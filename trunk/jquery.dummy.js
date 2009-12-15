@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2009 Brent Weston Robinett
+ * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
+ */
 //
 // $.dummy(selector, context) 
 // 		Creates a dummy (empty) jQuery object with a selector and a selector and context **without traversing the DOM**.
