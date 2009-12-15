@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2009 Brent Weston Robinett
+ * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
+ */
 (function ($) {
 	$(function () {
 		var $calcInput = $("#calcInput"),
