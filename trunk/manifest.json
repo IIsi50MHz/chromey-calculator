@@ -1,0 +1,21 @@
+{
+	"name": "Chromey Calculator",
+	"version": "2.2.10",
+	"description": "A surprisingly versatile scrolling calculator. Results are generated using Google's calculator web search feature.",
+	"background_page": "background.html",
+	"browser_action": {
+		"popup": "popup.html",
+		"default_icon": "icon.png",
+		"default_title": "Chromey Calculator"  
+	},
+	"icons": { 
+		"16": "icon16.png",
+		"32": "icon32.png",
+		"48": "icon48.png",
+		"128": "icon128.png" 
+	},
+	"permissions": [		
+		"http://*.google.com/",
+		"https://*.google.com/"
+	]
+}
