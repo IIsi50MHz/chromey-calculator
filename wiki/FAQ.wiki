@@ -1,0 +1,16 @@
+#summary Frequently Asked Questions
+
+= FAQ =
+
+<dl>
+<dt>*How does Chromey Calculator work?*
+<dd>All results for Chromey Calculator are generated using [http://www.google.com/help/calculator.html Google's calculator] web search feature.
+
+<dt>*Why don't I see any result when I press "="?*
+<dd>To get a result, you must press _Enter_. You can add an "=" to the end of an expression, but it is not necessary.
+
+<dt>*What kinds of calculations is Chromey Calculator Capable of?*
+<dd>Since Chromey Calculator uses Google's calculator, it can do anything [http://www.google.com/help/calculator.html Google's calculator] can do.
+
+<dt>*What kinds of names are allowed for user variables?*
+<dd>User variables must start with an "@" sign followed by one or more letters, numbers, or underscores. The "@" variable is reserved for storing the most recent result.
