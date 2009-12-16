@@ -204,10 +204,10 @@
 			var uriInputExpr = inputExpr.
 				// add multipication sign between parentheses
 				replace(/\)\s*\(/g, ')*(').
-				// add multipication between word char and "(" 
-				replace(/([\w])\s*\(/g, '$1*(').
-				// add multipication between ")" and word char				
-				replace(/\)\s*([\d])/g, ')*$1').				
+				// add multipication between digit char and "(" 
+				//replace(/([\d])\s*\(/g, '$1*(').
+				// add multipication between ")" and digit char				
+				//replace(/\)\s*([\d])/g, ')*$1').
 				// add an equals sign at the end of expressions that end with a number, or a number follow by a ")"
 				//	NOTE: this forces expressions that look like, say, phone numbers to be evaluated
 				//	NOTE: adding the = for some expressions gives no results when wrapped in parentheses
