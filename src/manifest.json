@@ -1,6 +1,6 @@
 {
 	"name": "Chromey Calculator",
-	"version": "2.2.11",
+	"version": "2.2.12",
 	"description": "A surprisingly versatile scrolling calculator. Results are generated using Google's calculator web search feature.",
 	"background_page": "background.html",
 	"browser_action": {
