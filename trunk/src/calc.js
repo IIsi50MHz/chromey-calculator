@@ -76,7 +76,7 @@
 			storeCalcInfo();			
 		});
 		
-		$("body").height(0)
+		$("body").height(0);
 		
 		$("#clearAll").click(function () {
 			// clear results
@@ -152,7 +152,7 @@
 		});
 		
 		// insert result when user clicks on it
-		$.dummy(".outputText, .inputText, .replacedInputText, .errorInputText, .errorOutputText, .inputTextWithVars, .replacedVarAssignmentInputText, .varAssignmentInputText, .varAssignmentOutputText").live("click", function () {
+		$(".outputText, .inputText, .replacedInputText, .errorInputText, .errorOutputText, .inputTextWithVars, .replacedVarAssignmentInputText, .varAssignmentInputText, .varAssignmentOutputText").live("click", function () {
 			var $this = $(this);
 			var resultText = $this.text().replace(/\s*=\s*$/, '');  // prepare result text for insertion			
 
