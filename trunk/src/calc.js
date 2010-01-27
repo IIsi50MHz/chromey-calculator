@@ -12,7 +12,7 @@ $(function () {
 		calcSelEnd,
 
 		// variables for history
-		history = (function(a){ a.p = -1; a[-1] = ""; return a; })([]), // new history!
+		history = History(), // new history!
 
 		// user variables
 		lastRawOutput, // gets substitued for @ (last result) variable
@@ -28,7 +28,7 @@ $(function () {
 
 	// restore input history
 	if (localStorage.prevInputs) {
-		Array.prototype.unshift.apply(history, JSON.parse(localStorage.prevInputs));
+		history.set(JSON.parse(localStorage.prevInputs));
 	}
 
 	// restore user variables
@@ -82,7 +82,7 @@ $(function () {
 
 	// handle enter and arrow keydown events
 	$calcInput.keydown(function (e) {
-		var maxResults = 300, inputVal = this.value.trim();
+		var inputVal = this.value.trim();
 		// handle special keys
 		if (e.which === 13 && inputVal) { // enter
 			// check for commands
@@ -99,26 +99,18 @@ $(function () {
 					}
 				});
 			}
-			history.unshift(inputVal);
-			history.p = -1;
-			// only keep last maxResults inputs
-			if (history.length > maxResults) {
-				history.pop();
-			}
+			history.add(inputVal);
 			// clear input area
 			this.value = "";
 		} else if (e.which === 38) { // up arrow
-			if (history.p === -1) {
-				history[-1] = this.value;
-			}
-			this.value = history[history.p + 1] ? history[++history.p] : this.value;
+			this.value = history.up(this.value);
 			
 			// set cursor position to end of input
 			setTimeout(function(){
 				$calcInput[0].selectionStart = $calcInput[0].selectionEnd = $calcInput.val().length;
 			}, 0);
 		} else if (e.which === 40) { // down arrow
-			this.value = history[history.p - 1] != null ? history[--history.p] : this.value;
+			this.value = history.down(this.value);
 		}
 	});
 
