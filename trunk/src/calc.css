@@ -118,6 +118,7 @@ ul {
 	text-decoration:none;
 }
 #headerLinks {
+	color:#1D1ECE;
 	float:right;
 	position:relative;	
 	font-size:13px;
@@ -137,4 +138,9 @@ ul {
 }
 .headerLink:visited {
 	color:#1D1ECE;
+}
+#popOut {
+	text-decoration:none;
+	margin-left:-1px;
+	margin-top:-2px;
 }
