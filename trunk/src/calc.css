@@ -83,6 +83,9 @@ ul {
 	left:2px;
 	cursor:pointer;	
 }
+.result {
+	font-size:14px;
+}
 .input {
 	color:grey;
 }
