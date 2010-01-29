@@ -9,13 +9,12 @@
 	function popOutCalc() {		
 		var defaultPopOutWindowInfo = "width=300,height=400,scrollbars=no"
 		storeCalcInfo();		
-		if (!background.calcPopOut) {
-			background.calcPopOut = window.open('calc.html', 'calcPopOut', localStorage.popOutWindowInfo || defaultPopOutWindowInfo);			
-		} else {		
-			savePopOutWindowInfo();			
-			background.calcPopOut.close();
-			background.calcPopOut = window.open('calc.html', 'calcPopOut', localStorage.popOutWindowInfo || defaultPopOutWindowInfo);										
-		}	
+		if (background.calcPopOut) {
+			// don't let popout overwrite most current restults
+			background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
+			background.calcPopOut.close();			
+		}
+		background.calcPopOut = window.open('calc.html', 'calcPopOut', localStorage.popOutWindowInfo || defaultPopOutWindowInfo);		
 	}
 	
 	function savePopOutWindowInfo(win) {
@@ -100,6 +99,12 @@
 		}
 		$(window).bind("unload blur", function () {
 			storeCalcInfo();			
+			// If there's a popup, update if we're enntering stuff in the dropdown
+			if (background.calcPopOut && background.calcPopOut !== window) {		
+				// don't let popout overwrite most current restults
+				background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
+				background.calcPopOut.location.reload();					
+			}
 		});		
 		
 		$("body").height(0);
@@ -130,11 +135,20 @@
 						if ($results.length > maxResults) {
 							$results.slice(0, $results.length - maxResults).remove();
 						}
+						// If there's a popup, update if we're enntering stuff in the dropdown
+						if (background.calcPopOut && background.calcPopOut !== window) {
+							storeCalcInfo();
+							// don't let popout overwrite most current restults
+							background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
+							background.calcPopOut.location.reload();					
+						}
 					});
 				}
+				// update history
 				history.add(inputVal);
+				
 				// clear input area
-				this.value = "";
+				this.value = "";				
 			} else if (e.which === 38) { // up arrow
 				this.value = history.up(this.value);
 				
