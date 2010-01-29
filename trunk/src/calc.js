@@ -3,6 +3,14 @@
  * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
  */
  (function ($) {
+	// function to copy text to the clipboard
+	function Copy(v) {
+		var txt = $("<textarea/>").val(v).css({ position: "absolute", left: "-100%" }).appendTo("body");
+		txt[0].select();
+		document.execCommand("Copy");
+		txt.remove();
+	}
+	
 	// functions and variables for dealing with calculator pop-out 
 	var storeCalcInfo, background = chrome.extension.getBackgroundPage();	
 	
@@ -169,23 +177,27 @@
 		});
 		
 		// insert result when user clicks on it
-		$(".outputText, .inputText, .replacedInputText, .errorInputText, .errorOutputText, .inputTextWithVars, .replacedVarAssignmentInputText, .varAssignmentInputText, .varAssignmentOutputText").live("click", function () {
+		$(".outputText, .inputText, .replacedInputText, .errorInputText, .errorOutputText, .inputTextWithVars, .replacedVarAssignmentInputText, .varAssignmentInputText, .varAssignmentOutputText").live("click", function (e) {
 			var $this = $(this);
 			var resultText = $this.text().replace(/\s*=\s*$/, '');  // prepare result text for insertion			
+			
+			if (e.ctrlKey) {
+				Copy(resultText);
+			} else {
+				var	inputVal = $calcInput.val(),
+					head = inputVal.substring(0, calcSelStart),
+					tail = inputVal.substring(calcSelEnd);
+				
+				// caclulate new location for insertion (so results are inserted from left to right)
+				calcSelStart = calcSelEnd = calcSelStart + resultText.length;
+				$calcInput.val(head + resultText + tail);
 
-			var	inputVal = $calcInput.val(),
-				head = inputVal.substring(0, calcSelStart),
-				tail = inputVal.substring(calcSelEnd);
+				// focus calc input
+				$calcInput.focus();
 
-			// caclulate new location for insertion (so results are inserted from left to right)
-			calcSelStart = calcSelEnd = calcSelStart + resultText.length;
-			$calcInput.val(head + resultText + tail);
-
-			// focus calc input
-			$calcInput.focus();
-
-			// set caret to end of insterted result
-			$calcInput[0].selectionStart = $calcInput[0].selectionEnd = calcSelStart;
+				// set caret to end of insterted result
+				$calcInput[0].selectionStart = $calcInput[0].selectionEnd = calcSelStart;
+			}
 		});
 		
 		// refocus calc input no matter where user clicks
