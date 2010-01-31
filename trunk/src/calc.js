@@ -189,6 +189,8 @@
 			
 			if (e.ctrlKey) {
 				Copy(resultText);
+				$this.css({opacity: "0"});
+				$this.animate({opacity: "1"}, 700);				
 			} else {
 				var	inputVal = $calcInput.val(),
 					head = inputVal.substring(0, calcSelStart),

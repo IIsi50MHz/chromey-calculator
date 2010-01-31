@@ -46,7 +46,7 @@ ul {
 #inputMarker {	
 	font-weight:bold;
 	font-size:16px;
-	font-family:courier;
+	font-family:courier, monospace;
 	left:8px;
 	position:absolute;
 	bottom:1px;				
@@ -85,6 +85,7 @@ ul {
 }
 .result {
 	font-size:14px;
+	font-family:verdana;
 }
 .input {
 	color:grey;
@@ -108,7 +109,7 @@ ul {
 }
 #chromeyCalcName {
 	position:absolute;
-	font-family:courier;
+	font-family:courier, monospace;
 	margin:19px 0px 0px 35px;	
 	font-size:15px;
 	color:#3E5785;
