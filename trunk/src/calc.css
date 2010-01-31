@@ -84,8 +84,8 @@ ul {
 	cursor:pointer;	
 }
 .result {
-	font-size:14px;
-	font-family:verdana;
+	font-size:15px;
+	font-family:times, serif;
 }
 .input {
 	color:grey;
