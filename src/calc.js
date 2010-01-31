@@ -63,7 +63,11 @@
 		$calcResults[0].innerHTML = localStorage.calcResults || '';
 
 		// restore results scroll position (actually... scroll to bottom);
-		$calcResultsWrapper.scrollTop(localStorage.scrollTop);
+		if (background.calcPopOut === window) {
+			$calcResultsWrapper.scrollTop(localStorage.popOutScrollTop);
+		} else {
+			$calcResultsWrapper.scrollTop(localStorage.scrollTop);
+		}
 
 		// restore input history
 		if (localStorage.prevInputs) {
@@ -105,7 +109,11 @@
 			localStorage.calcSelEnd = $calcInput[0].selectionEnd;
 
 			// store scroll position
-			localStorage.scrollTop = $calcResultsWrapper.scrollTop();
+			if (background.calcPopOut === window) {
+				localStorage.popOutScrollTop = $calcResultsWrapper.scrollTop();				
+			} else {
+				localStorage.scrollTop = $calcResultsWrapper.scrollTop();
+			}
 			//delete localStorage.calcResults; delete localStorage.prevInputs; delete localStorage.varMap, localStorage.lastAns;
 		}
 		$(window).bind("unload blur", function () {
