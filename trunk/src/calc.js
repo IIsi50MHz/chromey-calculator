@@ -64,9 +64,11 @@
 
 		// restore results scroll position (actually... scroll to bottom);
 		if (background.calcPopOut === window) {
-			$calcResultsWrapper.scrollTop(localStorage.popOutScrollTop);
+			//$calcResultsWrapper.scrollTop(localStorage.popOutScrollTop);
+			$calcResultsWrapper[0].scrollTop = $calcResultsWrapper[0].scrollHeight
 		} else {
-			$calcResultsWrapper.scrollTop(localStorage.scrollTop);
+			//$calcResultsWrapper.scrollTop(localStorage.scrollTop);
+			$calcResultsWrapper[0].scrollTop = $calcResultsWrapper[0].scrollHeight
 		}
 
 		// restore input history
