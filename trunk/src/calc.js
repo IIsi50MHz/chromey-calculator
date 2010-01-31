@@ -25,10 +25,13 @@
 		background.calcPopOut = window.open('calc.html', 'calcPopOut', localStorage.popOutWindowInfo || defaultPopOutWindowInfo);		
 	}
 	
-	function savePopOutWindowInfo(win) {
-		var $win = $(win);
-		// Store pop-out position and dimentions as a single string that can be passed to window.open()
-		// TODO: write the code...
+	// Store pop-out position and dimentions as a single string that can be passed to window.open()
+	function savePopOutWindowInfo() {			
+		var height = ",height="+window.innerHeight;
+		var width = ",width="+window.innerWidth;
+		var top = ",top="+window.screenTop;
+		var left = ",left="+window.screenLeft;		
+		localStorage.popOutWindowInfo = "resizable=yes"+height+width+top+left;					
 	}
 	
 	// focus calc function (DOESN"T WORK)
@@ -112,6 +115,9 @@
 				// don't let popout overwrite most current restults
 				background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
 				background.calcPopOut.location.reload();					
+			} else if (background.calcPopOut && background.calcPopOut === window) {
+				// save popout size and position info
+				savePopOutWindowInfo();
 			}
 		});		
 		
