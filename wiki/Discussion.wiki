@@ -1,1 +1,1 @@
-#summary Discuss Chromey Calculator devolopment
+#summary Discuss Chromey Calculator development
