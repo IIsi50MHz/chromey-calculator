@@ -197,7 +197,7 @@
 			var $this = $(this);
 			var resultText = $this.text().replace(/\s*=\s*$/, '');  // prepare result text for insertion			
 			
-			if (e.ctrlKey) {
+			if (e.ctrlKey || e.metaKey) {
 				Copy(resultText);
 				$this.css({opacity: "0"});
 				$this.animate({opacity: "1"}, 700);				
