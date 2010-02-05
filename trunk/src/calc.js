@@ -259,7 +259,9 @@
 				//	NOTE: this forces expressions that look like, say, phone numbers to be evaluated
 				//	NOTE: adding the = for some expressions gives no results when wrapped in parentheses
 				//		Example: "(1000 km in ft)" works, but "(1000 km in ft)=" doesn't
-				replace(/(.*[0-9]\s*\)*\s*)$/g, '$1=');
+				replace(/(.*[0-9]\s*\)*\s*)$/g, '$1=').
+				// 10' in " --> 10 feet in inches
+				replace("'", " feet").replace('"', " inches");
 
 			isFirstSearch = true;			
 			if (inputExprWithVars && inputExprWithVars.match(/^\s*@\w*\s*=\s*.+\s*$/i)) { // variable assignment
