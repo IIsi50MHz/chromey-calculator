@@ -151,6 +151,10 @@
 				if (inputVal === 'clear') {
 					// clear results
 					$calcResults.empty();					
+				} else if (inputVal === 'alphaOn') {
+					localStorage.alphaOn = 'true';
+				} else if (inputVal === 'alphaOff') {
+					delete localStorage.alphaOn;
 				} else {													
 					// do calculation
 					calc(inputVal, function () {						
@@ -401,7 +405,44 @@
 		//		rawOutput: rawOutput // all markup stripped (used for calculator variables)
 		//	{
 		var uncorrectedInputExpr;
-		function getResult(uri, inputExpr, callback) {
+		var getResult = getGoogleResult;		
+		
+		// get W|Alpha result
+		function getAlphaResult(uri, inputExpr, callback) {
+			$.get(uri, function (htmlDoc) {				
+				var resultsArray = htmlDoc.match(/^.*context.jsonArray.popups.*$/gm) || [];
+				var context = {jsonArray: {popups: {}}};
+				var resultObj = context.jsonArray.popups;
+				$.each(resultsArray, function (i, val) {					
+					console.log("val", val)
+					try {
+						eval(val);
+					}
+					catch (e) {
+						// do nothing 
+					}
+				});
+									
+				var input = inputExpr, output;				
+				if (resultObj.i_0100_1 || resultObj.i_0200_1) {
+					output = resultObj.i_0200_1 ? resultObj.i_0200_1.stringified : resultObj.i_0100_1.mOutput;
+				}			
+				
+				// if there is no output, output the input
+				output = $.trim(output);
+				output = output || inputExpr;				
+				
+				callback && callback({
+					uncorrectedInputExpr: undefined,
+					inputExpr: input,
+					outputExpr: output,
+					rawOutput: output
+				});
+			});
+		}
+		
+		// get google result
+		function getGoogleResult(uri, inputExpr, callback) {
 			$.get(uri, function (htmlDoc) {
 				var $htmlDoc = $(htmlDoc);
 
@@ -449,7 +490,12 @@
 						// no result found
 						outputExpr = false;
 						if (inputExpr !== "@") {
-							rawOutput = inputExpr;
+							if (localStorage.alphaOn) {
+								var waUri = uri.replace("http://www.google.com/search?q=", "http://www.wolframalpha.com/input/?i=");
+								getAlphaResult(waUri, inputExpr, callback);
+							} else {
+								rawOutput = inputExpr;
+							}
 						} else { // use lastRawOutput if user is  just inspecting @ variable
 							outputExpr = rawOutput = lastRawOutput;
 						}
