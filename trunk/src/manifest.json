@@ -16,6 +16,7 @@
 	},
 	"permissions": [		
 		"http://*.google.com/",
-		"https://*.google.com/"
+		"https://*.google.com/",
+		"http://*.wolframalpha.com/"
 	]
 }
