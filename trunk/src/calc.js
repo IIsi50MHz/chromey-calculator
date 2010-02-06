@@ -377,7 +377,10 @@
 					}
 
 					var wrappedResultsInner;		
-					wrappedOutput = wrappedOutput.replace(/\s*([\(\)])\s*/g, "$1").replace(/>\(+([^\(\)]*)\)+</, ">$1<"); // get rid of parentheses if just outer
+					if (!hasAlphaResult) {
+						// NOTE: not sure why we're doing this... removing for W|Alpha results so we format them better.
+						wrappedOutput = wrappedOutput.replace(/\s*([\(\)])\s*/g, "$1").replace(/>\(+([^\(\)]*)\)+</, ">$1<"); // get rid of parentheses if just outer
+					}
 					if (inputExprWithVars && inputExprWithVars.match(/^@\w*=*$/g)) { // inspecting variable
 						wrappedResultsInner = wrappedInputExprWithVars + wrappedOutput;
 					} else if (inputExprWithVars && inputExprWithVars.match(/^@\w+\s*=.+/g)) { // inpecting last result "@"						
@@ -396,7 +399,7 @@
 			}
 		}
 
-		// get results of an expression from google
+		// get results of an expression from google or W|Alpha
 		// callback takes result object argument:
 		//	{
 		//		uncorrectedInputExpr: uncorrectedInputExpr,
@@ -406,6 +409,7 @@
 		//	{
 		var uncorrectedInputExpr;
 		var getResult = getGoogleResult;		
+		var hasAlphaResult;
 		
 		// get W|Alpha result
 		function getAlphaResult(uri, inputExpr, callback) {
@@ -416,7 +420,7 @@
 				$.each(resultsArray, function (i, val) {					
 					console.log("val", val)
 					try {
-						eval(val);
+						eval(val.replace('\n', ''));
 					}
 					catch (e) {
 						// do nothing 
@@ -424,11 +428,27 @@
 				});
 									
 				var input = inputExpr, output;				
-				if (resultObj.i_0100_1 || resultObj.i_0200_1) {
-					output = resultObj.i_0200_1 ? resultObj.i_0200_1.stringified : resultObj.i_0100_1.mOutput;
-				}			
+				var afterEqual; 
+				if (resultObj.i_0100_1) {
+					hasAlphaResult = true;
+					afterEqual = $.trim(resultObj.i_0100_1.stringified.replace(/[^=]*/, "")).replace("=", "");
+				}
+				if (afterEqual &&  !input.match(/^\s*solve/i)) {
+					// make ouput look nicer
+					output = afterEqual.
+						replace("+", " + ").
+						replace("-", " - ").
+						replace(/^ - /, "-").
+						replace(/\( - /, "(-");
+				} else if (resultObj.i_0200_1) {
+					output = resultObj.i_0200_1.stringified;
+				} else if (resultObj.i_0300_1) {
+					output = resultObj.i_0300_1.stringified;
+				} else if (resultObj.i_0400_1) {
+					output = resultObj.i_0400_1.stringified;
+				}
 				
-				// if there is no output, output the input
+				// if there is no outp	ut, output the input
 				output = $.trim(output);
 				output = output || inputExpr;				
 				
@@ -443,6 +463,7 @@
 		
 		// get google result
 		function getGoogleResult(uri, inputExpr, callback) {
+			hasAlphaResult = false;
 			$.get(uri, function (htmlDoc) {
 				var $htmlDoc = $(htmlDoc);
 
@@ -466,7 +487,7 @@
 					// get output for display (only using RH part of result for now)
 					outputExpr = resultHtml.replace(/.*=\s(.*)/, '$1'); // get stuff after = sign
 					// get raw output (used for calculator variables)
-					rawOutput = $('<div>'+outputExpr+'</div>').text(); // ouput cleaned of all markup
+					rawOutput = $('<div>'+outputExpr+'</div>').text(); // output cleaned of all markup
 				} else {
 					// if there is no result, see if there is spelling correction, and retry one more time
 					var $didYouMean = $htmlDoc.find(".spell").filter('a').eq(0);					
@@ -490,11 +511,13 @@
 						// no result found
 						outputExpr = false;
 						if (inputExpr !== "@") {
-							if (localStorage.alphaOn) {
+							// don't even try to use W|Alpha for plain numbers
+							if (localStorage.alphaOn && !inputExpr.match(/^\s*\d*\s*$/) && !inputExpr.match(/^\s*@.*=\s*\d*\s*$/)) {
 								var waUri = uri.replace("http://www.google.com/search?q=", "http://www.wolframalpha.com/input/?i=");
-								getAlphaResult(waUri, inputExpr, callback);
-							} else {
-								rawOutput = inputExpr;
+								getAlphaResult(waUri, inputExpr, callback);	
+								return;	
+							} else {					
+								rawOutput = inputExpr;							
 							}
 						} else { // use lastRawOutput if user is  just inspecting @ variable
 							outputExpr = rawOutput = lastRawOutput;
@@ -503,7 +526,7 @@
 				}
 				
 				// remove outermost parentheses before storing (if there are no inner ones)				
-				lastRawOutput = substVar(rawOutput).replace(/\s*([\(\)])\s*/g, "$1").replace(/^\(+([^\(\)]*)\)+$/, "$1");			
+				lastRawOutput = rawOutput && substVar(rawOutput).replace(/\s*([\(\)])\s*/g, "$1").replace(/^\(+([^\(\)]*)\)+$/, "$1");							
 				if (rawOutput === undefined || (typeof outputExpr === "string" &&  rawOutput.match(/undefined/))) {
 					rawOutput = "undefined";
 				}
@@ -605,12 +628,13 @@
 						expr = expr.replace(/@\w+/i, openParen+val+closedParen);
 					});
 				}
+				
+				// get rid of spaces between parentheses
+				expr = expr.replace(/\)\s*\(/g, ")(");
 			} else {
 				expr = undefined;
 			}
 			
-			// get rid of spaces between parentheses
-			expr = expr.replace(/\)\s*\(/g, ")(");
 			return expr;
 		}
 	});
