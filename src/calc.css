@@ -83,9 +83,31 @@ ul {
 	left:2px;
 	cursor:pointer;	
 }
+.resultLink {
+	color: #1D1ECE;
+	display: block;
+	font-family: Georgia, serif;
+	font-size: 16px;
+	left: -21px;
+	opacity: 0.6;
+	position: absolute;
+	text-align: center;
+	text-decoration: none;
+	top: -3px;
+	width: 17px;	
+}
+.resultLink:hover {
+	color:#1D1ECE;	
+	opacity:1;
+	text-decoration:underline;
+}
+
 .result {
+	position:relative;
 	font-size:15px;
 	font-family:times, serif;
+	margin-left:-25px;
+	border-left:solid 25px transparent;
 }
 .input {
 	color:grey;
