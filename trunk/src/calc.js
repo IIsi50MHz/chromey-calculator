@@ -3,6 +3,28 @@
  * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
  */
  (function ($) {
+	// hook up live event handlers before page loads
+	// show/hide link to result source on hover	
+	function showSourceLink(e) {
+		var $this = $(this);
+		var $resultLink = $this.find(".resultLink");
+		$resultLink.stop().css("opacity", "").show();
+		clearTimeout($this.data("showLinkTimeout"));
+		var showLinkTimeout = setTimeout(function () {
+			$resultLink.fadeOut(500);
+		}, 2000);
+		$this.data("showLinkTimeout", showLinkTimeout);
+	}
+	
+	$(".result").live("mousemove", showSourceLink);	
+	
+	// flags
+	var hasAlphaResult, hasGoogleResult;
+	
+	// query uri heads
+	var googleQueryUriHead = "http://www.google.com/search?q=";
+	var alphaQueryUriHead = "http://www.wolframalpha.com/input/?i=";
+	
 	// function to copy text to the clipboard
 	function Copy(v) {
 		var txt = $("<textarea/>").val(v).css({ position: "absolute", left: "-100%" }).appendTo("body");
@@ -96,6 +118,7 @@
 		// store results when we unload the calculator
 		storeCalcInfo = function () {			
 			// store results and inputs
+			$calcResults.find(".resultLink").hide();
 			localStorage.calcResults = $calcResults[0].innerHTML;
 			localStorage.prevInputs = JSON.stringify(history);
 
@@ -170,6 +193,7 @@
 							background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
 							background.calcPopOut.location.reload();					
 						}
+						$results.eq($results.length-1).find(".resultLink").show().fadeOut(2000);
 					});
 				}
 				// update history
@@ -276,7 +300,7 @@
 				uriVarValInput = substVar(uriVarValInput);
 				
 				// evaluate variable value
-				var varValInputUri = "http://www.google.com/search?q=" + encodeURIComponent(uriVarValInput);
+				var varValInputUri = googleQueryUriHead + encodeURIComponent(uriVarValInput);
 				getResult(varValInputUri, varValInput, function (result) {
 					var inputExpr = result.inputExpr,
 						outputExpr = result.outputExpr,
@@ -328,6 +352,15 @@
 						wrappedOutput = "<div class='output'><span class='varAssignmentOutputText'>" + outputExpr + "</span></div>";
 					}
 
+					// create link to result
+					var resultLink = "";
+					if (hasGoogleResult) {
+						resultLink = "<a target='_blank' class='resultLink' href='"+googleQueryUriHead+encodeURIComponent(varValInput)+"'>G</a>"
+					} else if (hasAlphaResult) {
+						var uriInputExprEqualStripped = varValInput.replace(/=$/, "");
+						resultLink = "<a target='_blank' class='resultLink' href='"+alphaQueryUriHead+encodeURIComponent(varValInput)+"'>W</a>"
+					}
+					
 					var wrappedResultsInner;	
 					wrappedOutput = wrappedOutput.replace(/\s*([\(\)])\s*/g, "$1").replace(/>\(+([^\(\)]*)\)+</, ">$1<"); // get rid of parentheses if just outer
 					if (wrappedInputWithVars) { // assingment with vars in rh
@@ -335,7 +368,7 @@
 					} else {
 						wrappedResultsInner = wrappedInput + wrappedOutput;
 					}
-					var resultHtml = "<li class='result'>"+ wrappedResultsInner + "</div>";					
+					var resultHtml = "<li class='result'>"+ resultLink + wrappedResultsInner + "</li>";					
 					$calcResults.append(resultHtml);
 
 					// scroll to bottom of results area
@@ -343,8 +376,20 @@
 					$calcResultsWrapper[0].scrollTop = $calcResultsWrapper[0].scrollHeight;
 					callback && callback();					
 				});
+			} else if (inputExprWithVars && inputExprWithVars.match(/^\s*@\w*\s*$/)) { // variable inspection
+				wrappedInput = "<div class='input'><span class='inputText'>" + inputExprWithVars + " =</span></div>";
+				wrappedOutput = "<div class='output'><span class='outputText'>" + substVar(inputExprWithVars) + "</span></div>";	
+				wrappedOutput = wrappedOutput.replace(/\s*([\(\)])\s*/g, "$1").replace(/>\(+([^\(\)]*)\)+</, ">$1<"); // get rid of parentheses if just outer
+				
+				var wrappedResultsInner = wrappedInput + wrappedOutput;				
+				var resultHtml = "<li class='result'>"+ wrappedResultsInner + "</li>";
+				$calcResults.append(resultHtml);
+
+				// scroll to bottom of results area
+				var $calcResultsWrapper = $("#calcResultsWrapper");
+				$calcResultsWrapper[0].scrollTop = $calcResultsWrapper[0].scrollHeight;				
 			} else { // no variable assignment
-				var inputUri = "http://www.google.com/search?q=" + encodeURIComponent(uriInputExpr);
+				var inputUri = googleQueryUriHead + encodeURIComponent(uriInputExpr);
 				// get result from google
 				getResult(inputUri, inputExpr, function (result) {
 					// results
@@ -354,7 +399,8 @@
 						rawOutput = result.rawOutput;					
 					// stuff to display
 					var	wrappedInput,
-						wrappedOutput;
+						wrappedOutput,
+						resultLink = "";
 
 					// construct html for displaying results
 					if (!outputExpr) { // no result
@@ -375,20 +421,23 @@
 						wrappedInput = "<div class='input'><span class='inputText'>" + inputExpr + " =</span></div>";
 						wrappedOutput = "<div class='output'><span class='outputText'>" + outputExpr + "</span></div>";
 					}
-
+					
+					// create link to result
+					if (hasGoogleResult) {
+						resultLink = "<a target='_blank' class='resultLink' href='"+googleQueryUriHead+encodeURIComponent(uriInputExpr)+"'>G</a>"
+					} else if (hasAlphaResult) {
+						var uriInputExprEqualStripped = uriInputExpr.replace(/=$/, "");
+						resultLink = "<a target='_blank' class='resultLink' href='"+alphaQueryUriHead+encodeURIComponent(uriInputExprEqualStripped)+"'>W</a>"
+					}
+					
 					var wrappedResultsInner;		
 					if (!hasAlphaResult) {
 						// NOTE: not sure why we're doing this... removing for W|Alpha results so we format them better.
 						wrappedOutput = wrappedOutput.replace(/\s*([\(\)])\s*/g, "$1").replace(/>\(+([^\(\)]*)\)+</, ">$1<"); // get rid of parentheses if just outer
 					}
-					if (inputExprWithVars && inputExprWithVars.match(/^@\w*=*$/g)) { // inspecting variable
-						wrappedResultsInner = wrappedInputExprWithVars + wrappedOutput;
-					} else if (inputExprWithVars && inputExprWithVars.match(/^@\w+\s*=.+/g)) { // inpecting last result "@"						
-						wrappedResultsInner = wrappedInput + wrappedOutput;
-					} else {
-						wrappedResultsInner = (wrappedInputExprWithVars + wrappedInput) + wrappedOutput;
-					}
-					var resultHtml = "<li class='result'>"+ wrappedResultsInner + "</div>";
+					
+					wrappedResultsInner = (wrappedInputExprWithVars + wrappedInput) + wrappedOutput;					
+					var resultHtml = "<li class='result'>"+ resultLink + wrappedResultsInner + "</li>";
 					$calcResults.append(resultHtml);
 
 					// scroll to bottom of results area
@@ -409,7 +458,6 @@
 		//	{
 		var uncorrectedInputExpr;
 		var getResult = getGoogleResult;		
-		var hasAlphaResult;
 		
 		// get W|Alpha result
 		function getAlphaResult(uri, inputExpr, callback) {
@@ -418,7 +466,6 @@
 				var context = {jsonArray: {popups: {}}};
 				var resultObj = context.jsonArray.popups;
 				$.each(resultsArray, function (i, val) {					
-					console.log("val", val)
 					try {
 						eval(val.replace('\n', ''));
 					}
@@ -452,6 +499,19 @@
 				output = $.trim(output);
 				output = output || inputExpr;				
 				
+				// remove outermost parentheses before storing (if there are no inner ones)	
+				var outputExpr;				
+				lastRawOutput = output && substVar(output).replace(/\s*([\(\)])\s*/g, "$1").replace(/^\(+([^\(\)]*)\)+$/, "$1");							
+				if (output === undefined || (typeof outputExpr === "string" &&  output.match(/undefined/))) {
+					output = "undefined";
+				}
+				if (outputExpr === undefined || (typeof outputExpr === "string" &&  outputExpr.match(/undefined/))) {
+					outputExpr = "undefined";
+				}
+				if (lastRawOutput === undefined || (typeof lastRawOutput === "string" &&  lastRawOutput.match(/undefined/))) {
+					lastRawOutput = "undefined";
+				}
+				
 				callback && callback({
 					uncorrectedInputExpr: undefined,
 					inputExpr: input,
@@ -464,6 +524,7 @@
 		// get google result
 		function getGoogleResult(uri, inputExpr, callback) {
 			hasAlphaResult = false;
+			hasGoogleResult = false;
 			$.get(uri, function (htmlDoc) {
 				var $htmlDoc = $(htmlDoc);
 
@@ -475,6 +536,7 @@
 				var outputExpr;
 				var rawOutput;				
 				if (resultHtml) {
+					hasGoogleResult = true;
 					// clean up result for copy/paste...
 					resultHtml = resultHtml.
 						// ...fix exponents so we can copy/paste result
@@ -502,7 +564,7 @@
 						// save original input expression
 						uncorrectedInputExpr = inputExpr;
 						// try caclation a second time using "Did you mean...?" expression
-						getResult("http://www.google.com/search?q=" + encodeURIComponent(didYouMeanExpr+'='), didYouMeanExpr, function (result) {
+						getResult(googleQueryUriHead + encodeURIComponent(didYouMeanExpr+'='), didYouMeanExpr, function (result) {
 							callback(result);
 							uncorrectedInputExpr = undefined; // reset uncorrectedInputExpr
 						});
@@ -512,8 +574,8 @@
 						outputExpr = false;
 						if (inputExpr !== "@") {
 							// don't even try to use W|Alpha for plain numbers
-							if (localStorage.alphaOn && !inputExpr.match(/^\s*\d*\s*$/) && !inputExpr.match(/^\s*@.*=\s*\d*\s*$/)) {
-								var waUri = uri.replace("http://www.google.com/search?q=", "http://www.wolframalpha.com/input/?i=");
+							if (localStorage.alphaOn && !inputExpr.match(/^\s*\(*\d*\)*\s*$/)) {
+								var waUri = uri.replace(googleQueryUriHead, alphaQueryUriHead);
 								getAlphaResult(waUri, inputExpr, callback);	
 								return;	
 							} else {					
