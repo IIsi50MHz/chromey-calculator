@@ -177,7 +177,7 @@
 				} else if (inputVal === 'alphaOn') {
 					localStorage.alphaOn = 'true';
 				} else if (inputVal === 'alphaOff') {
-					delete localStorage.alphaOn;
+					localStorage.alphaOn = 'false';
 				} else {													
 					// do calculation
 					calc(inputVal, function () {						
@@ -574,7 +574,7 @@
 						outputExpr = false;
 						if (inputExpr !== "@") {
 							// don't even try to use W|Alpha for plain numbers
-							if (localStorage.alphaOn && !inputExpr.match(/^\s*\(*\d*\)*\s*$/)) {
+							if (localStorage.alphaOn !== 'false' && !inputExpr.match(/^\s*\(*\d*\)*\s*$/)) {
 								var waUri = uri.replace(googleQueryUriHead, alphaQueryUriHead);
 								getAlphaResult(waUri, inputExpr, callback);	
 								return;	
