@@ -349,13 +349,14 @@
 						wrappedOutput = "<div class='output'><span class='varAssignmentOutputText'>" + outputExpr + "</span></div>";
 					}
 
-					// create link to result
-					var resultLink = "";
-					if (flag.hasGoogleResult) {
-						resultLink = "<a target='_blank' class='resultLink' href='"+googleQueryUriHead+encodeURIComponent(varValInput)+"'>G</a>"
+					// create link to result					
+					if (flag.hasGoogleResult) {						
+						resultLink = "<a target='_blank' class='resultLink'>G</a>"
+						resultLink = $("<div>"+resultLink+"</div>").find('a').attr("href", googleQueryUriHead+encodeURIComponent(varValInput)).end()[0].innerHTML;
 					} else if (flag.hasAlphaResult) {
 						var uriInputExprEqualStripped = varValInput.replace(/=$/, "");
-						resultLink = "<a target='_blank' class='resultLink' href='"+alphaQueryUriHead+encodeURIComponent(varValInput)+"'>W</a>"
+						resultLink = "<a target='_blank' class='resultLink'>W</a>"
+						resultLink = $("<div>"+resultLink+"</div>").find('a').attr("href", alphaQueryUriHead+encodeURIComponent(uriInputExprEqualStripped)).end()[0].innerHTML;						
 					}
 					
 					var wrappedResultsInner;	
@@ -420,11 +421,13 @@
 					}
 					
 					// create link to result
-					if (flag.hasGoogleResult) {
-						resultLink = "<a target='_blank' class='resultLink' href='"+googleQueryUriHead+encodeURIComponent(uriInputExpr)+"'>G</a>"
+					if (flag.hasGoogleResult) {						
+						resultLink = "<a target='_blank' class='resultLink'>G</a>"
+						resultLink = $("<div>"+resultLink+"</div>").find('a').attr("href", googleQueryUriHead+encodeURIComponent(uriInputExpr)).end()[0].innerHTML;
 					} else if (flag.hasAlphaResult) {
 						var uriInputExprEqualStripped = uriInputExpr.replace(/=$/, "");
-						resultLink = "<a target='_blank' class='resultLink' href='"+alphaQueryUriHead+encodeURIComponent(uriInputExprEqualStripped)+"'>W</a>"
+						resultLink = "<a target='_blank' class='resultLink'>W</a>"
+						resultLink = $("<div>"+resultLink+"</div>").find('a').attr("href", alphaQueryUriHead+encodeURIComponent(uriInputExprEqualStripped)).end()[0].innerHTML;						
 					}
 					
 					var wrappedResultsInner;		
@@ -581,6 +584,7 @@
 						if (inputExpr !== "@") {
 							// don't even try to use W|Alpha for plain numbers
 							if (localStorage.alphaOn !== 'false' && !inputExpr.match(/^\s*\(*\d*\)*\s*$/)) {
+								console.debug("getGoogleResult.origInputExpr", getGoogleResult.origInputExpr);
 								var waUri = alphaQueryUriHead+encodeURIComponent(getGoogleResult.origInputExpr);
 								getAlphaResult(waUri, getGoogleResult.origInputExpr, callback);	
 								return;	
