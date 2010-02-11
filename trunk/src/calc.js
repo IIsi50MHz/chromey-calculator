@@ -192,7 +192,7 @@
 							background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
 							background.calcPopOut.location.reload();					
 						}
-						$results.eq($results.length-1).find(".resultLink").show().animate({opacity: "0"}, 2000);
+						$results.eq($results.length-1).find(".resultLink").show().css({opacity: ".8"}).animate({opacity: "0"}, 2000);
 					});
 				}
 				// update history
