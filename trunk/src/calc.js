@@ -466,8 +466,9 @@
 				var context = {jsonArray: {popups: {}}};
 				var resultObj = context.jsonArray.popups;
 				$.each(resultsArray, function (i, val) {					
-					try {
-						eval(val.replace('\n', ''));
+					console.log("heleo?!??!", val.replace(/",.*/, '"}'));
+					try {						
+						eval(val.replace(/",.*/, '"}'));
 					}
 					catch (e) {
 						// do nothing 
@@ -488,16 +489,22 @@
 						replace("-", " - ").
 						replace(/^ - /, "-").
 						replace(/\( - /, "(-");
-				} else if (resultObj.i_0200_1) {
+					console.log("i_0100_1", output)
+				} else if (resultObj.i_0200_1) {					
 					flag.hasAlphaResult = true;
 					output = resultObj.i_0200_1.stringified;
+					console.log("i_0200_1", output)
 				} else if (resultObj.i_0300_1) {
 					flag.hasAlphaResult = true;
 					output = resultObj.i_0300_1.stringified;
+					console.log("i_0300_1", output)
 				} else if (resultObj.i_0400_1) {
 					flag.hasAlphaResult = true;
 					output = resultObj.i_0400_1.stringified;
+					console.log("i_0400_1", output)
 				}
+				
+				console.log("output", output)
 				
 				// if there is no outp	ut, output the input
 				output = $.trim(output);
