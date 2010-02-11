@@ -5,21 +5,20 @@
  (function ($) {
 	// hook up live event handlers before page loads
 	// show/hide link to result source on hover	
-	function showSourceLink(e) {
-		var $this = $(this);
-		var $resultLink = $this.find(".resultLink");
-		$resultLink.stop().css("opacity", "").show();
-		clearTimeout($this.data("showLinkTimeout"));
-		var showLinkTimeout = setTimeout(function () {
-			$resultLink.fadeOut(500);
-		}, 2000);
-		$this.data("showLinkTimeout", showLinkTimeout);
-	}
-	
-	$(".result").live("mousemove", showSourceLink);	
+	function showSourceLink(e) {		
+		$(this).stop().css("opacity", "").show();		
+	}	
+	function hideSourceLink(e) {		
+		$(this).animate({opacity: "0"}, 500);	
+	}	
+	$(".resultLink").live("mouseenter", showSourceLink);
+	$(".resultLink").live("mouseleave", hideSourceLink);	
 	
 	// flags
-	var hasAlphaResult, hasGoogleResult;
+	var flag = {
+		hasGoogleResult: false,
+		hasAlphaResult: false
+	};
 	
 	// query uri heads
 	var googleQueryUriHead = "http://www.google.com/search?q=";
@@ -118,7 +117,7 @@
 		// store results when we unload the calculator
 		storeCalcInfo = function () {			
 			// store results and inputs
-			$calcResults.find(".resultLink").hide();
+			$calcResults.find(".resultLink").css({display: "block", opacity: "0"});
 			localStorage.calcResults = $calcResults[0].innerHTML;
 			localStorage.prevInputs = JSON.stringify(history);
 
@@ -193,7 +192,7 @@
 							background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
 							background.calcPopOut.location.reload();					
 						}
-						$results.eq($results.length-1).find(".resultLink").show().fadeOut(2000);
+						$results.eq($results.length-1).find(".resultLink").show().animate({opacity: "0"}, 2000);
 					});
 				}
 				// update history
@@ -352,9 +351,9 @@
 
 					// create link to result
 					var resultLink = "";
-					if (hasGoogleResult) {
+					if (flag.hasGoogleResult) {
 						resultLink = "<a target='_blank' class='resultLink' href='"+googleQueryUriHead+encodeURIComponent(varValInput)+"'>G</a>"
-					} else if (hasAlphaResult) {
+					} else if (flag.hasAlphaResult) {
 						var uriInputExprEqualStripped = varValInput.replace(/=$/, "");
 						resultLink = "<a target='_blank' class='resultLink' href='"+alphaQueryUriHead+encodeURIComponent(varValInput)+"'>W</a>"
 					}
@@ -421,15 +420,15 @@
 					}
 					
 					// create link to result
-					if (hasGoogleResult) {
+					if (flag.hasGoogleResult) {
 						resultLink = "<a target='_blank' class='resultLink' href='"+googleQueryUriHead+encodeURIComponent(uriInputExpr)+"'>G</a>"
-					} else if (hasAlphaResult) {
+					} else if (flag.hasAlphaResult) {
 						var uriInputExprEqualStripped = uriInputExpr.replace(/=$/, "");
 						resultLink = "<a target='_blank' class='resultLink' href='"+alphaQueryUriHead+encodeURIComponent(uriInputExprEqualStripped)+"'>W</a>"
 					}
 					
 					var wrappedResultsInner;		
-					if (!hasAlphaResult) {
+					if (!flag.hasAlphaResult) {
 						// NOTE: not sure why we're doing this... removing for W|Alpha results so we format them better.
 						wrappedOutput = wrappedOutput.replace(/\s*([\(\)])\s*/g, "$1").replace(/>\(+([^\(\)]*)\)+</, ">$1<"); // get rid of parentheses if just outer
 					}
@@ -475,11 +474,11 @@
 				var input = inputExpr, output;				
 				var afterEqual; 
 				if (resultObj.i_0100_1) {
-					hasAlphaResult = true;
+					flag.hasAlphaResult = true;
 					afterEqual = $.trim(resultObj.i_0100_1.stringified.replace(/[^=]*/, "")).replace("=", "");
 				}
 				if (afterEqual &&  !input.match(/^\s*solve/i)) {
-					hasAlphaResult = true;
+					flag.hasAlphaResult = true;
 					// make ouput look nicer
 					output = afterEqual.
 						replace("+", " + ").
@@ -487,13 +486,13 @@
 						replace(/^ - /, "-").
 						replace(/\( - /, "(-");
 				} else if (resultObj.i_0200_1) {
-					hasAlphaResult = true;
+					flag.hasAlphaResult = true;
 					output = resultObj.i_0200_1.stringified;
 				} else if (resultObj.i_0300_1) {
-					hasAlphaResult = true;
+					flag.hasAlphaResult = true;
 					output = resultObj.i_0300_1.stringified;
 				} else if (resultObj.i_0400_1) {
-					hasAlphaResult = true;
+					flag.hasAlphaResult = true;
 					output = resultObj.i_0400_1.stringified;
 				}
 				
@@ -530,8 +529,8 @@
 				getGoogleResult.origInputExpr = inputExpr;
 			}
 			
-			hasAlphaResult = false;
-			hasGoogleResult = false;
+			flag.hasAlphaResult = false;
+			flag.hasGoogleResult = false;
 			$.get(uri, function (htmlDoc) {
 				var $htmlDoc = $(htmlDoc);
 
@@ -543,7 +542,7 @@
 				var outputExpr;
 				var rawOutput;				
 				if (resultHtml) {
-					hasGoogleResult = true;
+					flag.hasGoogleResult = true;
 					// clean up result for copy/paste...
 					resultHtml = resultHtml.
 						// ...fix exponents so we can copy/paste result
