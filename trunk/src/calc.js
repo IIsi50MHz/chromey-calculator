@@ -479,6 +479,7 @@
 					afterEqual = $.trim(resultObj.i_0100_1.stringified.replace(/[^=]*/, "")).replace("=", "");
 				}
 				if (afterEqual &&  !input.match(/^\s*solve/i)) {
+					hasAlphaResult = true;
 					// make ouput look nicer
 					output = afterEqual.
 						replace("+", " + ").
@@ -486,10 +487,13 @@
 						replace(/^ - /, "-").
 						replace(/\( - /, "(-");
 				} else if (resultObj.i_0200_1) {
+					hasAlphaResult = true;
 					output = resultObj.i_0200_1.stringified;
 				} else if (resultObj.i_0300_1) {
+					hasAlphaResult = true;
 					output = resultObj.i_0300_1.stringified;
 				} else if (resultObj.i_0400_1) {
+					hasAlphaResult = true;
 					output = resultObj.i_0400_1.stringified;
 				}
 				
@@ -521,6 +525,11 @@
 		
 		// get google result
 		function getGoogleResult(uri, inputExpr, callback) {
+			// save original input expression in case W|Alpha get's used
+			if (isFirstSearch) {
+				getGoogleResult.origInputExpr = inputExpr;
+			}
+			
 			hasAlphaResult = false;
 			hasGoogleResult = false;
 			$.get(uri, function (htmlDoc) {
@@ -547,7 +556,7 @@
 					// get output for display (only using RH part of result for now)
 					outputExpr = resultHtml.replace(/.*=\s(.*)/, '$1'); // get stuff after = sign
 					// get raw output (used for calculator variables)
-					rawOutput = $('<div>'+outputExpr+'</div>').text(); // output cleaned of all markup
+					rawOutput = $('<div>'+outputExpr+'</div>').text(); // output cleaned of all markup					
 				} else {
 					// if there is no result, see if there is spelling correction, and retry one more time
 					var $didYouMean = $htmlDoc.find(".spell").filter('a').eq(0);					
@@ -573,8 +582,8 @@
 						if (inputExpr !== "@") {
 							// don't even try to use W|Alpha for plain numbers
 							if (localStorage.alphaOn !== 'false' && !inputExpr.match(/^\s*\(*\d*\)*\s*$/)) {
-								var waUri = uri.replace(googleQueryUriHead, alphaQueryUriHead);
-								getAlphaResult(waUri, inputExpr, callback);	
+								var waUri = alphaQueryUriHead+encodeURIComponent(getGoogleResult.origInputExpr);
+								getAlphaResult(waUri, getGoogleResult.origInputExpr, callback);	
 								return;	
 							} else {					
 								rawOutput = inputExpr;							
