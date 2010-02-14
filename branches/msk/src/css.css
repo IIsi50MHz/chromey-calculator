@@ -1,0 +1,261 @@
+body {
+	font-family: monospace;
+	font-size: 13px;
+	margin-top: 12px;
+	width: 450px;
+}
+
+#links {
+	position: absolute;
+	top: 15px;
+	right: 20px;
+	z-index: 999;
+	color: blue;
+	font-family: Arial;
+	background: white;
+	border-radius: 5px;
+	padding: 4px;
+}
+
+#output {
+	padding-bottom: 4px;
+	overflow: auto;
+	height: 415px;
+}
+.output, .input {
+	padding-left: 15px;
+	line-height: 15px;
+	overflow: auto;
+	white-space: nowrap;
+}
+.output {
+	margin-bottom: 10px;
+}
+.input {
+	color: #A0A0A0;
+	position: relative;
+}
+.input > a {
+	position: absolute;
+	left: 3px;
+	display: none;
+}
+
+#input {
+	width: 100%;
+}
+#input > input {
+	border: 0;
+	border-top: 1px solid #D7D7D7;
+	outline: 0;
+	font: inherit;
+	padding: 2px 0 5px 18px;
+	margin: 0;
+	height: 23px;
+	width: 100%;
+	-webkit-box-sizing: border-box;
+}
+#input > span {
+	color: #808080;
+	position: absolute;
+	bottom: 5px;
+	left: 5px;
+}
+
+.strike {
+	text-decoration: line-through;
+}
+
+a {
+	text-decoration: none;
+	color: blue;
+}
+a:hover {
+	text-decoration: underline;
+}
+
+/*body {				
+	width:450px;				
+}
+.scrollableTable {				
+	position:relative;				
+	table-layout:fixed;				
+	width:100%;
+	margin:0;
+	padding:0;
+}
+#calcResultsWrapper {	
+	height:318px;
+	min-height:55px;
+	max-height:500px;
+}	
+
+
+body, html {
+	padding:0;		
+	margin:0;
+	background-color:white;
+}
+body {
+	font-size:17px;
+	font-family:monospace;
+	color:#123272;
+}
+ul {
+	list-style-type:none;
+	margin-left:-15px;
+}
+.outputText, .inputText, .replacedInputText, .errorInputText, .errorOutputText,
+.inputTextWithVars, .replacedVarAssignmentInputText, 
+.varAssignmentInputText, .varAssignmentOutputText {
+	cursor:pointer;
+}			
+#calcInput {	
+	position:relative;				
+	width:100%;
+	margin:0px;
+	padding-left:22px;
+	
+	border:solid #3E5785 1px;
+	background-color:#DDEAF9;
+	font-family: inherit;
+	font-size: 16px;
+	
+	-webkit-box-sizing:border-box;				
+	-webkit-box-shadow: 0px 0px 3px black;
+}
+#calcInputWrapper {
+	position:relative;
+	margin:4px 5px 3px;
+}
+#calcInputInnerWrapper {
+	position:relative;	
+	
+}
+#inputMarker {	
+	font-weight:bold;
+	font-size:16px;
+	font-family:courier, monospace;
+	left:8px;
+	position:absolute;
+	bottom:1px;				
+	color:#3E5785;
+}		
+.scrollableTable {
+	position:absolute;				
+	table-layout:fixed;
+	height:100%;
+	width:100%;
+	margin:0;
+	padding:0;
+}
+.scrollableCell, .shrinkCell {
+	position:relative;
+}
+.scrollableCellInner {
+	position:relative;
+	height:100%;				
+	overflow:auto;	
+}
+.scrollableCell {
+	height:100%
+}
+.shrinkCell {
+	height:0;
+}
+.outputText {
+	position:relative;
+}
+#calcIcon {
+	position:fixed;
+	top:4px;
+	left:2px;
+	cursor:pointer;	
+}
+.resultLink {
+	color: #3E5785;
+	display: block;
+	font-family: Georgia, serif;
+	font-size: 16px;
+	left: -21px;
+	opacity: 0.6;
+	position: absolute;
+	text-align: center;
+	text-decoration: none;
+	top: -3px;
+	width: 17px;	
+}
+.resultLink:hover {
+	color:#1D1ECE;	
+	opacity:1;
+	text-decoration:underline;
+}
+
+.result {
+	position:relative;
+	font-size:15px;
+	font-family:times, serif;
+	margin-left:-25px;
+	border-left:solid 25px transparent;
+}
+.input {
+	color:grey;
+}
+.output {
+	margin-bottom:10px;
+}
+.errorOutputText {
+	font-style:normal;
+}
+.replacedInputText, .replacedVarAssignmentInputText {
+	text-decoration:line-through;
+}
+#calcResultsWrapper {
+	position:relative;
+	margin: 0px 5px;
+	border:solid #3E5785 1px;;
+	background-color:rgba(221,234,249,.5);
+	-webkit-box-shadow: 0px 0px 3px black;
+	-webkit-border-radius: 0px;
+}
+#chromeyCalcName {
+	position:absolute;
+	font-family:courier, monospace;
+	margin:19px 0px 0px 35px;	
+	font-size:15px;
+	color:#3E5785;
+	text-shadow:1px 1px 2px #ddd;
+	letter-spacing:2px;
+	font-weight:bold;
+	cursor:pointer;
+}
+#chromeyCalcPageLink {
+	text-decoration:none;
+}
+#headerLinks {
+	color:#1D1ECE;
+	float:right;
+	position:relative;	
+	font-size:13px;
+	font-family:arial,sans-serif;
+	height:36px;
+	margin-right:2px;
+}
+.headerLink, .headerSeparator {
+	position:relative;
+	float:right;
+}
+.headerSeparator {
+	margin:0 3px;
+}
+.headerLink {
+	color:#1D1ECE;	
+}
+.headerLink:visited {
+	color:#1D1ECE;
+}
+#popOut {
+	text-decoration:none;
+	margin-left:-1px;
+	margin-top:-2px;
+}*/

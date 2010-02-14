@@ -1,49 +1,39 @@
-<!--
-/*
- * Copyright (c) 2009 Brent Weston Robinett
- * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
- */
--->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
 	<head>
-		<title>Chromey Calculator</title>		
-		
-		<link rel="stylesheet" type="text/css" href="calc.css" />
-		<style>
-			body {				
-				width:450px;				
-			}
-			.scrollableTable {				
-				position:relative;				
-				table-layout:fixed;				
-				width:100%;
-				margin:0;
-				padding:0;
-			}
-			#calcResultsWrapper {	
-				height:318px;
-				min-height:55px;
-				max-height:500px;
-			}			
-		</style>
-		<script src="jquery.js"></script>
-		<script src="history.js"></script>		
-		<script src="calc.js"></script>
+		<title>Chromey Calculator</title>
+		<link rel="stylesheet" type="text/css" href="html5-reset.css">
+		<link rel="stylesheet" type="text/css" href="css.css">
 	</head>
-	<body id="calc">	
-		<table class="scrollableTable">			
+	<body>
+		<span id="links"><a href="#">Clear</a> | <a href="#">Help</a> | <img src="popOutIcon.png"></span>
+		<div id="output">
+			<div class="input">1+1 =</div>
+			<div class="output">2</div>
+			<div class="input"><a href="#">G</a>1+1 =</div>
+			<div class="output">2</div>
+			<div class="input">1+1 =</div>
+			<div class="output">2</div>
+			<div class="input strike">1 cpus in pints=</div>
+			<div class="input">1 cups in pints=</div>
+			<div class="output">0.5 US pints</div>
+		</div>
+		<span id="input"><span>&gt;</span><input type="text"></span>
+		<script type="text/javascript" src="jquery.js"></script>
+		<script type="text/javascript" src="js.js"></script>
+		
+		<!--<table class="scrollableTable">
 			<tr>
 				<td class="shrinkCell">
-					<div id="headerWrapper">												
-						<div id="headerLinks">						
+					<div id="headerWrapper">
+						<div id="headerLinks">
 							<a href="#popOut" id="popOut" class="headerLink">
 								<img src="popOutIcon.png"/>
 							</a>
 							<span class="headerSeparator">|</span>
 							<a href="http://www.google.com/help/calculator.html" target="_tab" id="googleCalcHelp" class="headerLink">Help</a>
 							<span class="headerSeparator">|</span>
-							<a href="#calcResults" id="clearAll" class="headerLink">Clear</a>														
+							<a href="#calcResults" id="clearAll" class="headerLink">Clear</a>
 						</div>
 						<a href="https://chrome.google.com/extensions/detail/acgimceffoceigocablmjdpebeodphgc" target="_tab" id="chromeyCalcPageLink">
 							<img src="icon32.png" id="calcIcon"/>
@@ -53,20 +43,20 @@
 				</td>
 			</tr>
 			<tr>
-				<td class="scrollableCell">					
-					<div id="calcResultsWrapper" class="scrollableCellInner">						
+				<td class="scrollableCell">
+					<div id="calcResultsWrapper" class="scrollableCellInner">
 						<ul id="calcResults"></ul>
-					</div>					
-				</td>		
+					</div>
+				</td>
 			</tr>
 			<tr>
-				<td class="shrinkCell">	
+				<td class="shrinkCell">
 					<div id="calcInputWrapper">
 						<input type="text" id="calcInput" value=""/>
-						<div id="inputMarker">></div>						
-					</div>					
-				</td>		
+						<div id="inputMarker">></div>
+					</div>
+				</td>
 			</tr>
-		</table>		
-	</body>	
+		</table>-->
+	</body>
 </html>
