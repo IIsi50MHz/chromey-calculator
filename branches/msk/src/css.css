@@ -27,6 +27,8 @@ body {
 	line-height: 15px;
 	overflow: auto;
 	white-space: nowrap;
+	cursor: pointer;
+	display: table;
 }
 #output > .output {
 	margin-bottom: 10px;
