@@ -31,12 +31,15 @@ var Shell = {
 	})(),
 	
 	raw: function(val, classes, esc){
-		$("#output").append($("<div/>").addClass(classes)[esc ? "text" : "html"](val)).scrollTop(1e6);
+		var e = $("<div/>").addClass(classes)[esc ? "text" : "html"](val);
+		$("#output").append(e).scrollTop(1e6);
+		return e;
 	},
-	io: function(input, output, replace){
+	io: function(input, output, source, replace){
 		replace && Shell.raw(replace + " =", "input replace", true);
 		Shell.raw(input + " =", "input", true);
-		Shell.raw(output, "output", true);
+		var e = Shell.raw(output, "output", true);
+		source && e.prepend($("<a/>", { html: source[0], href: source[1], target: "_blank" }));
 	},
 	clear: function(){
 		$("#output").empty();
