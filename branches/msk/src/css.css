@@ -35,10 +35,10 @@ body {
 	color: #A0A0A0;
 	position: relative;
 }
-#output > .input > a {
+#output > .output > a {
 	position: absolute;
 	left: 3px;
-	display: none;
+	opacity: 0;
 }
 #output > .replace {
 	text-decoration: line-through;
