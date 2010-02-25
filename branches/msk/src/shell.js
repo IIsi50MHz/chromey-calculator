@@ -35,9 +35,9 @@ var Shell = {
 		$("#output").append(e).scrollTop(1e6);
 		return e;
 	},
-	io: function(input, output, source, replace){
-		replace && Shell.raw(replace + " =", "input replace", true);
-		Shell.raw(input + " =", "input", true);
+	io: function(input, output, source, replaced){
+		replaced && Shell.raw(input, "input replaced", true);
+		Shell.raw(replaced || input, "input", true);
 		var e = Shell.raw(output, "output", true);
 		source && e.prepend($("<a/>", { html: source[0], href: source[1], target: "_blank" }));
 	},
