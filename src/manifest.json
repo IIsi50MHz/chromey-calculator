@@ -6,17 +6,16 @@
 	"browser_action": {
 		"popup": "popup.html",
 		"default_icon": "icon.png",
-		"default_title": "Chromey Calculator"  
+		"default_title": "Chromey Calculator"
 	},
-	"icons": { 
+	"icons": {
 		"16": "icon16.png",
 		"32": "icon32.png",
 		"48": "icon48.png",
-		"128": "icon128.png" 
+		"128": "icon128.png"
 	},
-	"permissions": [		
-		"http://*.google.com/",
-		"https://*.google.com/",
-		"http://*.wolframalpha.com/"
+	"permissions": [
+		"http://www.google.com/",
+		"http://www.wolframalpha.com/"
 	]
 }

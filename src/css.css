@@ -23,7 +23,7 @@ body {
 	height: 415px;
 }
 #output > div {
-	padding-left: 15px;
+	margin-left: 15px;
 	line-height: 15px;
 	overflow: auto;
 	white-space: nowrap;
@@ -42,7 +42,7 @@ body {
 	left: 3px;
 	opacity: 0;
 }
-#output > .replace {
+#output > .replaced {
 	text-decoration: line-through;
 }
 
