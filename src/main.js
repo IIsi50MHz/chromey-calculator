@@ -63,7 +63,7 @@ $output.find(".input, .output").live("click", function(e){ // handle clicking on
 	
 	if (e.ctrlKey || e.metaKey) { // handle ctrl and command-clicking
 		Copy(result); // copy the result to the clipboard
-		$this.css("opacity", 0.001).animate({ opacity: 1 }, 700);
+		$this.css("opacity", 0).animate({ opacity: 1 }, 700);
 	} else { // insert result into the input (replacing any selection with it)
 		var cval = $input.val(), sel = $input.data("selection"),
 			head = cval.substring(0, sel.start), tail = cval.substring(sel.end);
@@ -77,32 +77,76 @@ $output.find(".input, .output").live("click", function(e){ // handle clicking on
 	}
 });
 
+$output.find(".output > a").live("click", function(e){ // handle clicking on source links
+	if (e.ctrlKey || e.metaKey) { // handle ctrl and command-clicking
+		Copy($(this).css("opacity", 0).animate({ opacity: 1 }, 700).attr("href"));
+		return false;
+	}
+});
+
 
 /*** functions ***/
 function calc(input, cb) {
-	var replaced = false, original = input;
+	var replaced = false, original = input, dym = false;
 	
 	input = vars.replace(input); // replace variables
 	if (original !== input) { replaced = true; }
 	
 	input = clean(input); // cleanup the input
 	
-	var source = "http://www.google.com/search?q=" + encodeURIComponent(input);
+	original = input;
 	
-	$.get(source, function($doc){
-		$doc = $($doc);
+	var source = "http://www.google.com/search?q=" + encodeURIComponent(input);
+	$.get(source, function(doc){
+		var $doc = $(doc), $r = $doc.find("#res > .std img[src*=calc_img]").parent().siblings("td:eq(1)").find("h2");
 		
-		var $r = $doc.find("#res > .std img[src*=calc_img]").parent().siblings("td:eq(1)").find("h2");
 		if ($r.length) {
 			$r.find("sup").prepend("^");
 			var result = $r.text().replace(/.+=\s(.+)/, "$1").replace(/(\d)\s+(\d)/g, "$1,$2").replace(/\u00D7/g, "*");
 			
-			cb(result, ["G", source], replaced ? input : "");
+			calc.ans = result;
+			cb(result, ["G", source], replaced ? input.replace(/\s*=$/, "") : "");
 		} else {
-			var dym = clean($doc.find("#res a.spell:eq(0)").text().trim().replace(/(\d)\s+(\d)/g, "$1,$2").replace(/\s*=$/, ""));
-			if (dym) {
-				replaced = true; input = dym;
+			if (dym === false && (dym = $doc.find("#res a.spell:eq(0)").text().trim())) {
+				replaced = true;
+				input = clean(dym.replace(/(\d)\s+(\d)/g, "$1,$2").replace(/\s*=$/, ""));
 				$.get(source = "http://www.google.com/search?q=" + encodeURIComponent(input), arguments.callee);
+			} else {
+				input = original;
+				if (!/^\(*\d*\)*$/.test(input)) {
+					source = "http://www.wolframalpha.com/input/?i=" + encodeURIComponent(original);
+					$.get(source, function(doc){
+						var $doc = $(doc), results = $doc.filter("script:last").html().match(/context.jsonArray.popups.+?\s=\s\{(?:.|\s)+?\};/g) || [], result;
+						
+						dym = $doc.find("#warnings").text().match(/Interpreting\s"(.+?)"\sas\s"(.+?)"/);
+						if (dym) {
+							input = input.replace(dym[1], dym[2]);
+							replaced = true;
+						}
+						
+						results.forEach(function(v, i){
+							results[i] = JSON.parse(v.trim().replace(/^.+?(\{(?:.|\s)+\});$/, "$1")).stringified;
+						});
+						
+						var r0 = results[0];
+						if (r0 && (r0 = r0.replace(/[^=]+=?/, "")) && !/^solve/i.test(input)) {
+							result = r0
+								.replace("+", " + ")
+								.replace("-", " - ")
+								.replace(/^\s-\s/, "-")
+								.replace(/\(\s-\s/, "(-");
+						} else if (results[1]) {
+							result = results[1];
+						}
+						
+						input = input.replace(/\s*=$/, "");
+						
+						result = result.trim() || input;
+						
+						calc.ans = result;
+						cb(result, ["W", source], replaced ? input : "");
+					});
+				}
 			}
 		}
 	});
