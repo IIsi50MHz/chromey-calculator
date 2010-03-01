@@ -18,29 +18,28 @@ body {
 }
 
 #output {
-	padding-bottom: 4px;
+	padding-bottom: 3px;
 	overflow: auto;
-	height: 415px;
+	height: 400px;
 }
 #output > div {
 	margin-left: 15px;
 	line-height: 15px;
 	overflow: auto;
-	white-space: nowrap;
 	cursor: pointer;
 	display: table;
 }
 #output > .output {
 	margin-bottom: 10px;
-}
-#output > .input {
-	color: #A0A0A0;
 	position: relative;
 }
 #output > .output > a {
 	position: absolute;
-	left: 3px;
+	left: -11px;
 	opacity: 0;
+}
+#output > .input {
+	color: #A0A0A0;
 }
 #output > .replaced {
 	text-decoration: line-through;
