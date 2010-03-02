@@ -7,14 +7,23 @@ body {
 
 #links {
 	position: absolute;
-	top: 5px;
-	right: 20px;
+	top: 0;
+	right: 0;
 	z-index: 999;
-	color: blue;
-	font-family: Arial;
-	background: white;
-	border-radius: 5px;
-	padding: 4px;
+	border: 1px solid #B2B2B2;
+	border-top-width: 0;
+	border-right-width: 0;
+	border-bottom-left-radius: 5px;
+	padding: 3px;
+	background-color: white;
+	font-family: sans-serif;
+}
+#links > a {
+	text-decoration: none;
+}
+#links > span {
+	margin-left: -2px;
+	display: none;
 }
 
 #output {
@@ -23,9 +32,8 @@ body {
 	height: 400px;
 }
 #output > div {
-	margin-left: 15px;
+	margin: 0 15px;
 	line-height: 15px;
-	overflow: auto;
 	cursor: pointer;
 	display: table;
 }
@@ -50,7 +58,7 @@ body {
 }
 #input > input {
 	border: 0;
-	border-top: 1px solid #D7D7D7;
+	border-top: 1px solid #B2B2B2;
 	outline: 0;
 	font: inherit;
 	padding: 2px 0 5px 18px;
@@ -60,7 +68,7 @@ body {
 	-webkit-box-sizing: border-box;
 }
 #input > span {
-	color: #808080;
+	color: #505050;
 	position: absolute;
 	bottom: 5px;
 	left: 5px;

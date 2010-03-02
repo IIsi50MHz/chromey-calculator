@@ -1,4 +1,4 @@
-(function(window, undefined){
+(function(window, document, undefined){
 
 /*** variables ***/
 var $input = $("#input > input"), $output = $("#output");
@@ -6,6 +6,12 @@ var $input = $("#input > input"), $output = $("#output");
 
 /*** setup ***/
 $input.focus(); // focus the input
+
+if (window.opener !== null) {
+	$("body").css("width", "auto");
+	$("#output").css("height", "auto");
+	$("#input").css({ position: "fixed", bottom: 0 });
+}
 
 
 /*** events ***/
@@ -35,9 +41,9 @@ $input.keydown(function(e){ // handle enter and up/down keypresses
 				// add the result
 				Shell.io(val + " =", result, source, replace && replace + " =");
 				
-				// limit number of results
 				var $results = $output.children();
-				$results.length > 400 && $results.slice(0, $results.length - 400).remove();
+				
+				$results.length > 400 && $results.slice(0, $results.length - 400).remove(); // limit number of results
 				
 				$results.eq(-1).find("a").css("opacity", 1).animate({ opacity: 0 }, 1500); // momentarily show the source
 			});
@@ -84,6 +90,17 @@ $output.find(".output > a").live("click", function(e){ // handle clicking on sou
 	}
 });
 
+$("#links > a").toggle(function(){
+	$(this).text(">").siblings("span").show();
+}, function(){
+	$(this).text("<").siblings("span").hide();
+});
+
+$("#clear-link").click(Shell.clear);
+
+$("#popout-link").click(function(){
+	window.open("popup.html", "chromeypopout", "width=450,height=438,scrollbars=no");
+});
 
 /*** functions ***/
 function calc(input, cb) {
@@ -116,7 +133,7 @@ function calc(input, cb) {
 				if (!/^\(*\d*\)*$/.test(input)) {
 					source = "http://www.wolframalpha.com/input/?i=" + encodeURIComponent(original);
 					$.get(source, function(doc){
-						var $doc = $(doc), results = $doc.filter("script:last").html().match(/context.jsonArray.popups.+?\s=\s\{(?:.|\s)+?\};/g) || [], result;
+						var $doc = $(doc), results = $doc.filter("script:last").html().match(/context.jsonArray.popups.+?\s=\s\{(?:.|\s)+?\};/g) || [], result = "";
 						
 						dym = $doc.find("#warnings").text().match(/Interpreting\s"(.+?)"\sas\s"(.+?)"/);
 						if (dym) {
@@ -141,10 +158,8 @@ function calc(input, cb) {
 						
 						input = input.replace(/\s*=$/, "");
 						
-						result = result.trim() || input;
-						
-						calc.ans = result;
-						cb(result, ["W", source], replaced ? input : "");
+						calc.ans = result || input;
+						cb(result || input, result ? ["W", source] : [], replaced ? input : "");
 					});
 				}
 			}
@@ -176,4 +191,4 @@ var vars = {
 	}
 };
 
-})(window);
+})(this, this.document);

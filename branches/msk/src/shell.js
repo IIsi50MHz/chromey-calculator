@@ -35,11 +35,14 @@ var Shell = {
 		$("#output").append(e).scrollTop(1e6);
 		return e;
 	},
+	info: function(){
+		Shell.raw($.makeArray(arguments).join(" "), "", true);
+	},
 	io: function(input, output, source, replaced){
 		replaced && Shell.raw(input, "input replaced", true);
 		Shell.raw(replaced || input, "input", true);
 		var e = Shell.raw(output, "output", true);
-		source && e.prepend($("<a/>", { html: source[0], href: source[1], target: "_blank" }));
+		source && e.prepend($("<a/>", { html: source[0], href: source[1], target: "_tab" }));
 	},
 	clear: function(){
 		$("#output").empty();
