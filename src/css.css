@@ -6,7 +6,7 @@ body {
 }
 
 #links {
-	position: absolute;
+	position: fixed;
 	top: 0;
 	right: 0;
 	z-index: 999;
@@ -27,7 +27,7 @@ body {
 }
 
 #output {
-	padding-bottom: 3px;
+	margin-bottom: 3px;
 	overflow: auto;
 	height: 400px;
 }
@@ -44,7 +44,6 @@ body {
 #output > .output > a {
 	position: absolute;
 	left: -11px;
-	opacity: 0;
 }
 #output > .input {
 	color: #A0A0A0;
