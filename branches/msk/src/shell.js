@@ -32,7 +32,7 @@ var Shell = {
 	
 	raw: function(val, classes, esc){
 		var e = $("<div/>").addClass(classes)[esc ? "text" : "html"](val);
-		$("#output").append(e).scrollTop(1e6);
+		$("#output").append(e).add(document).scrollTop(1e6);
 		return e;
 	},
 	info: function(){
@@ -42,7 +42,7 @@ var Shell = {
 		replaced && Shell.raw(input, "input replaced", true);
 		Shell.raw(replaced || input, "input", true);
 		var e = Shell.raw(output, "output", true);
-		source && e.prepend($("<a/>", { html: source[0], href: source[1], target: "_tab" }));
+		source && e.prepend($("<a/>", { html: source[0], href: source[1], target: "_tab" }).animate({ opacity: 0 }, 1500));
 	},
 	clear: function(){
 		$("#output").empty();
