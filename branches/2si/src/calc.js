@@ -46,6 +46,26 @@
 		background.calcPopOut = window.open('calc.html', 'calcPopOut', localStorage.popOutWindowInfo || defaultPopOutWindowInfo);		
 	}
 	
+	// Zoom the entire Chromey UI.
+	function popZoomLevel() {
+		var zoomLevel = $("body").css("zoom");
+
+		// --- Maximum zoom that doesn't require layout changes is 1.54! ---
+		// Compare to 1.27 and use 0.27 increment for three zoom levels.
+		// Compare to 1.36 and use 0.18 increment for four zoom levels.
+		if (parseFloat(zoomLevel) <= 1.27) {
+			zoomLevel = parseFloat(zoomLevel) + 0.27;
+			$("body").css("zoom", zoomLevel);
+			$("body").css("overflow", "hidden");
+		} else {
+			zoomLevel=1;
+			$("body").css("zoom", "1");
+			$("body").css("overflow", "hidden");
+		}
+		// Store last-used zoom level
+		localStorage.zoomLevel = zoomLevel;
+	}
+	
 	// Store pop-out position and dimentions as a single string that can be passed to window.open()
 	function savePopOutWindowInfo() {			
 		var height = ",height="+window.innerHeight;
@@ -82,6 +102,11 @@
 		
 		// restore displayed results
 		$calcResults[0].innerHTML = localStorage.calcResults || '';
+		
+		// restore zoom level
+		zoomLevel = localStorage.zoomLevel;
+		$("body").css("zoom", zoomLevel);
+		$("body").css("overflow", "hidden");
 
 		// restore results scroll position (actually... scroll to bottom);
 		if (background.calcPopOut === window) {
@@ -162,6 +187,11 @@
 		
 		$("#popOut").click(function () {
 			popOutCalc();
+		});
+
+		// receive "Zoom" link clicks
+		$("#zoomLevel").click(function () {
+			popZoomLevel();
 		});
 
 		// handle enter and arrow keydown events
