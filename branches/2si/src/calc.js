@@ -207,6 +207,8 @@
 					localStorage.alphaOn = 'true';
 				} else if (inputVal === 'alphaOff') {
 					localStorage.alphaOn = 'false';
+				} else if (inputVal === 'zoomlvl') {
+					popZoomLevel();
 				} else {													
 					// do calculation
 					calc(inputVal, function () {						
