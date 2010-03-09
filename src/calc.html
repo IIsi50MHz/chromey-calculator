@@ -3,12 +3,17 @@
 	<head>
 		<title>Chromey Calculator</title>
 		<link rel="stylesheet" type="text/css" href="html5-reset.css">
-		<link rel="stylesheet" type="text/css" href="css.css">
+		<link rel="stylesheet" type="text/css" href="calc.css">
 	</head>
 	<body>
 		<span id="links">
 			<a href="#">&lt;</a>
-			<span>| <a href="#" id="clear-link">Clear</a> | <a href="help.html" target="_tab">Help</a> | <a href="#" id="popout-link">Popout</a></span>
+			<span>|
+				<a href="#" id="clear-link">Clear</a> |
+				<a href="help.html" target="_tab">Help</a> |
+				<a href="options.html" target="_tab">Options</a> |
+				<a href="#" id="popout-link">Popout</a>
+			</span>
 		</span>
 		
 		<div id="output"></div>
@@ -16,6 +21,7 @@
 		
 		<script type="text/javascript" src="jquery.js"></script>
 		<script type="text/javascript" src="shell.js"></script>
+		<script type="text/javascript" src="calc.js"></script>
 		<script type="text/javascript" src="main.js"></script>
 	</body>
 </html>

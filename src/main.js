@@ -1,4 +1,4 @@
-(function(window, document, undefined){
+(function(window, document, localStorage, undefined){
 
 /*** variables ***/
 var $input = $("#input > input"), $output = $("#output");
@@ -7,21 +7,33 @@ var $input = $("#input > input"), $output = $("#output");
 /*** setup ***/
 $input.focus(); // focus the input
 
-if (window.opener !== null) {
+if (window.location.hash !== "popup") {
 	$("body").css("width", "auto");
 	$("#output").css({ height: "auto", marginBottom: "26px" });
 	$("#input").css({ position: "fixed", bottom: 0 });
 }
 
-for (var i = 0; i < 11; i++) { Shell.io("foo", "bar"); }
+if ("v" in localStorage) {
+	loadData();
+} else {
+	localStorage.v = "4";
+}
 
 
 /*** events ***/
 $output.find(".output > a")
 	.live("mouseenter", function(){ $(this).stop().css("opacity", 1); }) // show the link (if any) to the result source
-	.live("mouseleave", function(){ $(this).animate({ opacity: 0 }, 500); }); // hide the link
+	.live("mouseleave", function(){ $(this).animate({ opacity: 0 }, 500); }) // hide the link
+	.live("click", function(e){ // handle clicking on source links
+		if (e.ctrlKey || e.metaKey) { // handle ctrl and command-clicking
+			Copy($(this).css("opacity", 0).animate({ opacity: 1 }, 700).attr("href"));
+			return false;
+		}
+	});
 
-$(window).bind("unload blur", function(){});
+$(window).bind("unload blur", function(){
+	saveData();
+});
 
 // refocus the input no matter what is clicked
 $(document).click(function(){ $input.focus(); }).add("#output").scroll(function(){ $input.focus(); });
@@ -33,17 +45,19 @@ $input.keydown(function(e){ // handle enter and up/down keypresses
 		if (val.toLowerCase() === "clear") { // clear the results
 			Shell.clear();
 		} else if (m = val.match(/^@(\w+)\s*=\s*(.+)/)) { // we're setting a variable
-			Vars.add(m[1], m[2]);
+			Vars.add(m[1], m[2], function(result, source){
+				Shell.io("@" + m[1] + " = " + m[2], result, source);
+			});
 		} else if (m = val.match(/^@(\w+)\s*=?$/)) { // we're getting a variable
 			var v = Vars.list[m[1]] || { original: "", value: "undefined", source: ["", ""] };
 			Shell.raw("@" + m[1] + " =", "input");
 			Shell.raw(v.original, "replaced");
 			Shell.raw(v.value, "output").prepend($("<a/>", { html: v.source[0], href: v.source[1], target: "_tab" }).animate({ opacity: 0 }, 1500));
 		} else { // try calculating it
-			val = val.replace(/\s*=$/, ""); // remove trailing =
-			calc(val, function(result, source, replace){
+			var input = val.replace(/\s*=$/, ""); // remove trailing =
+			calc(input, function(result, source, replace){
 				// add the result
-				Shell.io(val + " =", result, source, replace && replace + " =");
+				Shell.io(input + " =", result, source, replace && replace + " =");
 				
 				var $results = $output.children();
 				
@@ -85,13 +99,6 @@ $output.find(".input, .output").live("click", function(e){ // handle clicking on
 	}
 });
 
-$output.find(".output > a").live("click", function(e){ // handle clicking on source links
-	if (e.ctrlKey || e.metaKey) { // handle ctrl and command-clicking
-		Copy($(this).css("opacity", 0).animate({ opacity: 1 }, 700).attr("href"));
-		return false;
-	}
-});
-
 $("#links > a").toggle(function(){
 	$(this).text(">").siblings("span").show();
 }, function(){
@@ -101,81 +108,37 @@ $("#links > a").toggle(function(){
 $("#clear-link").click(Shell.clear);
 
 $("#popout-link").click(function(){
-	window.open("popup.html", "chromeypopout", "width=450,height=450,scrollbars=no");
+	saveData();
+	
+	var p = JSON.parse(localStorage.popout || '{"top":100,"left":100,"width":450,"height":450}');
+	window.open("calc.html", "chromeypopout", "top=" + p.top + ",left=" + p.left + ",width=" + p.width + ",height=" + p.height);
 });
 
 /*** functions ***/
-function calc(input, cb) {
-	var replaced = false, original = input, dym = false;
+function saveData() {
+	localStorage.hist = JSON.stringify(Shell.hist);
+	localStorage.vars = JSON.stringify(Vars.list);
+	localStorage.ans = calc.ans;
+	localStorage.input = $input.val();
+	localStorage.results = $output.html();
 	
-	input = Vars.replace(input); // replace variables
-	if (original !== input) { replaced = true; }
-	
-	input = clean(input); // cleanup the input
-	
-	original = input;
-	
-	var source = "http://www.google.com/search?q=" + encodeURIComponent(input);
-	$.get(source, function(doc){
-		var $doc = $(doc), $r = $doc.find("#res > .std img[src*=calc_img]").parent().siblings("td:eq(1)").find("h2");
-		
-		if ($r.length) {
-			$r.find("sup").prepend("^");
-			var result = $r.text().replace(/.+=\s(.+)/, "$1").replace(/(\d)\s+(\d)/g, "$1,$2").replace(/\u00D7/g, "*");
-			
-			calc.ans = result;
-			cb(result, ["G", source], replaced ? input.replace(/\s*=$/, "") : "");
-		} else {
-			if (dym === false && (dym = $doc.find("#res a.spell:eq(0)").text().trim())) {
-				replaced = true;
-				input = clean(dym.replace(/(\d)\s+(\d)/g, "$1,$2").replace(/\s*=$/, ""));
-				$.get(source = "http://www.google.com/search?q=" + encodeURIComponent(input), arguments.callee);
-			} else {
-				input = original;
-				if (!/^\(*\d*\)*$/.test(input)) {
-					source = "http://www.wolframalpha.com/input/?i=" + encodeURIComponent(original);
-					$.get(source, function(doc){
-						var $doc = $(doc), results = $doc.filter("script:last").html().match(/context.jsonArray.popups.+?\s=\s\{(?:.|\s)+?\};/g) || [], result = "";
-						
-						dym = $doc.find("#warnings").text().match(/Interpreting\s"(.+?)"\sas\s"(.+?)"/);
-						if (dym) {
-							input = input.replace(dym[1], dym[2]);
-							replaced = true;
-						}
-						
-						results.forEach(function(v, i){
-							results[i] = JSON.parse(v.trim().replace(/^.+?(\{(?:.|\s)+\});$/, "$1")).stringified;
-						});
-						
-						var r0 = results[0];
-						if (r0 && (r0 = r0.replace(/[^=]+=?/, "")) && !/^solve/i.test(input)) {
-							result = r0
-								.replace("+", " + ")
-								.replace("-", " - ")
-								.replace(/^\s-\s/, "-")
-								.replace(/\(\s-\s/, "(-");
-						} else if (results[1]) {
-							result = results[1];
-						}
-						
-						input = input.replace(/\s*=$/, "");
-						
-						calc.ans = result || input;
-						cb(result || input, result ? ["W", source] : [], replaced ? input : "");
-					});
-				}
-			}
-		}
-	});
-	
-	function clean(txt) {
-		return txt
-			.replace(/(\d)\s+(\d)/g, "$1*$2") // replace spaces between numbers with a *
-			.replace(/\(\s*\(/g, ")*(") // add * between parentheses
-			.replace(/(.*\d\s*\)*\s*)$/g, "$1="); // add an = at the end of expressions that end with a number, or a number follow by a )
+	if (window.opener !== null) {
+		localStorage.popout = JSON.stringify({
+			top: window.screenTop,
+			left: window.screenLeft,
+			width: window.innerWidth,
+			height: window.innerHeight
+		});
 	}
 }
-calc.ans = "";
+
+function loadData() {
+	Shell.hist.set(JSON.parse(localStorage.hist));
+	Vars.list = JSON.parse(localStorage.vars);
+	calc.ans = localStorage.ans;
+	$input.val(localStorage.input);
+	$output.html(localStorage.results);
+}
 
 function Copy(v) { // copies text to the clipboard
 	var txt = $("<textarea/>").val(v).css({ position: "absolute", left: "-100%" }).appendTo("body");
@@ -184,24 +147,4 @@ function Copy(v) { // copies text to the clipboard
 	txt.remove();
 }
 
-
-/*** other ***/
-var Vars = {
-	list: {},
-	add: function(name, value){
-		calc(value, function(result, source){
-			Vars.list[name] = {
-				value: result,
-				original: value,
-				source: source
-			};
-			
-			Shell.io("@" + name + " = " + value, result, source);
-		});
-	},
-	replace: function(txt){
-		return txt.replace(/@(?!\w)/g, "(" + calc.ans + ")").replace(/@(\w+)/g, function(m, n){ return "(" + Vars.list[n].value + ")"; });
-	}
-};
-
-})(this, this.document);
+})(this, this.document, this.localStorage);
