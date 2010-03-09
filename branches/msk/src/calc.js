@@ -12,7 +12,7 @@ var Vars = {
 		});
 	},
 	replace: function(txt){
-		return txt.replace(/@(?!\w)/g, "(" + calc.ans + ")").replace(/@(\w+)/g, function(m, n){ return "(" + Vars.list[n].value + ")"; });
+		return txt.replace(/@(?!\w)/g, "(" + calc.ans + ")").replace(/@(\w+)/g, function(m, n){ return "(" + ((Vars.list[n] || {}).value) + ")"; });
 	}
 };
 
