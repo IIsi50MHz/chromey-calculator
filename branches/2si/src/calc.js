@@ -207,7 +207,8 @@
 					localStorage.alphaOn = 'true';
 				} else if (inputVal === 'alphaOff') {
 					localStorage.alphaOn = 'false';
-				} else if (inputVal === 'zoomlvl') {
+				} else if (inputVal === 'zoom') {
+					// Can still get W|Alpha's response for "zoom" by using "lookup zoom" instead.
 					popZoomLevel();
 				} else {													
 					// do calculation
