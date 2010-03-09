@@ -4,7 +4,7 @@
 	"description": "A shockingly versatile scrolling calculator for Chrome. Results are generated using Google and Wolfram|Alpha.",
 	"background_page": "background.html",
 	"browser_action": {
-		"popup": "popup.html",
+		"popup": "calc.html#popup",
 		"default_icon": "16.png",
 		"default_title": "Chromey Calculator"
 	},
