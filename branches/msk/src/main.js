@@ -7,7 +7,7 @@ var $input = $("#input > input"), $output = $("#output");
 /*** setup ***/
 $input.focus(); // focus the input
 
-if (window.location.hash !== "popup") {
+if (window.location.hash !== "#popup") {
 	$("body").css("width", "auto");
 	$("#output").css({ height: "auto", marginBottom: "26px" });
 	$("#input").css({ position: "fixed", bottom: 0 });
