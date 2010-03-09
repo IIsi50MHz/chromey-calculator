@@ -2,7 +2,7 @@
 
 /*** variables ***/
 var $input = $("#input > input"), $output = $("#output");
-
+window._opener = window.opener !== null;
 
 /*** setup ***/
 $input.focus(); // focus the input
@@ -99,10 +99,11 @@ $output.find(".input, .output").live("click", function(e){ // handle clicking on
 	}
 });
 
-$("#links > a").toggle(function(){
-	$(this).text(">").siblings("span").show();
-}, function(){
-	$(this).text("<").siblings("span").hide();
+$("#links > a").click(function(){
+	var $this = $(this), $span = $this.siblings("span"), open = $span.is(":visible");
+	$this.text(open ? "<" : ">");
+	$span[open ? "hide" : "show"]();
+	localStorage.linksOpen = !open;
 });
 
 $("#clear-link").click(Shell.clear);
@@ -122,7 +123,7 @@ function saveData() {
 	localStorage.input = $input.val();
 	localStorage.results = $output.html();
 	
-	if (window.opener !== null) {
+	if (window._opener) {
 		localStorage.popout = JSON.stringify({
 			top: window.screenTop,
 			left: window.screenLeft,
@@ -138,6 +139,9 @@ function loadData() {
 	calc.ans = localStorage.ans;
 	$input.val(localStorage.input);
 	$output.html(localStorage.results);
+	
+	var linksOpen = "linksOpen" in localStorage ? JSON.parse(localStorage.linksOpen) : true;
+	$("#links > span")[linksOpen ? "show" : "hide"]().siblings("a").text(linksOpen ? ">" : "<");
 }
 
 function Copy(v) { // copies text to the clipboard
