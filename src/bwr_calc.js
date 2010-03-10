@@ -428,7 +428,7 @@
 			}
 			if (afterEqual &&  !input.match(/^\s*solve/i)) {
 				flag.hasAlphaResult = true;
-				// make ouput look nicer
+				// make output look nicer
 				output = afterEqual.
 					replace("+", " + ").
 					replace("-", " - ").
@@ -481,7 +481,7 @@
 			if (!expr) {
 				return '';
 			}
-			return "<div class='ouput'><span class='"+type+"'>" + expr + " =</span></div>";
+			return "<div class='output'><span class='"+type+"'>" + expr + " =</span></div>";
 		}
 		
 		function createLinkHtml(queryType, uri) {		
