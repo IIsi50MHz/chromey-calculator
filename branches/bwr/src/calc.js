@@ -483,7 +483,7 @@
 				}
 				if (afterEqual &&  !input.match(/^\s*solve/i)) {
 					flag.hasAlphaResult = true;
-					// make ouput look nicer
+					// make output look nicer
 					output = afterEqual.
 						replace("+", " + ").
 						replace("-", " - ").
