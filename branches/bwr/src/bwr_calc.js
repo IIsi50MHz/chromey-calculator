@@ -31,7 +31,7 @@
 			// user variables
 			lastRawOutput, // gets substitued for @ (last result) variable
 			lastAns,
-			varMap = {};		
+			varMap = {};
 
 		// focus input area
 		$calcInput.focus();
@@ -48,7 +48,7 @@
 		});
 
 		// handle enter and arrow keydown events
-		$calcInput.keydown(function (e) {			
+		$calcInput.keydown(function (e) {
 			var inputVal = this.value.trim();
 			// handle special keys
 			if (e.which === 13 && inputVal) { // enter
@@ -193,14 +193,14 @@
 	//			status: <current status of result search>,
 	//			output: <final output>, // TODO: need displayOutput and varOutput???
 	//		}
-	var calc = (function () {
+	calc = (function () {
 		var queryTypeByStatus = { // Used to decide to query Google or Wolfram|Alpha
 				"trying google": "google",
 				"trying google, did you mean": "google",
 				"trying alpha": "alpha",
 				"failed": ""
 			},
-			nextStatusByStatus = { // Used to decide what query to try next if last query failed				
+			nextStatusByStatus = { // Used to decide what query to try next if last query failed
 				"trying google": "trying google, did you mean",
 				"trying google, did you mean": "trying alpha",
 				"trying alpha": "failed"
@@ -261,8 +261,8 @@
 				calc.result.varSubstInput = input;
 			}
 
-			// Go fishing for a result			
-			calcQuery(input, function () {				
+			// Go fishing for a result
+			calcQuery(input, function () {
 				callback && callback();
 			});
 		}
@@ -284,20 +284,20 @@
 				// Query for result
 				$.ajax({
 					url: createQueryUri[queryType](input),
-					success: function (doc) {						
-						var output = extractCalcOutput[queryType](doc).forDisplay;						
+					success: function (doc) {
+						var output = extractCalcOutput[queryType](doc).forDisplay;
 						calc.result = calc.result || {};
 						// No result yet...
-						if (!output) {							
+						if (!output) {
 							// Update status
-							calc.result.status = nextStatusByStatus[calc.result.status];							
+							calc.result.status = nextStatusByStatus[calc.result.status];
 							// Check for "Did You Mean"
-							if (calc.result.status === "trying google, did you mean") {								
-								calc.result.correctedInput = grabDidYouMeanInput(doc);								
-								if (calc.result.correctedInput) {									
+							if (calc.result.status === "trying google, did you mean") {
+								calc.result.correctedInput = grabDidYouMeanInput(doc);
+								if (calc.result.correctedInput) {
 									input = calc.result.correctedInput;
 								}
-							}							
+							}
 							// Keep trying...
 							calcQuery(input, callback);
 						// Result found.
@@ -313,9 +313,9 @@
 		}
 
 		// Grab "Did You Mean" if it exists
-		function grabDidYouMeanInput(doc) {			
+		function grabDidYouMeanInput(doc) {
 			return $(doc).find(".spell").filter('a').eq(0).text();
-		}		
+		}
 		function isNothing(input) {
 			return !!input.match(rx.nothing);
 		}
@@ -355,7 +355,7 @@
 	//		uri = createQueryUri[queryType](input);
 	//	* Returns:
 	//		<a uri>
-	var createQueryUri = (function () {
+	createQueryUri = (function () {
 		// Google uri
 		function generateInputGoogleQueryUri(input) {
 			return queryUriHead.google + encodeURIComponent(input);
@@ -363,8 +363,8 @@
 		// Wolfram|Alpha uri
 		function generateInputAlphaQueryUri(input) {
 			return queryUriHead.alpha + encodeURIComponent(input);
-		}		
-		
+		}
+
 		return {
 			google: generateInputGoogleQueryUri,
 			alpha: generateInputAlphaQueryUri
@@ -383,7 +383,7 @@
 	//			forDisplay: <output for display>,
 	//			forVars: <output for storing in variables>
 	// 		}
-	var extractCalcOutput = (function () {
+	extractCalcOutput = (function () {
 		// Extract output from google query result doc
 		function extractGoogleCalcOutput(doc) {
 			var $doc = $(doc);
@@ -393,7 +393,7 @@
 				parents('td:eq(0)').siblings().find('*').
 				filter(function () {return $(this).text().match(' = ')}).
 				slice(-1).html();
-			
+
 			if (docHtml) {
 				// clean up result for copy/paste...
 				docHtml = docHtml.
@@ -423,7 +423,7 @@
 			var context = {jsonArray: {popups: {}}};
 			var resultObj = context.jsonArray.popups;
 
-			$.each(resultsArray, function (i, val) {				
+			$.each(resultsArray, function (i, val) {
 				try {
 					eval(val.replace(/",.*/, '"}'));
 				}
@@ -476,7 +476,7 @@
 	//		uri = createQueryUri[queryType](input);
 	//	* Returns:
 	//		<a uri>
-	var resultHtml = (function () {
+	resultHtml = (function () {
 		function createIntputHtml(type, expr) {
 			if (!expr) {
 				return '';
@@ -537,7 +537,7 @@
 
 			// Output
 			resultInnerHtml += createOutputHtml('outputText', result.output);
-			
+
 			// Full result html
 			return "<li class='result'>"+ resultInnerHtml + "</li>";
 		}
