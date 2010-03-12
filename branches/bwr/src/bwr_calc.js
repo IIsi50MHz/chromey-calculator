@@ -2,7 +2,7 @@
  * Copyright (c) 2010 Brent Weston Robinett
  * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
  */
-(function () {
+var cCalc =(function () {
 	// -----------------------------------------------------------------------
 	// 	Module declarations
 	// -----------------------------------------------------------------------
@@ -55,11 +55,7 @@
 				// check for commands
 				if (inputVal === 'clear') {
 					// clear results
-					$calcResults.empty();
-				} else if (inputVal === 'alphaOn') {
-					localStorage.alphaOn = 'true';
-				} else if (inputVal === 'alphaOff') {
-					localStorage.alphaOn = 'false';
+					$calcResults.empty();			
 				} else {
 					// do calculation
 					calc.findResult(inputVal, function () {
@@ -136,7 +132,7 @@
 	// -----------------------------------------------------------------------
 	// 	Stuff that needs a home
 	// -----------------------------------------------------------------------
-	// TODO: Find a home for this stuff
+	// TODO: Find a better home for this stuff
 
 	// query uri heads
 	var queryUriHead = {
@@ -150,23 +146,7 @@
 	function storeCalcInfo() {
 		// TODO
 	}
-	function getVarRhExpr(input) {
-		// TODO
-		return input;
-	}
-	function getVarLhExpr(input) {
-		// TODO
-		return input;
-	}
-	function getVarVal(varName) {
-		// TODO
-		return varName;
-	}
-	function substVar(input) {
-		// TODO
-		return input;
-	}
-
+	
 	// -----------------------------------------------------------------------
 	// 	Module definitions
 	// -----------------------------------------------------------------------
@@ -176,14 +156,14 @@
 	//	calc.findResult(input, callback)
 	//		Takes user input and tries to find a result.
 	// 	calc.result
-	//		An object with stuff about result in it. (Used for generating html for result, among other things.)
+	//		An object containing a bunch of result info. (Used for generating html for result, among other things.)
 	// -----------------------------------------------------------------------
 	//	calc.findResult(input, callback)
 	// 	calc.result
 	// 		{
 	//			origInput: <original user input>,
 	//			number: <original user input, only if it was a number>,
-	//			varVal: <value of varaible, only if insepecting variable>,
+	//			varVal: <value of variable, only if insepecting variable>,
 	//			varLhExpr: <lh side of variable assignment, only if there was an assignment>,
 	//			varRhExpr: <rh side of variable assignment, only if there was an assignment>,
 	//			varSubstInput: <input with variables substituted, only if there were any>,
@@ -191,16 +171,18 @@
 	//			uri: <uri of query, only if there was a successful query>,
 	//			queryType: <query type, only if there was a successful query>,
 	//			status: <current status of result search>,
-	//			output: <final output>, // TODO: need displayOutput and varOutput???
+	//			output: <final output>,
+	//			outputDisplay: <final output for display>,
+	//			outputPlain: <final plain text output>
 	//		}
 	calc = (function () {
-		var queryTypeByStatus = { // Used to decide to query Google or Wolfram|Alpha
+		var queryTypeByStatus = { // Used to decide to query Google or Wolfram|Alpha or give up
 				"trying google": "google",
 				"trying google, did you mean": "google",
 				"trying alpha": "alpha",
 				"failed": ""
-			},
-			nextStatusByStatus = { // Used to decide what query to try next if last query failed
+			},			
+			nextStatus = { // Used to decide what query to try next if last query failed
 				"trying google": "trying google, did you mean",
 				"trying google, did you mean": "trying alpha",
 				"trying alpha": "failed"
@@ -214,57 +196,58 @@
 
 		// Extract output from query result doc
 		function findResult(input, callback) {
-			var inputIsNothing = isNothing(input),
-				inputIsNumber = isNumber(input),
-				inputIsVarInspect = isVarInspect(input),
-				inputIsVarAssign = isVarAssign(input);
-
 			// Reset result object
-			calc.result = {}; // Used to help contruct all the pieces of the result html
-
+			var result = calc.result = {}; // Used to help contruct all the pieces of the result html	
+			
 			// Save original input to result object
-			calc.result.origInput = input;
-
-			// Input is nothing, no query
-			if (inputIsNothing) {
-				//console.debug("----inputIsNothing", input)
-				calc.result.output = "";
-				callback && callback(calc.result);
-				return;
-			// Input is just a number, no query
-			} else if (inputIsNumber) {
-				//console.debug("----inputIsNumber", input)
-				calc.result.output = calc.result.number = input;
-				callback && callback(calc.result);
-				return;
-			// Input is a variable inspection, no query
-			} else if (inputIsVarInspect) {
-				//console.debug("----inputIsVarInspect", input)
-				calc.result.output = calc.result.varVal = getVarVal(input);
-				callback && callback(calc.result);
-				return;
-			// Input is a variable assignment
-			} else if (inputIsVarAssign) {
+			result.origInput = input;
+			
+			// Input is a variable assignment			
+			if (isVarAssign(input)) {
 				//console.debug("----inputIsVarAssign", input)
 				// Save LH and RH parts of input
-				calc.result.varLhExpr = getVarLhExpr(input);
-				calc.result.varRhExpr = getVarRhExpr(input);
+				result.varLhExpr = getVarLhName(input);
+				result.varRhExpr = getVarRhExpr(input);
 
 				// Update input to RH expression for calcQuery
-				input = calc.result.varRhExpr;
-			}
+				input = result.varRhExpr;
+			}		
 
+			// Input is nothing, no query
+			var doQuery = true;
+			if (isNothing(input)) {
+				//console.debug("----inputIsNothing", input)
+				result.outputDisplay = result.outputPlain = "";
+				doQuery = false;				
+			// Input is just a number, no query
+			} else if (isNumber(input)) {
+				//console.debug("----inputIsNumber", input)
+				result.outputDisplay = result.outputPlain = result.number = input;
+				doQuery = false;
+			// Input is a variable inspection, no query
+			} else if (isVarInspect(input)) {
+				//console.debug("----inputIsVarInspect", input)
+				result.outputDisplay = result.outputPlain = result.varVal = getVarVal(input);
+				doQuery = false;				
+			}
+			
 			// Variable substitution
-			input = substVar(input);
+			input = calcVars.subst(input);
 			// Update result object if there were any substitutions
-			if (input !== calc.result.origInput && input !== calc.result.varRhExpr) {
-				calc.result.varSubstInput = input;
+			if (input !== result.origInput && input !== result.varRhExpr) {
+				result.varSubstInput = input;
 			}
-
-			// Go fishing for a result
-			calcQuery(input, function () {
+			
+			if (doQuery) {
+				// Go fishing for a result
+				calcQuery(input, function () {
+					callback && callback();
+				});
+			} else {
+				// Done. No query needed.
 				callback && callback();
-			});
+				return;
+			}
 		}
 
 		// Go find a result
@@ -273,39 +256,41 @@
 			if (!calc.result.status) {
 				calc.result.status = "trying google";
 			}
-			var queryType = queryTypeByStatus[calc.result.status || ""];
-			var didYouMeanInfo = {};
-			if (calc.result.status === "failed") {
+			var queryType = queryTypeByStatus[calc.result.status || ""],
+				didYouMeanInfo = {},
+				result = calc.result;
+			if (result.status === "failed") {
 				// No result found. Give up.
-				calc.result.output = input;
-				calc.result.queryType = queryType;
-				callback && callback(calc.result);
+				result.outputDisplay = result.outputPlain = input;
+				result.queryType = queryType;
+				callback && callback(result);
 			} else {
 				// Query for result
 				$.ajax({
 					url: createQueryUri[queryType](input),
 					success: function (doc) {
-						var output = extractCalcOutput[queryType](doc).forDisplay;
-						calc.result = calc.result || {};
+						var output = extractCalcOutput[queryType](doc);
+						result = result || {};
 						// No result yet...
-						if (!output) {
+						if (!output.plain) {
 							// Update status
-							calc.result.status = nextStatusByStatus[calc.result.status];
+							result.status = nextStatus[result.status];
 							// Check for "Did You Mean"
-							if (calc.result.status === "trying google, did you mean") {
-								calc.result.correctedInput = grabDidYouMeanInput(doc);
-								if (calc.result.correctedInput) {
-									input = calc.result.correctedInput;
+							if (result.status === "trying google, did you mean") {
+								result.correctedInput = grabDidYouMeanInput(doc);
+								if (result.correctedInput) {
+									input = result.correctedInput;
 								}
 							}
 							// Keep trying...
 							calcQuery(input, callback);
 						// Result found.
 						} else {
-							calc.result.output = output;
-							calc.result.queryType = queryType;
-							calc.result.uri = createQueryUri[queryType](input);
-							callback && callback(calc.result);
+							result.outputDisplay = output.display;
+							result.outputPlain = output.plain;
+							result.queryType = queryType;
+							result.uri = createQueryUri[queryType](input);
+							callback && callback(result);
 						}
 					}
 				});
@@ -328,19 +313,20 @@
 		function isVarAssign(input) {
 			return !!input.match(rx.varAssign);
 		}
-		function getVarRhExpr(input) {
+		function getVarRhExpr(input) {			
+			return input.replace(/^\s*@\w*\s*=\s*(.+)\s*$/i, "$1");
+		}
+		function getVarLhName(input) {
+			return input.replace(/^\s*(@\w*)\s*=\s*.+\s*$/i, "$1");		
+		}
+		function substVar(input) {
 			// TODO
 			return input;
-		}
-		function getVarLhExpr(input) {
-			// TODO
-			return input;
-		}
+		}		
 		function getVarVal(varName) {
 			// TODO
 			return varName;
-		}
-
+		}		
 		return {
 			findResult: findResult,
 			result: {}
@@ -364,7 +350,6 @@
 		function generateInputAlphaQueryUri(input) {
 			return queryUriHead.alpha + encodeURIComponent(input);
 		}
-
 		return {
 			google: generateInputGoogleQueryUri,
 			alpha: generateInputAlphaQueryUri
@@ -377,11 +362,11 @@
 	//  Extracts output from query result doc.
 	//	* Examples:
 	//		output = extractCalcOutput[queryType](doc);
-	//		outputForDisplay = output.forDisplay;
+	//		outputdisplay = output.display;
 	//	* Returns:
 	//		{
-	//			forDisplay: <output for display>,
-	//			forVars: <output for storing in variables>
+	//			display: <output for display>,
+	//			plain: <output for storing in variables>
 	// 		}
 	extractCalcOutput = (function () {
 		// Extract output from google query result doc
@@ -406,14 +391,14 @@
 
 				return {
 					// get output for display (only using RH part of result for now)
-					forDisplay: docHtml.replace(/.*=\s(.*)/, '$1'), // get stuff after = sign
+					display: docHtml.replace(/.*=\s(.*)/, '$1'), // get stuff after = sign
 					// get raw output (used for calculator variables)
-					forVars: $('<div>'+docHtml+'</div>').text() // output cleaned of all markup
+					plain: $('<div>'+docHtml+'</div>').text() // output cleaned of all markup
 				};
 			} else {
 				return  {
-					forDisplay: null,
-					forVars: null
+					display: null,
+					plain: null
 				};
 			}
 		}
@@ -457,8 +442,8 @@
 			}
 
 			return {
-				forDisplay: output,
-				forVars: output
+				display: output,
+				plain: output
 			};
 		}
 
@@ -469,81 +454,81 @@
 	})();
 
 	// -----------------------------------------------------------------------
-	// 	resultHtml.fullResult(result)
+	// 	resultHtml.fullResult()
 	// -----------------------------------------------------------------------
-	//  Generates query uri from user input.
+	//  Generates restult html for display
 	//	* Examples:
-	//		uri = createQueryUri[queryType](input);
+	//		resultHtml.fullResult()
 	//	* Returns:
-	//		<a uri>
+	//		<a string>
 	resultHtml = (function () {
-		function createIntputHtml(type, expr) {
-			if (!expr) {
-				return '';
-			}
+		function createIntputHtml(type, expr) {			
+			return "<div class='input'><span class='"+type+"'>" + expr + "</span></div>";
+		}
+		
+		function createIntputHtmlEq(type, expr) {			
 			return "<div class='input'><span class='"+type+"'>" + expr + " =</span></div>";
 		}
 
-		function createOutputHtml(type, expr) {
-			if (!expr) {
-				return '';
-			}
+		function createOutputHtml(type, expr) {			
 			return "<div class='output'><span class='"+type+"'>" + expr + "</span></div>";
-		}
+		}	
 
-		function createLinkHtml(queryType, uri) {
-			if (!queryType) {
-				return '';
-			}
-
-			var	linkText = {
-				google: "G",
-				alpha: "W"
-			};
-
+		function createLinkHtml(queryType, uri) {			
+			var	linkText = {google: "G", alpha: "W"};
 			var $resultLink = $("<div><a target='_blank' class='resultLink'>" + (linkText[queryType] || "") + "</a></div>");
-			$resultLink = $resultLink.find("a").attr("href", calc.result.uri).end();
-			return $resultLink.html();
-		}
-
+			$resultLink = $resultLink.find("a").attr("href", calc.result.uri);
+			return $($resultLink).parent().html() || "";
+		}						
+		
 		function resultHtml() {
 			var result = calc.result;
 			var linkHtml = createLinkHtml(result.queryType, result.uri);
-			var resultInnerHtml = linkHtml;
-
-			// Input correction
-			if (result.correctedInput) {
-				// Variable substitutions made
-				if (result.varSubstInput) {
-					resultInnerHtml += createIntputHtml('inputText', result.origInput);
-					resultInnerHtml += createIntputHtml('replacedInputText', result.varSubstInput);
-				// No variable substitutions
-				} else {
-					resultInnerHtml += createIntputHtml('replacedInputText', result.origInput);
-				}
-				// Corrected and substituted input
-				resultInnerHtml += createIntputHtml('inputText', result.correctedInput);
-			// No input correction
+			var resultInnerHtml = linkHtml;				
+			var funcPicker = {
+				"createIntputHtml": createIntputHtml,
+				"createIntputHtmlEq": createIntputHtmlEq
+			}		
+			console.log("ofig INPUT?", calc.result.origInput)
+			// [<result object property name>, <input type>, <html creator function name>]
+			var resultInstructions;			
+			if (result.varLhExpr) {
+				// Instructions for creating variable assignment input html
+				resultInstructions = [	
+					["origInput", "inputText", "createIntputHtml"], 
+					["varSubstInput", "inputText", "createIntputHtml"], 
+					["correctedInput", "replacedInputText", "createIntputHtml"]
+				];			
 			} else {
-				// Variable substitutions made
-				if (result.varSubstInput) {
-					resultInnerHtml += createIntputHtml('inputText', result.origInput);
-					resultInnerHtml += createIntputHtml('inputText', result.varSubstInput);
-				// No variable substitutions
-				} else {
-					resultInnerHtml += createIntputHtml('inputText', result.origInput);
+				// Instructions for regular input html
+				resultInstructions = [						
+					["origInput", "inputText", "createIntputHtmlEq"], 
+					["varSubstInput", "inputText", "createIntputHtmlEq"], 
+					["correctedInput", "replacedInputText", "createIntputHtmlEq"]
+				];
+			}			
+			
+			var instr, func, prop, type, i, len = resultInstructions.length;			
+			for (i = 0; i < len; i++) {
+				instr = resultInstructions[i];	
+				func = instr[2];
+				prop = instr[0];
+				type = instr[1];
+				console.log("prop", prop, result[prop], result)
+				if (result[prop]) {
+					resultInnerHtml += funcPicker[func](type, result[prop]);
 				}
 			}
-
+		
 			// Output
-			resultInnerHtml += createOutputHtml('outputText', result.output);
+			resultInnerHtml += createOutputHtml('outputText', result.outputDisplay);
 
 			// Full result html
 			return "<li class='result'>"+ resultInnerHtml + "</li>";
 		}
 
 		return {
-			fullResult: resultHtml
+			fullResult: resultHtml			
 		};
 	})();
 
