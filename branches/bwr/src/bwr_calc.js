@@ -232,7 +232,7 @@ var cCalc =(function () {
 			}
 			
 			// Variable substitution
-			input = calcVars.subst(input);
+			input = substVar(input);
 			// Update result object if there were any substitutions
 			if (input !== result.origInput && input !== result.varRhExpr) {
 				result.varSubstInput = input;
