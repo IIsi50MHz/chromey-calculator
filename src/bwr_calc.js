@@ -6,7 +6,7 @@ var cCalc =(function () {
 	// -----------------------------------------------------------------------
 	// 	Module declarations
 	// -----------------------------------------------------------------------
-	var calc, createQueryUri, extractCalcOutput, resultHtml;
+	var calc, createQueryUri, extractCalcOutput, resultHtml, calcVar;
 
 	// -----------------------------------------------------------------------
 	// 	Event Handlers
@@ -68,7 +68,7 @@ var cCalc =(function () {
 						// If there's a popup, update if we're enntering stuff in the dropdown
 						if (background.calcPopOut && background.calcPopOut !== window) {
 							storeCalcInfo();
-							// don't let popout overwrite most current restults
+							// don't let popout overwrite most current results
 							background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
 							background.calcPopOut.location.reload();
 						}
@@ -194,10 +194,10 @@ var cCalc =(function () {
 				varAssign:  /^\s*@\w*\s*=\s*.+$/
 			};
 
-		// Extract output from query result doc
-		function findResult(input, callback) {
+		// Extract output from query result doc			
+		function findResult(input, callback) {		
 			// Reset result object
-			var result = calc.result = {}; // Used to help contruct all the pieces of the result html	
+			var result = calc.result = {prevResult: calc.result}; // Used to help contruct all the pieces of the result html				
 			
 			// Save original input to result object
 			result.origInput = input;
@@ -208,7 +208,9 @@ var cCalc =(function () {
 				// Save LH and RH parts of input
 				result.varLhExpr = getVarLhName(input);
 				result.varRhExpr = getVarRhExpr(input);
-
+				// Create variable
+				calcVar.create(result.varLhExpr, result.varRhExpr);
+				
 				// Update input to RH expression for calcQuery
 				input = result.varRhExpr;
 			}		
@@ -225,14 +227,16 @@ var cCalc =(function () {
 				result.outputDisplay = result.outputPlain = result.number = input;
 				doQuery = false;
 			// Input is a variable inspection, no query
-			} else if (isVarInspect(input)) {
-				//console.debug("----inputIsVarInspect", input)
-				result.outputDisplay = result.outputPlain = result.varVal = getVarVal(input);
+			} else if (isVarInspect(input)) {				
+				result.outputDisplay = result.outputPlain = result.varVal = calcVar.getVal(input);
+				console.debug("----inputIsVarInspect", input, result.outputDisplay)
 				doQuery = false;				
 			}
 			
 			// Variable substitution
-			input = substVar(input);
+			if (!isVarInspect(input)) {
+				input = calcVar.subst(input);
+			}
 			// Update result object if there were any substitutions
 			if (input !== result.origInput && input !== result.varRhExpr) {
 				result.varSubstInput = input;
@@ -456,7 +460,7 @@ var cCalc =(function () {
 	// -----------------------------------------------------------------------
 	// 	resultHtml.fullResult()
 	// -----------------------------------------------------------------------
-	//  Generates restult html for display
+	//  Generates result html for display
 	//	* Examples:
 	//		resultHtml.fullResult()
 	//	* Returns:
@@ -531,5 +535,119 @@ var cCalc =(function () {
 			fullResult: resultHtml			
 		};
 	})();
+	
+	calcVar = (function () {
+		var varMap = {};
+		// create a calculator variable
+		// varName always starts with and "@" sign followed by one or more letters, numbers, or underscores
+		// The most recent variables are kept. When the limit is reached, the oldes variables get tossed.
+		// Need to clean up code and improve comments for this function
+		function createVar(varName, varVal) {
+			// remove outermost parentheses before storing (if there are no inner ones)
+			varVal = varVal.replace(/\s*([\(\)])\s*/g, "$1").replace(/^\(+([^\(\)]*)\)+$/, "$1");
+			
+			if (varName !== "@") { // don't save @
+				varMap.size || (varMap.size = 0);
+				varMap.maxSize || (varMap.maxSize = 500);
+				var varAlreadyExists = !!varMap[varName];
 
+				if (varAlreadyExists) {
+					// if variable already exsits, remove old links, create new links in the empty space
+					if (varMap[varName].prevName) {
+						varMap[varMap[varName].prevName].nextName = varMap[varName].nextName;
+					} else if (varMap[varName].nextName) { // we're removing the oldest, set oldest to next oldest
+						varMap.oldestVarName = varMap[varName].nextName;
+					}
+					if (varMap[varName].nextName) {
+						varMap[varMap[varName].nextName].prevName = varMap[varName].prevName;
+					}
+				}
+
+				// save new var
+				varMap[varName] = {name: varName, val: varVal};
+
+				if (!varMap.size) {
+					// keep track of oldest var
+					varMap.oldestVarName = varName;
+				} else {
+					// link new var to previous var
+					varMap[varName].prevName = varMap.prevVarName;
+				}
+
+				// link previous variable to this one
+				if (varMap.prevVarName) { // make sure there is a previous variable
+					varMap[varMap.prevVarName].nextName = varName;
+				}
+
+				if (!varAlreadyExists) {
+					if (varMap.size === varMap.maxSize) { // remove oldest varaible if max size reached
+						var nextOldestVarName = varMap[varMap.oldestVarName].nextName;
+
+						// get rid of link to oldest variable
+						delete varMap[nextOldestVarName].prevName;
+						// remove oldest variable from list
+						delete varMap[varMap.oldestVarName];
+
+						// make next oldest variable the new oldest
+						varMap.oldestVarName = nextOldestVarName;
+					} else { // if variable name isn't in use already, variable map size gets one bigger
+						varMap.size++
+					}
+				}
+
+				// now, prevVarName becomes varName for next time user creates a variable
+				varMap.prevVarName = varName;			
+			}
+		}
+
+		// substitute values for caclulator variables into an expression		
+		function substVar(expr) {
+			if (expr) {
+				// extract all variable names in expr
+				var varNameArr = expr.match(/@\w+/g),
+					openParen = "(",
+					closedParen = ")";				
+				// handle "@" variable
+				expr = expr.
+					// add spaces between @'s
+					replace(/@@/g, "@ @").replace(/@@/g, "@ @").					
+					// wrap substitute variable and wrap in parentheses
+					replace(/@([^\w|@]+|$)/g, openParen+calc.result.prevResult.outputDisplay+closedParen+"$1");				
+				// substitute the value of each variable into the expression (wrapped in parentheses)
+				if (varNameArr) { // make sure we have variables other than the previous output "@" variable
+					$.each(varNameArr, function () {
+						var val = varMap[this] ? varMap[this].val : undefined;
+						expr = expr.replace(/@\w+/i, openParen+val+closedParen);
+					});
+				}
+				
+				// get rid of spaces between parentheses
+				expr = expr.replace(/\)\s*\(/g, ")(");
+			} else {
+				expr = undefined;
+			}
+			
+			return expr;
+		}
+		function getVarRhExpr(input) {			
+			return input.replace(/^\s*@\w*\s*=\s*(.+)\s*$/i, "$1");
+		}
+		function getVarLhName(input) {
+			return input.replace(/^\s*(@\w*)\s*=\s*.+\s*$/i, "$1");		
+		}
+		function getVarVal(varName) {
+			if (varName === '@') {
+				return calc.result.prevResult.outputDisplay;
+			} else {
+				return varMap[varName].val;
+			}				
+		}		
+		return {
+			create: createVar,
+			subst: substVar,
+			getRhExpr: getVarRhExpr,
+			getName: getVarLhName,
+			getVal: getVarVal
+		};
+	})();
 })();
