@@ -47,20 +47,23 @@ var cCalc =(function () {
 			popOutCalc();
 		});
 
-		// handle enter and arrow keydown events
+		// Handle enter and arrow keydown events
 		$calcInput.keydown(function (e) {
 			var inputVal = this.value.trim();
-			// handle special keys
-			if (e.which === 13 && inputVal) { // enter
-				// check for commands
+			// Handle special keys
+			if (e.which === 13 && inputVal) { // Enter
+				// Check for commands
 				if (inputVal === 'clear') {
-					// clear results
+					// Clear results
 					$calcResults.empty();			
 				} else {
-					// do calculation
+					// Do calculation
 					calc.findResult(inputVal, function () {
+						// Show result
 						$calcResults.append(resultHtml.fullResult());
-						// limit nubmer of results to maxResults
+						// Sroll to bottom
+						$calcResultsWrapper[0].scrollTop = $calcResultsWrapper[0].scrollHeight;
+						// Limit nubmer of results to maxResults
 						var $results = $calcResults.children();
 						if ($results.length > maxResults) {
 							$results.slice(0, $results.length - maxResults).remove();
@@ -68,26 +71,26 @@ var cCalc =(function () {
 						// If there's a popup, update if we're enntering stuff in the dropdown
 						if (background.calcPopOut && background.calcPopOut !== window) {
 							storeCalcInfo();
-							// don't let popout overwrite most current results
+							// Don't let popout overwrite most current results
 							background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
 							background.calcPopOut.location.reload();
 						}
 						$results.eq($results.length-1).find(".resultLink").show().css({opacity: ".8"}).animate({opacity: "0"}, 2000);
 					});
 				}
-				// update history
+				// Update history
 				history.add(inputVal);
 
-				// clear input area
+				// Clear input area
 				this.value = "";
-			} else if (e.which === 38) { // up arrow
+			} else if (e.which === 38) { // Up arrow
 				this.value = history.up(this.value);
 
-				// set cursor position to end of input
+				// Set cursor position to end of input
 				setTimeout(function(){
 					$calcInput[0].selectionStart = $calcInput[0].selectionEnd = $calcInput.val().length;
 				}, 0);
-			} else if (e.which === 40) { // down arrow
+			} else if (e.which === 40) { // Down arrow
 				this.value = history.down(this.value);
 			}
 		});
