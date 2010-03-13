@@ -107,6 +107,13 @@
 		zoomLevel = localStorage.zoomLevel;
 		$("body").css("zoom", zoomLevel);
 		$("body").css("overflow", "hidden");
+		
+		// restore product identity hidden/shown state
+		prodIDState = localStorage.prodIDState;
+		if (prodIDState == "none") {
+			$("#prodID").css("display", "none");
+			$('#calcResultsWrapper').css('margin-top', "-18px");
+		}
 
 		// restore results scroll position (actually... scroll to bottom);
 		if (background.calcPopOut === window) {
@@ -192,6 +199,20 @@
 		// receive "Zoom" link clicks
 		$("#zoomLevel").click(function () {
 			popZoomLevel();
+		});
+		
+		$("#toggleProdID").click(function () { 
+			if (localStorage.prodIDState != 'none') {
+				$('#prodID').hide();
+				$('#calcResultsWrapper').css('margin-top', "-18px");
+					//.height(function(index, height){height=height+18;return height});
+				localStorage.prodIDState = 'none';
+			}else{
+				$("#prodID").show();
+				$('#calcResultsWrapper').css('margin-top', '0px');
+					//.height(function(index, height){height=height-18;return height});
+				localStorage.prodIDState = 'show';
+			}
 		});
 
 		// handle enter and arrow keydown events
