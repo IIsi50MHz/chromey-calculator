@@ -204,13 +204,13 @@
 		$("#toggleProdID").click(function () { 
 			if (localStorage.prodIDState != 'none') {
 				$('#prodID').hide();
-				$('#calcResultsWrapper').css('margin-top', "-18px");
-					//.height(function(index, height){height=height+18;return height});
+				$('#calcResultsWrapper').height(function(index, height){height=height+18;return height})
+					.css('margin-top', "-18px");
 				localStorage.prodIDState = 'none';
 			}else{
+				$('#calcResultsWrapper').height(function(index, height){height=height-18;return height})
+					.css('margin-top', '0px');
 				$("#prodID").show();
-				$('#calcResultsWrapper').css('margin-top', '0px');
-					//.height(function(index, height){height=height-18;return height});
 				localStorage.prodIDState = 'show';
 			}
 		});

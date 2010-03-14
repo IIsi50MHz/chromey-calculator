@@ -12,6 +12,13 @@
 		<script src="jquery.js"></script>
 		<script src="history.js"></script>		
 		<script src="calc.js"></script>
+		<script type="text/javascript">
+			// Want #calcResultsWrapper's height to be equal to the parent element's height, minus 2px.
+			$(window).resize(function() { 
+				$('#calcResultsWrapper').height('100%');
+			});
+			//window.onResize = alert('foo!');
+		</script>
 	</head>
 	<body id="calc">	
 		<table class="scrollableTable">			
