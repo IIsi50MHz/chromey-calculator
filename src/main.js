@@ -1,8 +1,24 @@
 (function(window, document, localStorage, undefined){
 
 /*** variables ***/
-var $input = $("#input > input"), $output = $("#output");
+var $links = $("#links"), $input = $("#input > input"), $output = $("#output");
+$links.$span = $links.children("span"); $links.$a = $links.children("a");
+
 window._opener = window.opener !== null;
+
+var commands = {
+	clear: Shell.clear,
+	help: function(){ window.open("help.html", "chromey-help"); },
+	options: function(){ window.open("options.html", "chromey-options"); },
+	popout: function(){
+		$input.val("");
+		saveData();
+		
+		var p = JSON.parse(localStorage.popout || '{"top":100,"left":100,"width":450,"height":450}');
+		window.open("calc.html", "chromey-popout", "top=" + p.top + ",left=" + p.left + ",width=" + p.width + ",height=" + p.height);
+	}
+};
+
 
 /*** setup ***/
 $input.focus(); // focus the input
@@ -39,18 +55,18 @@ $(window).bind("unload blur", function(){
 $(document).click(function(){ $input.focus(); }).add("#output").scroll(function(){ $input.focus(); });
 
 $input.keydown(function(e){ // handle enter and up/down keypresses
-	var val = this.value.trim(), m;
+	var val = this.value.trim(), a;
 	
 	if (e.which === 13 && val) { // enter
-		if (val.toLowerCase() === "clear") { // clear the results
-			Shell.clear();
-		} else if (m = val.match(/^@(\w+)\s*=\s*(.+)/)) { // we're setting a variable
-			Vars.add(m[1], m[2], function(result, source){
-				Shell.io("@" + m[1] + " = " + m[2], result, source);
+		if (a = commands[val.toLowerCase()]) { // commands
+			a();
+		} else if (a = val.match(/^@(\w+)\s*=\s*(.+)/)) { // we're setting a variable
+			Vars.add(a[1], a[2], function(result, source){
+				Shell.io("@" + a[1] + " = " + a[2], result, source);
 			});
 		} else if (m = val.match(/^@(\w+)\s*=?$/)) { // we're getting a variable
-			var v = Vars.list[m[1]] || { original: "", value: "undefined", source: ["", ""] };
-			Shell.raw("@" + m[1] + " =", "input");
+			var v = Vars.list[a[1]] || { original: "", value: "undefined", source: ["", ""] };
+			Shell.raw("@" + a[1] + " =", "input");
 			Shell.raw(v.original, "replaced");
 			Shell.raw(v.value, "output").prepend($("<a/>", { html: v.source[0], href: v.source[1], target: "_tab" }).animate({ opacity: 0 }, 1500));
 		} else { // try calculating it
@@ -99,20 +115,16 @@ $output.find(".input, .output").live("click", function(e){ // handle clicking on
 	}
 });
 
-$("#links > a").click(function(){
-	var $this = $(this), $span = $this.siblings("span"), open = $span.is(":visible");
-	$this.text(open ? "<" : ">");
-	$span[open ? "hide" : "show"]();
+$links.$a.click(function(){
+	var open = $links.$span.is(":visible");
+	$links.$a.text(open ? "<" : ">");
+	$links.$span[open ? "hide" : "show"]();
 	localStorage.linksOpen = !open;
 });
 
-$("#clear-link").click(Shell.clear);
-
-$("#popout-link").click(function(){
-	saveData();
-	
-	var p = JSON.parse(localStorage.popout || '{"top":100,"left":100,"width":450,"height":450}');
-	window.open("calc.html", "chromeypopout", "top=" + p.top + ",left=" + p.left + ",width=" + p.width + ",height=" + p.height);
+$links.$span.children().each(function(){
+	var $this = $(this);
+	$this.click(function(){ commands[$this.html().toLowerCase()](); });
 });
 
 /*** functions ***/
@@ -141,7 +153,7 @@ function loadData() {
 	$output.html(localStorage.results);
 	
 	var linksOpen = "linksOpen" in localStorage ? JSON.parse(localStorage.linksOpen) : true;
-	$("#links > span")[linksOpen ? "show" : "hide"]().siblings("a").text(linksOpen ? ">" : "<");
+	$links.$span[linksOpen ? "show" : "hide"]().siblings("a").text(linksOpen ? ">" : "<");
 }
 
 function Copy(v) { // copies text to the clipboard
