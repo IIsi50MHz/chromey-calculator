@@ -13,16 +13,21 @@
 		<script src="history.js"></script>		
 		<script src="calc.js"></script>
 		<script type="text/javascript">
-			// Want #calcResultsWrapper's height to be equal to the parent element's height, minus 2px.
-			$(window).resize(function() { 
-				$('#calcResultsWrapper').height('100%');
-			});
-			//window.onResize = alert('foo!');
+			// FIX ME! Try to make calcResultsWrapper have correct height, distance from header, and distance from input line.
+			//	So far, not working for distance from input line.
+			//~ $(window).resize(function() { 
+				//~ if (localStorage.prodIDState == "none") {
+					//~ $('#calcResultsWrapper').height('')
+						//~ .css('margin-top', '-36px') //forces proper spacing between header and calcResultsWrapper
+						//~ .css('margin-bottom', '-36px') // overrides previous line and forces proper spacing between input line and calcResultsWrapper
+						//~ ;
+				//~ }
+			//~ });
 		</script>
 	</head>
 	<body id="calc">	
 		<table class="scrollableTable">			
-			<tr>
+			<tr id="headerRow">
 				<td class="shrinkCell">
 					<div id="headerWrapper">												
 						<div id="headerLinks">
@@ -45,7 +50,7 @@
 				</td>
 			</tr>
 			<tr>
-				<td class="scrollableCell">					
+				<td class="scrollableCell">
 					<div id="calcResultsWrapper" class="scrollableCellInner">						
 						<ul id="calcResults"></ul>
 					</div>					

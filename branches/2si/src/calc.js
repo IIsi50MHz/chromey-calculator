@@ -112,7 +112,10 @@
 		prodIDState = localStorage.prodIDState;
 		if (prodIDState == "none") {
 			$("#prodID").css("display", "none");
-			$('#calcResultsWrapper').css('margin-top', "-18px");
+			$('#headerWrapper').css('overflow', 'hidden')
+				.height(function(index, height){height=height-18;return height});
+			//~ $('#calcResultsWrapper').css('margin-top', "-18px")
+				//~ .height($('#calcResultsWrapper').height() + 18);
 		}
 
 		// restore results scroll position (actually... scroll to bottom);
@@ -204,12 +207,16 @@
 		$("#toggleProdID").click(function () { 
 			if (localStorage.prodIDState != 'none') {
 				$('#prodID').hide();
-				$('#calcResultsWrapper').height(function(index, height){height=height+18;return height})
-					.css('margin-top', "-18px");
+				$('#headerWrapper').css('overflow', 'hidden')
+					.height(function(index, height){height=height-18;return height});
+				//~ $('#calcResultsWrapper').height(function(index, height){height=height+18;return height})
+					//~ .css('margin-top', "-18px");
 				localStorage.prodIDState = 'none';
 			}else{
-				$('#calcResultsWrapper').height(function(index, height){height=height-18;return height})
-					.css('margin-top', '0px');
+				//~ $('#calcResultsWrapper').height('')
+					//~ .css('margin-top', '');
+				$('#headerWrapper').css('overflow', 'hidden')
+					.height(function(index, height){height=height+18;return height});
 				$("#prodID").show();
 				localStorage.prodIDState = 'show';
 			}
