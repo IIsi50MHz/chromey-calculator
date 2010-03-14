@@ -43,7 +43,8 @@ body {
 }
 #output > .output > a {
 	position: absolute;
-	left: -11px;
+	left: -12px;
+	font-size: 16px;
 }
 #output > .input {
 	color: #A0A0A0;
@@ -76,6 +77,7 @@ body {
 a {
 	text-decoration: none;
 	color: blue;
+	cursor: pointer;
 }
 a:hover {
 	text-decoration: underline;
