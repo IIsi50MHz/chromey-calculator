@@ -113,7 +113,7 @@
 		if (prodIDState == "none") {
 			$("#prodID").css("display", "none");
 			$('#headerWrapper').css('overflow', 'hidden')
-				.height(function(index, height){height=height-18;return height});
+				.height(function(index, height){height=height-17;return height});
 			//~ $('#calcResultsWrapper').css('margin-top', "-18px")
 				//~ .height($('#calcResultsWrapper').height() + 18);
 		}
@@ -208,7 +208,7 @@
 			if (localStorage.prodIDState != 'none') {
 				$('#prodID').hide();
 				$('#headerWrapper').css('overflow', 'hidden')
-					.height(function(index, height){height=height-18;return height});
+					.height(function(index, height){height=height-17;return height});
 				//~ $('#calcResultsWrapper').height(function(index, height){height=height+18;return height})
 					//~ .css('margin-top', "-18px");
 				localStorage.prodIDState = 'none';
@@ -216,7 +216,7 @@
 				//~ $('#calcResultsWrapper').height('')
 					//~ .css('margin-top', '');
 				$('#headerWrapper').css('overflow', 'hidden')
-					.height(function(index, height){height=height+18;return height});
+					.height(function(index, height){height=height+17;return height});
 				$("#prodID").show();
 				localStorage.prodIDState = 'show';
 			}
