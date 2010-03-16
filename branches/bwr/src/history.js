@@ -34,6 +34,7 @@ function History(max) {
 	};
 	a.set = function(a){
 		this.length = 0;
+		console.debug("xxx", this, a)
 		this.push.apply(this, a);
 	};
 	
