@@ -6,132 +6,179 @@ var cCalc =(function () {
 	// -----------------------------------------------------------------------
 	// 	Module declarations
 	// -----------------------------------------------------------------------
-	var calc, createQueryUri, extractCalcOutput, resultHtml, calcVar;
-
+	var calc, createQueryUri, extractCalcOutput, resultHtml, calcVar, calcStore;
+	
+	// -----------------------------------------------------------------------
+	// 	Variables 
+	// -----------------------------------------------------------------------
+	var	calcSelStart, calcSelEnd, // variables to keep track of caret postion or selection in calc input area		
+		maxResults = 500, history = History(maxResults), // variables for history			
+		lastRawOutput, // gets substitued for @ (last result) variable
+		lastAns,
+		background = chrome.extension.getBackgroundPage();
+		//varMap = {};
+	
 	// -----------------------------------------------------------------------
 	// 	Event Handlers
 	// -----------------------------------------------------------------------
 	// TODO: This section pasted and chopped up from old calc.js. Still need to re-write this section, fill and fill missing pieces
-	var $calcInput,	$calcResults, $calcResultsWrapper;
-	$(function () {
-		var storeCalcInfo, background = chrome.extension.getBackgroundPage();
+	var $calcInput,	$calcResults, $calcResultsWrapper;//, varMap;
+	function calcInit() {
+		//delete localStorage.calcResults; delete localStorage.prevInputs; delete localStorage.varMap, localStorage.lastAns;
+		//////
+		// Stuff to do before DOM is ready
+		function showSourceLink(e) {		
+			$(this).stop().css("opacity", "").show();		
+		}	
+		function hideSourceLink(e) {		
+			$(this).animate({opacity: "0"}, 500);	
+		}	
+		// Show/hide link to result source on hover	
+		$(".resultLink").live("mouseenter", showSourceLink);
+		$(".resultLink").live("mouseleave", hideSourceLink);	
+		
+		//////
+		// Stuff to do once DOM is ready
+		$(function () {		
+			$calcInput = $("#calcInput");
+			$calcResults = $("#calcResults");
+			$calcResultsWrapper = $("#calcResultsWrapper");					
+			
+			// Restore calculator state
+			calcStore.load();
 
-		$calcInput = $("#calcInput");
-		$calcResults = $("#calcResults");
-		$calcResultsWrapper = $("#calcResultsWrapper");
-
-			// variables to keep track of caret postion or selection in calc input area
-		var	calcSelStart,
-			calcSelEnd,
-
-			// variables for history
-			maxResults = 500,
-			history = History(maxResults), // new history!
-
-			// user variables
-			lastRawOutput, // gets substitued for @ (last result) variable
-			lastAns,
-			varMap = {};
-
-		// focus input area
-		$calcInput.focus();
-
-		$("body").height(0);
-
-		$("#clearAll").click(function () {
-			// clear results
-			$calcResults.empty();
-		});
-
-		$("#popOut").click(function () {
-			popOutCalc();
-		});
-
-		// Handle enter and arrow keydown events
-		$calcInput.keydown(function (e) {
-			var inputVal = this.value.trim();
-			// Handle special keys
-			if (e.which === 13 && inputVal) { // Enter
-				// Check for commands
-				if (inputVal === 'clear') {
-					// Clear results
-					$calcResults.empty();			
-				} else {
-					// Do calculation
-					calc.findResult(inputVal, function () {
-						// Show result
-						$calcResults.append(resultHtml.fullResult());
-						// Sroll to bottom
-						$calcResultsWrapper[0].scrollTop = $calcResultsWrapper[0].scrollHeight;
-						// Limit nubmer of results to maxResults
-						var $results = $calcResults.children();
-						if ($results.length > maxResults) {
-							$results.slice(0, $results.length - maxResults).remove();
-						}
-						// If there's a popup, update if we're enntering stuff in the dropdown
-						if (background.calcPopOut && background.calcPopOut !== window) {
-							storeCalcInfo();
-							// Don't let popout overwrite most current results
-							background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
-							background.calcPopOut.location.reload();
-						}
-						$results.eq($results.length-1).find(".resultLink").show().css({opacity: ".8"}).animate({opacity: "0"}, 2000);
-					});
+			// Focus input area
+			$calcInput.focus();
+			
+			// function to copy text to the clipboard
+			function Copy(v) {
+				var txt = $("<textarea/>").val(v).css({ position: "absolute", left: "-100%" }).appendTo("body");
+				txt[0].select();
+				document.execCommand("Copy");
+				txt.remove();
+			}			
+			
+			function popOutCalc() {		
+				var defaultPopOutWindowInfo = "width=300,height=400,scrollbars=no"
+				calcStore.save();		
+				if (background.calcPopOut) {
+					// don't let popout overwrite most current restults
+					background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
+					background.calcPopOut.close();			
 				}
-				// Update history
-				history.add(inputVal);
+				background.calcPopOut = window.open('calc.html', 'calcPopOut', localStorage.popOutWindowInfo || defaultPopOutWindowInfo);		
+			}		
+			
+			$(window).bind("unload blur", function () {
+				calcStore.save();			
+				// If there's a popup, update if we're enntering stuff in the dropdown
+				if (background.calcPopOut && background.calcPopOut !== window) {		
+					// don't let popout overwrite most current restults
+					background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
+					background.calcPopOut.location.reload();					
+				} else if (background.calcPopOut && background.calcPopOut === window) {
+					// save popout size and position info
+					savePopOutWindowInfo();
+				}
+			});
+			
+			$("body").height(0);
 
-				// Clear input area
-				this.value = "";
-			} else if (e.which === 38) { // Up arrow
-				this.value = history.up(this.value);
+			$("#clearAll").click(function () {
+				// Clear results
+				$calcResults.empty();
+			});
 
-				// Set cursor position to end of input
-				setTimeout(function(){
-					$calcInput[0].selectionStart = $calcInput[0].selectionEnd = $calcInput.val().length;
-				}, 0);
-			} else if (e.which === 40) { // Down arrow
-				this.value = history.down(this.value);
-			}
+			$("#popOut").click(function () {
+				popOutCalc();
+			});			
+			
+			// Handle enter and arrow keydown events
+			$calcInput.keydown(function (e) {
+				var inputVal = this.value.trim();
+				// Handle special keys
+				if (e.which === 13 && inputVal) { // Enter
+					// Check for commands
+					if (inputVal === 'clear') {
+						// Clear results
+						$calcResults.empty();			
+					} else {
+						// Do calculation
+						calc.findResult(inputVal, function () {
+							// Show result
+							$calcResults.append(resultHtml.fullResult());
+							// Sroll to bottom
+							$calcResultsWrapper[0].scrollTop = $calcResultsWrapper[0].scrollHeight;
+							// Limit nubmer of results to maxResults
+							var $results = $calcResults.children();
+							if ($results.length > maxResults) {
+								$results.slice(0, $results.length - maxResults).remove();
+							}
+							// If there's a popup, update if we're enntering stuff in the dropdown
+							if (background.calcPopOut && background.calcPopOut !== window) {
+								calcStore.save();
+								// Don't let popout overwrite most current results
+								background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
+								background.calcPopOut.location.reload();
+							}
+							$results.eq($results.length-1).find(".resultLink").show().css({opacity: ".8"}).animate({opacity: "0"}, 2000);
+						});
+					}
+					// Update history
+					history.add(inputVal);
+
+					// Clear input area
+					this.value = "";
+				} else if (e.which === 38) { // Up arrow
+					this.value = history.up(this.value);
+
+					// Set cursor position to end of input
+					setTimeout(function(){
+						$calcInput[0].selectionStart = $calcInput[0].selectionEnd = $calcInput.val().length;
+					}, 0);
+				} else if (e.which === 40) { // Down arrow
+					this.value = history.down(this.value);
+				}
+			});
+
+			// insert input or output at caret position
+			$calcInput.blur(function () {
+				// saving text selection info on blur so we can insert clicked result at caret position
+				calcSelStart = this.selectionStart;
+				calcSelEnd = this.selectionEnd;
+			});
+
+			// insert result when user clicks on it
+			$(".outputText, .inputText, .replacedInputText, .errorInputText, .errorOutputText, .inputTextWithVars, .replacedVarAssignmentInputText, .varAssignmentInputText, .varAssignmentOutputText").live("click", function (e) {
+				var $this = $(this);
+				var resultText = $this.text().replace(/\s*=\s*$/, '');  // prepare result text for insertion
+
+				if (e.ctrlKey || e.metaKey) {
+					Copy(resultText);
+					$this.css({opacity: "0"});
+					$this.animate({opacity: "1"}, 700);
+				} else {
+					var	inputVal = $calcInput.val(),
+						head = inputVal.substring(0, calcSelStart),
+						tail = inputVal.substring(calcSelEnd);
+
+					// caclulate new location for insertion (so results are inserted from left to right)
+					calcSelStart = calcSelEnd = calcSelStart + resultText.length;
+					$calcInput.val(head + resultText + tail);
+
+					// focus calc input
+					$calcInput.focus();
+
+					// set caret to end of insterted result
+					$calcInput[0].selectionStart = $calcInput[0].selectionEnd = calcSelStart;
+				}
+			});
+
+			// refocus calc input no matter where user clicks
+			$(document).click(function () {$calcInput.focus();});
+			$calcResultsWrapper.scroll(function () {$calcInput.focus();});
 		});
-
-		// insert input or output at caret position
-		$calcInput.blur(function () {
-			// saving text selection info on blur so we can insert clicked result at caret position
-			calcSelStart = this.selectionStart;
-			calcSelEnd = this.selectionEnd;
-		});
-
-		// insert result when user clicks on it
-		$(".outputText, .inputText, .replacedInputText, .errorInputText, .errorOutputText, .inputTextWithVars, .replacedVarAssignmentInputText, .varAssignmentInputText, .varAssignmentOutputText").live("click", function (e) {
-			var $this = $(this);
-			var resultText = $this.text().replace(/\s*=\s*$/, '');  // prepare result text for insertion
-
-			if (e.ctrlKey || e.metaKey) {
-				Copy(resultText);
-				$this.css({opacity: "0"});
-				$this.animate({opacity: "1"}, 700);
-			} else {
-				var	inputVal = $calcInput.val(),
-					head = inputVal.substring(0, calcSelStart),
-					tail = inputVal.substring(calcSelEnd);
-
-				// caclulate new location for insertion (so results are inserted from left to right)
-				calcSelStart = calcSelEnd = calcSelStart + resultText.length;
-				$calcInput.val(head + resultText + tail);
-
-				// focus calc input
-				$calcInput.focus();
-
-				// set caret to end of insterted result
-				$calcInput[0].selectionStart = $calcInput[0].selectionEnd = calcSelStart;
-			}
-		});
-
-		// refocus calc input no matter where user clicks
-		$(document).click(function () {$calcInput.focus();});
-		$calcResultsWrapper.scroll(function () {$calcInput.focus();});
-	});
+	}
 	// -----------------------------------------------------------------------
 	// 	Stuff that needs a home
 	// -----------------------------------------------------------------------
@@ -141,18 +188,77 @@ var cCalc =(function () {
 	var queryUriHead = {
 		google: "http://www.google.com/search?q=",
 		alpha: "http://www.wolframalpha.com/input/?i="
-	};
-
-	function loadCalcInfo() {
-		// TODO
-	}
-	function storeCalcInfo() {
-		// TODO
-	}
+	};	
 	
 	// -----------------------------------------------------------------------
 	// 	Module definitions
 	// -----------------------------------------------------------------------
+	
+	// -----------------------------------------------------------------------
+	// 	calcStore
+	// -----------------------------------------------------------------------
+	var calcStore = (function () {
+		function loadCalcInfo() {
+			// restore displayed results
+			$calcResults[0].innerHTML = localStorage.calcResults || '';
+
+			// restore results scroll position (actually... scroll to bottom);
+			if (background.calcPopOut === window) {				
+				$calcResultsWrapper[0].scrollTop = $calcResultsWrapper[0].scrollHeight;
+			} else {				
+				$calcResultsWrapper[0].scrollTop = $calcResultsWrapper[0].scrollHeight;
+			}
+
+			// restore input history
+			if (localStorage.prevInputs) {
+				history.set(JSON.parse(localStorage.prevInputs));
+			}
+
+			// restore user variables
+			if (localStorage.varMap) {
+				calcVar.init(JSON.parse(localStorage.varMap));
+			}
+			// restore last output
+			//lastAns = lastRawOutput = localStorage.lastAns; // TODO
+			
+			// restore calc input value and caret positon (or text selection)
+			if (localStorage.calcInput) {
+				$calcInput.val(localStorage.calcInput);
+				$calcInput[0].selectionStart = localStorage.calcSelStart;
+				$calcInput[0].selectionEnd = localStorage.calcSelEnd;
+			}	
+		}
+		
+		function storeCalcInfo() {			
+			// store results and inputs
+			$calcResults.find(".resultLink").css({display: "block", opacity: "0"});
+			localStorage.calcResults = $calcResults[0].innerHTML;
+			localStorage.prevInputs = JSON.stringify(history);
+
+			// store user variables			
+			localStorage.varMap =  JSON.stringify(calcVar.varMap);
+			
+			// store last answer
+			localStorage.lastAns = lastRawOutput;
+
+			// store state of calc input ares
+			localStorage.calcInput = $calcInput.val();
+			localStorage.calcSelStart = $calcInput[0].selectionStart;
+			localStorage.calcSelEnd = $calcInput[0].selectionEnd;
+
+			// store scroll position
+			if (background.calcPopOut === window) {
+				localStorage.popOutScrollTop = $calcResultsWrapper.scrollTop();				
+			} else {
+				localStorage.scrollTop = $calcResultsWrapper.scrollTop();
+			}			
+		}
+		
+		return {
+			save: storeCalcInfo,
+			load: loadCalcInfo
+		}		
+	}());	
 
 	// -----------------------------------------------------------------------
 	// 	calc
@@ -354,7 +460,7 @@ var cCalc =(function () {
 			findResult: findResult,
 			result: {}
 		};
-	})();
+	}());
 
 	// -----------------------------------------------------------------------
 	// 	createQueryUri[queryType](input)
@@ -377,7 +483,7 @@ var cCalc =(function () {
 			google: generateInputGoogleQueryUri,
 			alpha: generateInputAlphaQueryUri
 		};
-	})();
+	}());
 
 	// -----------------------------------------------------------------------
 	// 	extractCalcOutput[queryType](doc)
@@ -475,7 +581,7 @@ var cCalc =(function () {
 			google: extractGoogleCalcOutput,
 			alpha: extractAlphaCalcOutput
 		}
-	})();
+	}());
 
 	// -----------------------------------------------------------------------
 	// 	resultHtml.fullResult()
@@ -561,7 +667,7 @@ var cCalc =(function () {
 		return {
 			fullResult: resultHtml			
 		};
-	})();
+	}());
 	
 	calcVar = (function () {
 		var varMap = {};
@@ -679,13 +785,23 @@ var cCalc =(function () {
 			} else {
 				return varMap[varName] && varMap[varName].val;
 			}				
-		}		
+		}	
+		function setVarMap(vm) {
+			varMap = vm;
+		}
 		return {
+			varMap: varMap,
+			init: setVarMap,
 			create: createVar,
 			subst: substVar,
 			getRhExpr: getVarRhExpr,
 			getName: getVarLhName,
 			getVal: getVarVal
 		};
-	})();
-})();
+	}());
+	
+	// -----------------------------------------------------------------------
+	// 	Initialize Chromey Calculator
+	// -----------------------------------------------------------------------
+	calcInit();
+}());
