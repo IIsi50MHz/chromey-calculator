@@ -69,6 +69,15 @@ var cCalc =(function () {
 				background.calcPopOut = window.open('calc.html', 'calcPopOut', localStorage.popOutWindowInfo || defaultPopOutWindowInfo);		
 			}		
 			
+			// Store pop-out position and dimentions as a single string that can be passed to window.open()
+			function savePopOutWindowInfo() {			
+				var height = ",height="+window.innerHeight;
+				var width = ",width="+window.innerWidth;
+				var top = ",top="+window.screenTop;
+				var left = ",left="+window.screenLeft;		
+				localStorage.popOutWindowInfo = "resizable=yes"+height+width+top+left;					
+			}
+			
 			$(window).bind("unload blur", function () {
 				calcStore.save();			
 				// If there's a popup, update if we're enntering stuff in the dropdown
@@ -313,8 +322,7 @@ var cCalc =(function () {
 			
 			// Input is a variable assignment			
 			var varRhSubstExpr;
-			if (isVarAssign(input)) {
-				//console.debug("----inputIsVarAssign", input)
+			if (isVarAssign(input)) {				
 				// Save LH and RH parts of input
 				result.varLhExpr = calcVar.getName(input);
 				result.varRhExpr = calcVar.getRhExpr(input);				
@@ -324,19 +332,16 @@ var cCalc =(function () {
 
 			// Input is nothing, no query
 			var doQuery = true;
-			if (isNothing(input)) {
-				//console.debug("----inputIsNothing", input)
+			if (isNothing(input)) {				
 				result.outputDisplay = result.outputPlain = "";
 				doQuery = false;				
 			// Input is just a number, no query
-			} else if (isNumber(input)) {
-				//console.debug("----inputIsNumber", input)
+			} else if (isNumber(input)) {				
 				result.outputDisplay = result.outputPlain = result.number = input;
 				doQuery = false;
 			// Input is a variable inspection, no query
 			} else if (isVarInspect(input)) {				
-				result.outputDisplay = result.outputPlain = result.varVal = calcVar.getVal(input);
-				console.debug("----inputIsVarInspect", input, result.outputDisplay)
+				result.outputDisplay = result.outputPlain = result.varVal = calcVar.getVal(input);				
 				doQuery = false;				
 			}
 			
@@ -344,6 +349,7 @@ var cCalc =(function () {
 			if (!isVarInspect(input)) {
 				input = calcVar.subst(input);
 			}
+			
 			// Update result object if there were any substitutions
 			if (input !== result.origInput && input !== result.varRhExpr) {
 				result.varSubstInput = calcVar.subst(result.origInput);
@@ -448,7 +454,7 @@ var cCalc =(function () {
 			return !!input.match(rx.nothing);
 		}
 		function isNumber(input) {
-			return $.trim(input).replace(/\./, "").match(rx.integer);
+			return !!$.trim(input).replace(/\./, "").match(rx.integer);
 		}
 		function isVarInspect(input) {
 			return !!input.match(rx.varInspect);
@@ -618,17 +624,18 @@ var cCalc =(function () {
 			var funcPicker = {
 				"createIntputHtml": createIntputHtml,
 				"createIntputHtmlEq": createIntputHtmlEq
-			}		
-			console.log("ofig INPUT?", calc.result.origInput)
-			// [<result object property name>, <input type>, <html creator function name>]
-			var resultInstructions, origInputType = "inputText", varSubstInputType = "inputText";
+			}					
+			
+			var origInputType = "inputText", varSubstInputType = "inputText";
 			if (result.correctedInput) {
 				if (result.varSubstInput) {
 					varSubstInputType = "replacedInputText";
 				} else {
 					origInputType = "replacedInputText";
 				}
-			}
+			}			
+			
+			var resultInstructions; // [<result object property name>, <input type>, <html creator function name>]
 			if (result.varLhExpr) {
 				// Instructions for creating variable assignment input html
 				resultInstructions = [	
@@ -645,13 +652,13 @@ var cCalc =(function () {
 				];
 			}			
 			
+			// Create instructions for generating html for result
 			var instr, func, prop, type, i, len = resultInstructions.length;			
 			for (i = 0; i < len; i++) {
 				instr = resultInstructions[i];	
 				func = instr[2];
 				prop = instr[0];
-				type = instr[1];
-				console.log("prop", prop, result[prop], result)
+				type = instr[1];				
 				if (result[prop]) {
 					resultInnerHtml += funcPicker[func](type, result[prop]);
 				}
