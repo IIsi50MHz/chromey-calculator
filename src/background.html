@@ -7,6 +7,21 @@
 <html> 
 	<script>		
 		var background = {};		
-		var hello = "ding!!!!"
+		
+		// For simple requests:
+		chrome.extension.onRequestExternal.addListener(function(request, sender, sendResponse) {			
+			if (request.openPopOut) {							
+				background.calcPopOut = window.open('calc.html', 'calcPopOut', localStorage.popOutWindowInfo);
+			}				
+			sendResponse({});
+		});				
+		
+		// var extendChromeyCalcId = "njloeiaipgbkinikjhenmgacopoecbci";		
+		// setInterval(function () {			
+			// // Make a simple request:
+			// chrome.extension.sendRequest(extendChromeyCalcId, {openPopOut: "DING DONG!!!!! frome CHROMEY"}, function (response) {
+				// console.debug("Is this thing on? 3")				
+			// });
+		// }, 2000);
 	</script> 
 </html>
