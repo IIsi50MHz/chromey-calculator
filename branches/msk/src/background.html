@@ -1,3 +1,10 @@
 <script type="text/javascript">
-var popup = {};
+function updateViews(activewin) {
+	chrome.extension.getViews().forEach(function(win){
+		if (win === window || win === activewin) { return; }
+		
+		win.$(win).unbind("unload blur");
+		win.location.reload();
+	});
+}
 </script>

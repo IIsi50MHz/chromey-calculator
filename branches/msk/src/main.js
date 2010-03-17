@@ -1,21 +1,19 @@
 (function(window, document, localStorage, undefined){
 
 /*** variables ***/
-var $links = $("#links"), $input = $("#input > input"), $output = $("#output");
+var $links = $("#links"), $input = $("#input > input"), $output = $("#output"), background = chrome.extension.getBackgroundPage();
 $links.$span = $links.children("span"); $links.$a = $links.children("a");
-
-window._opener = window.opener !== null;
 
 var commands = {
 	clear: Shell.clear,
 	help: function(){ window.open("help.html", "chromey-help"); },
 	options: function(){ window.open("options.html", "chromey-options"); },
 	popout: function(){
-		$input.val("");
+		$input.val().trim().toLowerCase() === "popout" && $input.val("");
 		saveData();
 		
 		var p = JSON.parse(localStorage.popout || '{"top":100,"left":100,"width":450,"height":450}');
-		window.open("calc.html", "chromey-popout", "top=" + p.top + ",left=" + p.left + ",width=" + p.width + ",height=" + p.height);
+		window.open("calc.html#popout", "chromey-popout", "top=" + p.top + ",left=" + p.left + ",width=" + p.width + ",height=" + p.height);
 	}
 };
 
@@ -35,6 +33,8 @@ if ("v" in localStorage) {
 	localStorage.v = "4";
 }
 
+$("#output").add(document).scrollTop(1e6);
+
 
 /*** events ***/
 $output.find(".output > a")
@@ -49,10 +49,10 @@ $output.find(".output > a")
 
 $(window).bind("unload blur", function(){
 	saveData();
+	updateViews();
 });
 
-// refocus the input no matter what is clicked
-$(document).click(function(){ $input.focus(); }).add("#output").scroll(function(){ $input.focus(); });
+$(document).click(function(){ $input.focus(); }).add("#output").scroll(function(){ $input.focus(); }); // refocus the input no matter what is clicked
 
 $input.keydown(function(e){ // handle enter and up/down keypresses
 	var val = this.value.trim(), a;
@@ -78,6 +78,9 @@ $input.keydown(function(e){ // handle enter and up/down keypresses
 				var $results = $output.children();
 				
 				$results.length > 400 && $results.slice(0, $results.length - 400).remove(); // limit number of results
+				
+				saveData();
+				updateViews();
 			});
 		}
 		
@@ -135,7 +138,7 @@ function saveData() {
 	localStorage.input = $input.val();
 	localStorage.results = $output.html();
 	
-	if (window._opener) {
+	if (window.location.hash === "#popout") {
 		localStorage.popout = JSON.stringify({
 			top: window.screenTop,
 			left: window.screenLeft,
@@ -154,6 +157,10 @@ function loadData() {
 	
 	var linksOpen = "linksOpen" in localStorage ? JSON.parse(localStorage.linksOpen) : true;
 	$links.$span[linksOpen ? "show" : "hide"]().siblings("a").text(linksOpen ? ">" : "<");
+}
+
+function updateViews() {
+	background.updateViews(window);
 }
 
 function Copy(v) { // copies text to the clipboard
