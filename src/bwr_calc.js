@@ -2,7 +2,7 @@
  * Copyright (c) 2010 Brent Weston Robinett
  * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
  */
-var cCalc =(function () {
+var cCalc = (function () {
 	// -----------------------------------------------------------------------
 	// 	Module declarations
 	// -----------------------------------------------------------------------
@@ -15,14 +15,13 @@ var cCalc =(function () {
 		maxResults = 500, history = History(maxResults), // variables for history			
 		lastRawOutput, // gets substitued for @ (last result) variable
 		lastAns,
-		background = chrome.extension.getBackgroundPage();
-		//varMap = {};
+		background = chrome.extension.getBackgroundPage();		
 	
 	// -----------------------------------------------------------------------
 	// 	Event Handlers
 	// -----------------------------------------------------------------------
 	// TODO: This section pasted and chopped up from old calc.js. Still need to re-write this section, fill and fill missing pieces
-	var $calcInput,	$calcResults, $calcResultsWrapper;//, varMap;
+	var $calcInput,	$calcResults, $calcResultsWrapper;
 	function calcInit() {
 		//delete localStorage.calcResults; delete localStorage.prevInputs; delete localStorage.varMap, localStorage.lastAns;
 		//////
@@ -206,7 +205,7 @@ var cCalc =(function () {
 	// -----------------------------------------------------------------------
 	// 	calcStore
 	// -----------------------------------------------------------------------
-	var calcStore = (function () {
+	calcStore = (function () {
 		function loadCalcInfo() {
 			// restore displayed results
 			$calcResults[0].innerHTML = localStorage.calcResults || '';
@@ -228,7 +227,7 @@ var cCalc =(function () {
 				calcVar.init(JSON.parse(localStorage.varMap));
 			}
 			// restore last output
-			//lastAns = lastRawOutput = localStorage.lastAns; // TODO
+			calcVar.lastAns = localStorage.lastAns;
 			
 			// restore calc input value and caret positon (or text selection)
 			if (localStorage.calcInput) {
@@ -245,10 +244,10 @@ var cCalc =(function () {
 			localStorage.prevInputs = JSON.stringify(history);
 
 			// store user variables			
-			localStorage.varMap =  JSON.stringify(calcVar.varMap);
+			localStorage.varMap =  JSON.stringify(calcVar.varMap());
 			
 			// store last answer
-			localStorage.lastAns = lastRawOutput;
+			localStorage.lastAns = calcVar.lastAns;
 
 			// store state of calc input ares
 			localStorage.calcInput = $calcInput.val();
@@ -282,7 +281,7 @@ var cCalc =(function () {
 	//			origInput: <original user input>,	
 	//			number: <original user input, only if it was a number>,
 	//			varVal: <value of variable, only if insepecting variable>,
-	//			varLhExpr: <lh side of variable assignment, only if there was an assignment>,
+	//			varName: <lh side of variable assignment, only if there was an assignment>,
 	//			varRhExpr: <rh side of variable assignment, only if there was an assignment>,
 	//			varSubstInput: <input with variables substituted, only if there were any>,
 	//			correctedInput: <corrected input, only if it was corrected>,
@@ -309,30 +308,34 @@ var cCalc =(function () {
 				nothing: /^\s*$/,
 				integer: /^\s*\d+\s*$/,
 				varInspect: /^\s*@\w*\s*=*\s*$/,
-				varAssign:  /^\s*@\w*\s*=\s*.+$/
+				varAssign:  /^\s*@\w*\s*=\s*.+$/,
+				varAssignNoSubst:  /^\s*@\w*\s*:=\s*.+$/,
 			};
 
 		// Extract output from query result doc			
 		function findResult(input, callback) {		
 			// Reset result object
-			var result = calc.result = {prevResult: calc.result}; // Used to help contruct all the pieces of the result html				
+			var result = calc.result = {prevResult: calc.result}, // Used to help contruct all the pieces of the result html				
+				inputIsVarAssignNoSubst = isVarAssignNoSubst(input);
 			
 			// Save original input to result object
 			result.origInput = $.trim(input);
 			
-			// Input is a variable assignment			
-			var varRhSubstExpr;
-			if (isVarAssign(input)) {				
+			// Input is a variable assignment						
+			if (isVarAssign(input) || inputIsVarAssignNoSubst) {				
 				// Save LH and RH parts of input
-				result.varLhExpr = calcVar.getName(input);
-				result.varRhExpr = calcVar.getRhExpr(input);				
+				result.varName = calcVar.getName(input);
+				result.varRhExpr = calcVar.getRhExpr(input);					
 				// Update input to rh expression for calcQuery
 				input = result.varRhExpr;
-			}		
+			}			
 
 			// Input is nothing, no query
 			var doQuery = true;
-			if (isNothing(input)) {				
+			if (inputIsVarAssignNoSubst) {
+				result.outputDisplay = result.outputPlain = result.varRhExpr;
+				doQuery = false;
+			} else if (isNothing(input)) {				
 				result.outputDisplay = result.outputPlain = "";
 				doQuery = false;				
 			// Input is just a number, no query
@@ -346,37 +349,46 @@ var cCalc =(function () {
 			}
 			
 			// Variable substitution
-			if (!isVarInspect(input)) {
-				input = calcVar.subst(input);
+			if (!isVarInspect(input) && !inputIsVarAssignNoSubst) {
+				calcVar.subst(input);
+				input = calcVar.substResult;
+				//console.debug('input1', input);
 			}
 			
 			// Update result object if there were any substitutions
 			if (input !== result.origInput && input !== result.varRhExpr) {
-				result.varSubstInput = calcVar.subst(result.origInput);
+				calcVar.subst(result.origInput);
+				result.varSubstInput = calcVar.substResult;
+				console.debug('varSubstInput', result.varSubstInput, "-----", result.varSubstInput);
 				// Make output undefined sustitution contains undefined
 				if (input.match(/undefined/)) {					
 					result.outputDisplay = result.outputPlain = "undefined";
 					doQuery = false;
-				}				
+				} else if (result.varSubstInput === "too much recursion") {
+					result.outputDisplay = "<i>"+calcVar.substResult+"</i>";
+					result.outputPlain = "undefined";
+					result.varSubstInput = null;
+					doQuery = false;
+				}
 			}
 			
 			if (doQuery) {
 				// Go fishing for a result
-				calcQuery(input, function () {
-					// Create variable if we need to
-					if (result.varRhExpr) {
-						calcVar.create(result.varLhExpr, result.outputPlain);
-					}				
-					callback && callback();
-				});
+				calcQuery(input, afterQuery);
 			} else {
 				// Done. No query needed.				
+				afterQuery();				
+			}
+			
+			function afterQuery() {
+				// Save last answer
+				calcVar.lastAns = calc.result.outputPlain;
+				
 				// Create variable if we need to
 				if (result.varRhExpr) {
-					calcVar.create(result.varLhExpr, result.outputPlain);
-				}								
-				callback && callback();							
-				return;
+					calcVar.create(result.varName, result.outputPlain);
+				}									
+				callback && callback();	
 			}
 		}
 
@@ -391,7 +403,8 @@ var cCalc =(function () {
 				result = calc.result;
 			if (result.status === "failed") {
 				// No result found. Give up.
-				result.outputDisplay = result.outputPlain = calcQuery.origQueryInput || result.varSubstInput || result.origInput;
+				result.outputDisplay = "<i>no result found</i>";
+				result.outputPlain = "undefined"; //calcQuery.origQueryInput || result.varSubstInput || result.origInput;
 				result.queryType = queryType;
 				callback && callback(result);
 			} else {
@@ -427,10 +440,10 @@ var cCalc =(function () {
 						} else {
 							// If input was corrected, save it
 							if (result.status === "trying google, did you mean") {							
-								// Tack varaible to front of corrected input if user is doing an assignment
-								if (result.varLhExpr) {
+								// Tack variable to front of corrected input if user is doing an assignment
+								if (result.varName) {
 									// @x = <corrected stuff>
-									result.correctedInput = result.varLhExpr + ' = ' + calcQuery.correctedInput;
+									result.correctedInput = result.varName + ' = ' + calcQuery.correctedInput;
 								} else {
 									result.correctedInput = calcQuery.correctedInput;
 								}
@@ -461,7 +474,10 @@ var cCalc =(function () {
 		}
 		function isVarAssign(input) {
 			return !!input.match(rx.varAssign);
-		}		
+		}
+		function isVarAssignNoSubst(input) {
+			return !!input.match(rx.varAssignNoSubst);
+		}
 		return {
 			findResult: findResult,
 			result: {}
@@ -479,6 +495,19 @@ var cCalc =(function () {
 	createQueryUri = (function () {
 		// Google uri
 		function generateInputGoogleQueryUri(input) {
+			input = input.
+				// add multipication sign between parentheses
+				replace(/\)\s*\(/g, ')*(').
+				// add multipication between digit char and "(" 
+				replace(/(\d)\s*\(/g, '$1*(').
+				// add multipication between ")" and digit char				
+				replace(/\)\s*(\d)/g, ')*$1').
+				// add an equals sign at the end of expressions that end with a number, or a number followed by a ")"
+				//	NOTE: this forces expressions that look like, say, phone numbers to be evaluated
+				//	NOTE: adding the = for some expressions gives no results when wrapped in parentheses
+				//		Example: "(1000 km in ft)" works, but "(1000 km in ft)=" doesn't
+				replace(/(.*\d\s*\)*\s*)$/g, '$1=');
+				
 			return queryUriHead.google + encodeURIComponent(input);
 		}
 		// Wolfram|Alpha uri
@@ -636,7 +665,7 @@ var cCalc =(function () {
 			}			
 			
 			var resultInstructions; // [<result object property name>, <input type>, <html creator function name>]
-			if (result.varLhExpr) {
+			if (result.varName) {
 				// Instructions for creating variable assignment input html
 				resultInstructions = [	
 					["origInput", origInputType, "createIntputHtml"], 
@@ -742,7 +771,7 @@ var cCalc =(function () {
 
 		// substitute values for caclulator variables into an expression		
 		function substVar(expr) {
-			var lhName = getVarLhName(expr);
+			var lhName = getVarLhName(expr), origExpr = expr;
 			expr = getVarRhExpr(expr);
 			if (expr) {
 				// extract all variable names in expr
@@ -770,25 +799,40 @@ var cCalc =(function () {
 					expr = lhName + ' = ' + expr;
 				}
 			} else {
-				expr = undefined;
-			}			
+				expr = "undefined";
+			}						
 			
-			return expr;
+			// Keep going until we've replaced all variables
+			//console.debug("---orig", origExpr);
+			console.debug("--------expr", substVar.numCalls)			
+			if (expr !== origExpr) {
+				if (substVar.numCalls > 100) {
+					substVar.numCalls = 0;
+					calcVar.substResult = "too much recursion";
+				} else {
+					substVar.numCalls++
+					substVar(expr);
+				}
+			} else {	
+				substVar.numCalls = 0;
+				calcVar.substResult = expr;
+			}
 		}
+		substVar.numCalls = 0;
 		function getVarRhExpr(input) {			
-			return input.replace(/^\s*@\w*\s*=\s*(.+)\s*$/i, "$1");
+			return input.replace(/^\s*@\w*\s*:*=\s*(.+)\s*$/i, "$1");
 		}
 		function getVarLhName(input) {
 			// return empty string if there is no rh variable
-			if (!input.match(/^\s*@\w*\s*=/)) {
+			if (!input.match(/^\s*@\w*\s*:*=/)) {
 				return "";
 			} else {
-				return input.replace(/^\s*(@\w*)\s*=\s*.+\s*$/i, "$1");
+				return input.replace(/^\s*(@\w*)\s*:*=\s*.+\s*$/i, "$1");
 			}
 		}
 		function getVarVal(varName) {
 			if (varName === '@') {
-				return calc.result.prevResult.outputDisplay;
+				return calcVar.lastAns;
 			} else {
 				return varMap[varName] && varMap[varName].val;
 			}				
@@ -796,14 +840,19 @@ var cCalc =(function () {
 		function setVarMap(vm) {
 			varMap = vm;
 		}
+		function getVarMap() {
+			return varMap;
+		}
 		return {
-			varMap: varMap,
+			varMap: getVarMap,			
 			init: setVarMap,
 			create: createVar,
 			subst: substVar,
 			getRhExpr: getVarRhExpr,
 			getName: getVarLhName,
-			getVal: getVarVal
+			getVal: getVarVal,
+			//substResult: null;
+			//lastAns: null
 		};
 	}());
 	
