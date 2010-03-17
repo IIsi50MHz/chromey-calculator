@@ -13,10 +13,7 @@
 		"48": "48.png",
 		"128": "128.png"
 	},
-	"permissions": [
-		"http://www.google.com/",
-		"http://www.wolframalpha.com/"
-	],
+	"permissions": ["http://www.google.com/", "http://www.wolframalpha.com/"],
 	"options_page": "options.html",
 	"background_page": "background.html"
 }
