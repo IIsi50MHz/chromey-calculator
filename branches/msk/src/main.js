@@ -127,8 +127,17 @@ $links.$a.click(function(){
 
 $links.$span.children().each(function(){
 	var $this = $(this);
-	$this.click(function(){ commands[$this.html().toLowerCase()](); });
+	$this.click(commands[$this.html().toLowerCase()]);
 });
+
+$input.add(document)
+	.bind("keydown", "alt+c", commands.clear)
+	.bind("keydown", "alt+h", commands.help)
+	.bind("keydown", "alt+o", commands.options)
+	.bind("keydown", "alt+p", commands.popout)
+	.bind("keydown", "alt+r", function(){ Copy($output.children().last().contents().last().text()); })
+	.bind("keydown", "alt+s", function(){ Copy($output.children().last().children().attr("href")); });
+
 
 /*** functions ***/
 function saveData() {
@@ -168,6 +177,7 @@ function Copy(v) { // copies text to the clipboard
 	txt[0].select();
 	document.execCommand("Copy");
 	txt.remove();
+	$input.focus();
 }
 
 })(this, this.document, this.localStorage);
