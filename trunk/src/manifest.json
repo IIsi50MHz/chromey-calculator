@@ -1,20 +1,20 @@
 {
 	"name": "Chromey Calculator",
-	"version": "3.0.4",
-	"description": "A shockingly versatile scrolling calculator for Chrome. Results are generated using Google and WolframAlpha.",
+	"version": "3.1",
+	"description": "A shockingly versatile scrolling calculator for Chrome. Results are generated using Google and Wolfram|Alpha.",
 	"background_page": "background.html",
 	"browser_action": {
 		"popup": "popup.html",
 		"default_icon": "icon.png",
-		"default_title": "Chromey Calculator"  
+		"default_title": "Chromey Calculator"
 	},
-	"icons": { 
+	"icons": {
 		"16": "icon16.png",
 		"32": "icon32.png",
 		"48": "icon48.png",
-		"128": "icon128.png" 
+		"128": "icon128.png"
 	},
-	"permissions": [		
+	"permissions": [
 		"http://*.google.com/",
 		"https://*.google.com/",
 		"http://*.wolframalpha.com/"
