@@ -351,15 +351,13 @@ var cCalc = (function () {
 			// Variable substitution
 			if (!isVarInspect(input) && !inputIsVarAssignNoSubst) {
 				calcVar.subst(input);
-				input = calcVar.substResult;
-				//console.debug('input1', input);
+				input = calcVar.substResult;				
 			}
 			
 			// Update result object if there were any substitutions
 			if (input !== result.origInput && input !== result.varRhExpr) {
 				calcVar.subst(result.origInput);
-				result.varSubstInput = calcVar.substResult;
-				console.debug('varSubstInput', result.varSubstInput, "-----", result.varSubstInput);
+				result.varSubstInput = calcVar.substResult;				
 				// Make output undefined sustitution contains undefined
 				if (input.match(/undefined/)) {					
 					result.outputDisplay = result.outputPlain = "undefined";
@@ -381,8 +379,8 @@ var cCalc = (function () {
 			}
 			
 			function afterQuery() {
-				// Save last answer
-				calcVar.lastAns = calc.result.outputPlain;
+				// Save last answer				
+				calcVar.lastAns = calc.result.outputPlain;				
 				
 				// Create variable if we need to
 				if (result.varRhExpr) {
@@ -787,7 +785,7 @@ var cCalc = (function () {
 				// substitute the value of each variable into the expression (wrapped in parentheses)
 				if (varNameArr) { // make sure we have variables other than the previous output "@" variable
 					$.each(varNameArr, function () {
-						var val = varMap[this] ? varMap[this].val : undefined;
+						var val = getVarVal(this);
 						expr = expr.replace(/@\w+/i, openParen+val+closedParen);
 					});
 				}
@@ -802,9 +800,7 @@ var cCalc = (function () {
 				expr = "undefined";
 			}						
 			
-			// Keep going until we've replaced all variables
-			//console.debug("---orig", origExpr);
-			console.debug("--------expr", substVar.numCalls)			
+			// Keep going until we've replaced all variables					
 			if (expr !== origExpr) {
 				if (substVar.numCalls > 100) {
 					substVar.numCalls = 0;
@@ -819,7 +815,10 @@ var cCalc = (function () {
 			}
 		}
 		substVar.numCalls = 0;
-		function getVarRhExpr(input) {			
+		function getVarRhExpr(input) {	
+			// clean up input
+			input = $('<div>'+input+'</div>').text();
+			// grab rh expr
 			return input.replace(/^\s*@\w*\s*:*=\s*(.+)\s*$/i, "$1");
 		}
 		function getVarLhName(input) {
@@ -831,7 +830,7 @@ var cCalc = (function () {
 			}
 		}
 		function getVarVal(varName) {
-			if (varName === '@') {
+			if (varName === '@') {				
 				return calcVar.lastAns;
 			} else {
 				return varMap[varName] && varMap[varName].val;
