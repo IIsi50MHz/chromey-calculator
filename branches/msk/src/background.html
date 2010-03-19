@@ -1,7 +1,7 @@
 <script type="text/javascript">
 function updateViews(activewin) {
 	chrome.extension.getViews().forEach(function(win){
-		if (win === window || win === activewin) { return; }
+		if (win.location.pathname !== "/calc.html" || win === activewin) { return; }
 		
 		win.$(win).unbind("unload blur");
 		win.location.reload();

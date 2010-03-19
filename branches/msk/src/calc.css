@@ -52,6 +52,9 @@ body {
 #output > .replaced {
 	text-decoration: line-through;
 }
+#output > .error {
+	color: red;
+}
 
 #input {
 	width: 100%;

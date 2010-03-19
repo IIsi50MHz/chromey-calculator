@@ -35,7 +35,6 @@ function calc(input, cb) {
 			$r.find("sup").prepend("^");
 			var result = $r.text().replace(/.+=\s(.+)/, "$1").replace(/(\d)\s+(\d)/g, "$1,$2").replace(/\u00D7/g, "*");
 			
-			calc.ans = result;
 			cb(result, ["G", source], replaced ? input.replace(/\s*=$/, "") : "");
 		} else {
 			if (dym === false && (dym = $doc.find("#res a.spell:eq(0)").text().trim())) {
@@ -72,7 +71,6 @@ function calc(input, cb) {
 						
 						input = input.replace(/\s*=$/, "");
 						
-						calc.ans = result || input;
 						cb(result || input, result ? ["W", source] : null, replaced ? input : "");
 					});
 				} else {
