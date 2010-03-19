@@ -8,17 +8,26 @@ var commands = {
 	clear: Shell.clear,
 	help: function(){ window.open("help.html", "chromey-help"); },
 	options: function(){ window.open("options.html", "chromey-options"); },
-	popout: function(){
-		$input.val().trim().toLowerCase() === "popout" && $input.val("");
-		saveData();
+	popout: function(save){
+		self.close();
+		
+		if (save !== false) {
+			$input.val().trim().toLowerCase() === "popout" && $input.val("");
+			saveData();
+		}
 		
 		var p = JSON.parse(localStorage.popout || '{"top":100,"left":100,"width":450,"height":450}');
 		window.open("calc.html#popout", "chromey-popout", "top=" + p.top + ",left=" + p.left + ",width=" + p.width + ",height=" + p.height);
-	}
+	},
+	runtests: calc.test
 };
 
 
 /*** setup ***/
+if (window.location.hash === "#popup" && localStorage.defaultToPopout === "true") {
+	commands.popout(false);
+}
+
 $input.focus(); // focus the input
 
 if (window.location.hash !== "#popup") {
@@ -29,9 +38,8 @@ if (window.location.hash !== "#popup") {
 
 if ("v" in localStorage) {
 	loadData();
-} else {
-	localStorage.v = "4";
 }
+localStorage.v = "4";
 
 $("#output").add(document).scrollTop(1e6);
 
@@ -72,6 +80,8 @@ $input.keydown(function(e){ // handle enter and up/down keypresses
 		} else { // try calculating it
 			var input = val.replace(/\s*=$/, ""); // remove trailing =
 			calc(input, function(result, source, replace){
+				calc.ans = result || input;
+				
 				// add the result
 				Shell.io(input + " =", result, source, replace && replace + " =");
 				
@@ -164,7 +174,7 @@ function loadData() {
 	$input.val(localStorage.input);
 	$output.html(localStorage.results);
 	
-	var linksOpen = "linksOpen" in localStorage ? JSON.parse(localStorage.linksOpen) : true;
+	var linksOpen = localStorage.linksOpen !== "false";
 	$links.$span[linksOpen ? "show" : "hide"]().siblings("a").text(linksOpen ? ">" : "<");
 }
 

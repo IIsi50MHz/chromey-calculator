@@ -14,11 +14,26 @@
 			font-size: 16px;
 			padding: 15px 0 5px 0;
 		}
+		
+		input {
+			vertical-align: sub;
+		}
 		</style>
 	</head>
 	<body>
 		<h1 style="text-align: center; font-size: 20px; padding-top: 5px;">Options</h1>
 		
-		<h2>Popup</h2>
+		<h2>General</h2>
+		<input type="checkbox" id="defaultToPopout"><label for="defaultToPopout">Open the popout instead of the popup when clicking the toolbar button.</label>
+		
+		<script type="text/javascript" src="jquery.js"></script>
+		<script type="text/javascript">
+		$("[id]").each(function(){
+			if (this.type === "checkbox") {
+				this.checked = this.id in localStorage && localStorage[this.id] === "true";
+				$(this).click(function(){ localStorage[this.id] = this.checked; });
+			}
+		});
+		</script>
 	</body>
 </html>
