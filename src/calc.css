@@ -77,11 +77,12 @@ ul {
 .outputText {
 	position:relative;
 }
-#calcIcon {
+#calcIcon {	
 	position:fixed;
-	top:4px;
-	left:2px;
-	cursor:pointer;	
+	top:6px;
+	left:7px;
+	cursor:pointer;
+	display:none;
 }
 .resultLink {
 	color: #3E5785;
@@ -124,7 +125,7 @@ ul {
 #calcResultsWrapper {
 	position:relative;
 	margin: 0px 5px;
-	border:solid #3E5785 1px;;
+	border:solid #3E5785 1px;
 	background-color:rgba(221,234,249,.5);
 	-webkit-box-shadow: 0px 0px 3px black;
 	-webkit-border-radius: 0px;
@@ -132,10 +133,10 @@ ul {
 #chromeyCalcName {
 	position:absolute;
 	font-family:courier, monospace;
-	margin:19px 0px 0px 35px;	
-	font-size:15px;
-	color:#3E5785;
-	text-shadow:1px 1px 2px #ddd;
+	margin: 20px 0px 0px 6px;
+	font-size:16px;
+	color:#3c5481;
+	text-shadow:1px 1px 2px #ccc;
 	letter-spacing:2px;
 	font-weight:bold;
 	cursor:pointer;
@@ -149,7 +150,7 @@ ul {
 	position:relative;	
 	font-size:13px;
 	font-family:arial,sans-serif;
-	height:36px;
+	height:38px;
 	margin-right:2px;
 }
 .headerLink, .headerSeparator {
