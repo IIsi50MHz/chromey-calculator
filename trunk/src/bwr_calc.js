@@ -103,13 +103,21 @@ var cCalc = (function () {
 			
 			// Handle enter and arrow keydown events
 			$calcInput.keydown(function (e) {
-				var inputVal = this.value.trim();
+				var inputVal = this.value.trim(), iconName, iconFile;
 				// Handle special keys
 				if (e.which === 13 && inputVal) { // Enter
 					// Check for commands
 					if (inputVal === 'clear') {
 						// Clear results
 						$calcResults.empty();			
+					} else if (inputVal.indexOf('useIcon(') == '0') { // Change Chromey's toolbar icon
+						iconName = inputVal.slice(8, inputVal.length - 1); // Strip the 'useIcon(' and ')' from our param here
+						iconFile = "icon_"+iconName +".png";	
+						// Don't change icon unless it exsits (list of possible icons set in background.html)
+						if (background.icons.available[iconFile]) {
+							localStorage.useIcon = iconFile;
+							chrome.browserAction.setIcon({path: iconFile});							
+						}									
 					} else {
 						// Do calculation
 						calc.findResult(inputVal, function () {
@@ -234,7 +242,7 @@ var cCalc = (function () {
 				$calcInput.val(localStorage.calcInput);
 				$calcInput[0].selectionStart = localStorage.calcSelStart;
 				$calcInput[0].selectionEnd = localStorage.calcSelEnd;
-			}	
+			}			
 		}
 		
 		function storeCalcInfo() {			
@@ -244,7 +252,7 @@ var cCalc = (function () {
 			localStorage.prevInputs = JSON.stringify(history);
 
 			// store user variables			
-			localStorage.varMap =  JSON.stringify(calcVar.varMap());
+			localStorage.varMap = JSON.stringify(calcVar.varMap());
 			
 			// store last answer
 			localStorage.lastAns = calcVar.lastAns;
