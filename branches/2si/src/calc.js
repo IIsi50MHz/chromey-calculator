@@ -117,6 +117,13 @@
 			//~ $('#calcResultsWrapper').css('margin-top', "-18px")
 				//~ .height($('#calcResultsWrapper').height() + 18);
 		}
+		
+		// Restore user's preference for the main icon. See popup.html for a way to ensure that saved icon preference loads without having to open the popup.
+		useIcon = localStorage.useIcon;
+		if (useIcon != "" && useIcon != undefined) {
+			chrome.browserAction.setIcon({path: useIcon});
+			$("#calcIcon").attr("src",localStorage.calcIcon); // if localStorage.useIcon is defined, assume that localStorage.calcIcon is defined, too
+		}
 
 		// restore results scroll position (actually... scroll to bottom);
 		if (background.calcPopOut === window) {
@@ -235,8 +242,22 @@
 					localStorage.alphaOn = 'true';
 				} else if (inputVal === 'alphaOff') {
 					localStorage.alphaOn = 'false';
+				} else if (inputVal.indexOf('useIcon(') == '0') { // Change Chromey's main icon (used mainly on the toolbar).
+					foo = inputVal.slice(8,inputVal.length-1); // strip the 'useIcon(' and ')' from our param here
+					if (foo == "old") { //check for params here
+						localStorage.useIcon = 'oldChromey/icon16.png'; // classic Chromey uses different sizes.
+						localStorage.calcIcon = 'oldChromey/icon32.png';
+					} else if (foo == "pi" || foo == "default" || foo == "new") {
+						localStorage.useIcon = 'icon32.png';
+						localStorage.calcIcon = localStorage.useIcon;
+					} else {
+						localStorage.useIcon = foo +".png";
+						localStorage.calcIcon = localStorage.useIcon;
+					}
+					chrome.browserAction.setIcon({path: localStorage.useIcon});
+					$("#calcIcon").attr("src",localStorage.calcIcon);
 				} else if (inputVal === 'zoom') {
-					// Can still get W|Alpha's response for "zoom" by using "lookup zoom" instead.
+					// Can still get W|Alpha's response for "zoom" by using "lookup zoom" instead. Or just putting "(zoom)".
 					popZoomLevel();
 				} else {													
 					// do calculation
