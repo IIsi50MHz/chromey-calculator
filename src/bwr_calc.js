@@ -6,7 +6,7 @@ var cCalc = (function () {
 	// -----------------------------------------------------------------------
 	// 	Module declarations
 	// -----------------------------------------------------------------------
-	var calc, createQueryUri, extractCalcOutput, resultHtml, calcVar, calcStore;
+	var calc, createQueryUri, extractCalcOutput, resultHtml, calcVar, calcStore, calcCmd;
 	
 	// -----------------------------------------------------------------------
 	// 	Variables 
@@ -103,7 +103,7 @@ var cCalc = (function () {
 			
 			// Handle enter and arrow keydown events
 			$calcInput.keydown(function (e) {
-				var inputVal = this.value.trim(), iconName, iconFile;
+				var inputVal = this.value.trim(), iconName, iconFile, cmdArgs;
 				// Handle special keys
 				if (e.which === 13 && inputVal) { // Enter
 					// Check for commands
@@ -118,6 +118,10 @@ var cCalc = (function () {
 							localStorage.useIcon = iconFile;
 							chrome.browserAction.setIcon({path: iconFile});							
 						}									
+					} else if (inputVal.indexOf('cc(') == '0') { // A Chromey Calculator Command
+						// Strip the 'cc(' and ')' from our param here. Make an array of arguments
+						cmdArgs = inputVal.slice(3, inputVal.length - 1).split(/\s*,\s*/);						
+						calcCmd[cmdArgs[0]] && calcCmd[cmdArgs[0]].apply({}, cmdArgs.slice(1));
 					} else {
 						// Do calculation
 						calc.findResult(inputVal, function () {
@@ -214,7 +218,13 @@ var cCalc = (function () {
 	// 	calcStore
 	// -----------------------------------------------------------------------
 	calcStore = (function () {
+		// make sure there is a place to store options
+		localStorage.options || (localStorage.options = {});
+		
 		function loadCalcInfo() {
+			// restore user options
+			calcCmd.loadOptions();
+			
 			// restore displayed results
 			$calcResults[0].innerHTML = localStorage.calcResults || '';
 
@@ -861,6 +871,126 @@ var cCalc = (function () {
 			//substResult: null;
 			//lastAns: null
 		};
+	}());
+	
+	// -----------------------------------------------------------------------
+	// 	calcCmd
+	// -----------------------------------------------------------------------
+	calcCmd = (function () {		
+		var options = ["zoom", "width", "height"], // List of user options
+			cmd; // object containg Chromey Calc commands	
+		
+		function zoom(fac) {			
+			fac || fac == 0 || (fac = "");	
+
+			// Chrome only allows popout to get so wide before adding scroll-bars
+			var maxAllowed = 3;
+			if (fac > maxAllowed) {
+				fac = maxAllowed;
+			}
+			
+			// Don't let user set things too narrow...
+			var minAllowed = .5;
+			if (fac !== "" && fac < minAllowed) {
+				fac = minAllowed;
+			}
+			
+			$("#calcResults").css("zoom", fac);			
+			if (this != null) {
+				localStorage.opt_zoom = JSON.stringify([fac]);			
+			}
+		}
+		function width(w) {
+			w = parseInt(w);
+			w || (w = "");
+			
+			// Chrome only allows popout to get so wide before adding scroll-bars
+			var maxAllowed = 800;
+			if (w > maxAllowed) {
+				w = maxAllowed;
+			}	
+			
+			// Don't let user set things too narrow...
+			var minAllowed = 230;
+			if (w !== "" && w < minAllowed) {
+				w = minAllowed;
+			}
+			
+			$("body").css("width", w);	
+			if (this != null) {
+				localStorage.opt_width = JSON.stringify([w+"px"]);
+			}
+		}
+		function height(min, max) {
+			min = parseInt(min);
+			max = parseInt(max);			
+			min || min === 0 || (min = "");
+			max || max === 0 || (max = "");
+			
+			// Chrome only allows popout to get so tall before adding scroll-bars
+			var maxAllowed = 500;
+			if (min > maxAllowed) {
+				min = maxAllowed;
+			}
+			if (max > maxAllowed) {
+				max = maxAllowed;
+			}	
+			
+			// Don't let user set height too small (keep scroll-bars from showing up when result area is empty)...
+			var minAllowed = 35;
+			if (min !== "" && min < minAllowed) {
+				min = minAllowed;
+			}
+			if (max !== "" && max < minAllowed) {
+				max = minAllowed;
+			}
+			
+			
+			if (min && max) { // Set min and max
+				$("#calcResultsWrapper").css({height: "auto", minHeight: min+"px", maxHeight: max+"px"});				
+			} else if (min) { // Just set the height
+				$("#calcResultsWrapper").css({height: min+"px", minHeight: "", maxHeight: ""});
+			} else { // Reset				
+				$("#calcResultsWrapper").css({height: "", minHeight: "", maxHeight: ""});
+			}
+			if (this != null) {
+				localStorage.opt_height = JSON.stringify([min, max]);		
+			}
+		}		
+		
+		// Make dropdown as big as possible
+		function big() {
+			width(10000);
+			height(10000);
+		}
+		
+		function reset(opt) {
+			var args;
+			if (opt == null || opt === "all") {
+				args = options;				
+			} else {
+				args = $.makeArray(arguments);				
+			}
+			$(args).each(function (i, opt) {					
+				cmd[opt] && cmd[opt]();
+			});
+		}
+		
+		// make sure this is called before page is loaded
+		function loadOptions() {			
+			$(options).each(function (i, opt) {					
+				cmd[opt] && cmd[opt].apply(null, JSON.parse(localStorage["opt_"+opt] || "[]"));
+			});
+		}		
+		
+		return cmd = {
+			loadOptions: loadOptions,
+			zoom: zoom,
+			width: width,
+			height: height,
+			big: big,
+			reset: reset
+		}
 	}());
 	
 	// -----------------------------------------------------------------------
