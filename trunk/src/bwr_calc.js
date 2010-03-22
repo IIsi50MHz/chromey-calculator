@@ -961,10 +961,11 @@ var cCalc = (function () {
 			}
 		}
 		// -----------------------------------------------------------------------
-		// Make dropdown as big as possible
+		// Make dropdown as big as possible and make result text bigger
 		function big() {
 			width(10000);
 			height(10000);
+			zoom(1.4);
 		}
 		// -----------------------------------------------------------------------
 		// Fonts
