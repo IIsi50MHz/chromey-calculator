@@ -11,6 +11,7 @@ body {
 	font-size:17px;
 	font-family:monospace;
 	color:#123272;
+	overflow:hidden;
 }
 ul {
 	list-style-type:none;
