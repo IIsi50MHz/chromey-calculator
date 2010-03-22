@@ -106,8 +106,7 @@ ul {
 
 .result {
 	position:relative;
-	font-size:15px;
-	font-family:times, serif;
+	font-size:15px;	
 	margin-left:-25px;
 	border-left:solid 25px transparent;
 }
@@ -124,6 +123,7 @@ ul {
 	text-decoration:line-through;
 }
 #calcResultsWrapper {
+	font-family:times, serif;
 	position:relative;
 	margin: 0px 5px;
 	border:solid #3E5785 1px;
