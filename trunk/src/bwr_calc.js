@@ -7,16 +7,16 @@ var cCalc = (function () {
 	// 	Module declarations
 	// -----------------------------------------------------------------------
 	var calc, createQueryUri, extractCalcOutput, resultHtml, calcVar, calcStore, calcCmd;
-	
+
 	// -----------------------------------------------------------------------
-	// 	Variables 
+	// 	Variables
 	// -----------------------------------------------------------------------
-	var	calcSelStart, calcSelEnd, // variables to keep track of caret postion or selection in calc input area		
-		maxResults = 500, history = History(maxResults), // variables for history			
+	var	calcSelStart, calcSelEnd, // variables to keep track of caret postion or selection in calc input area
+		maxResults = 500, history = History(maxResults), // variables for history
 		lastRawOutput, // gets substitued for @ (last result) variable
 		lastAns,
-		background = chrome.extension.getBackgroundPage();		
-	
+		background = chrome.extension.getBackgroundPage();
+
 	// -----------------------------------------------------------------------
 	// 	Event Handlers
 	// -----------------------------------------------------------------------
@@ -26,70 +26,70 @@ var cCalc = (function () {
 		//delete localStorage.calcResults; delete localStorage.prevInputs; delete localStorage.varMap, localStorage.lastAns;
 		//////
 		// Stuff to do before DOM is ready
-		function showSourceLink(e) {		
-			$(this).stop().css("opacity", "").show();		
-		}	
-		function hideSourceLink(e) {		
-			$(this).animate({opacity: "0"}, 500);	
-		}	
-		// Show/hide link to result source on hover	
+		function showSourceLink(e) {
+			$(this).stop().css("opacity", "").show();
+		}
+		function hideSourceLink(e) {
+			$(this).animate({opacity: "0"}, 500);
+		}
+		// Show/hide link to result source on hover
 		$(".resultLink").live("mouseenter", showSourceLink);
-		$(".resultLink").live("mouseleave", hideSourceLink);	
-		
+		$(".resultLink").live("mouseleave", hideSourceLink);
+
 		//////
 		// Stuff to do once DOM is ready
-		$(function () {		
+		$(function () {
 			$calcInput = $("#calcInput");
 			$calcResults = $("#calcResults");
-			$calcResultsWrapper = $("#calcResultsWrapper");					
-			
+			$calcResultsWrapper = $("#calcResultsWrapper");
+
 			// Restore calculator state
 			calcStore.load();
 
 			// Focus input area
 			$calcInput.focus();
-			
+
 			// function to copy text to the clipboard
 			function Copy(v) {
 				var txt = $("<textarea/>").val(v).css({ position: "absolute", left: "-100%" }).appendTo("body");
 				txt[0].select();
 				document.execCommand("Copy");
 				txt.remove();
-			}			
-			
-			function popOutCalc() {		
+			}
+
+			function popOutCalc() {
 				var defaultPopOutWindowInfo = "width=300,height=400,scrollbars=no"
-				calcStore.save();		
+				calcStore.save();
 				if (background.calcPopOut) {
 					// don't let popout overwrite most current restults
 					background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
-					background.calcPopOut.close();			
+					background.calcPopOut.close();
 				}
-				background.calcPopOut = window.open('calc.html', 'calcPopOut', localStorage.popOutWindowInfo || defaultPopOutWindowInfo);		
-			}		
-			
+				background.calcPopOut = window.open('calc.html', 'calcPopOut', localStorage.popOutWindowInfo || defaultPopOutWindowInfo);
+			}
+
 			// Store pop-out position and dimentions as a single string that can be passed to window.open()
-			function savePopOutWindowInfo() {			
+			function savePopOutWindowInfo() {
 				var height = ",height="+window.innerHeight;
 				var width = ",width="+window.innerWidth;
 				var top = ",top="+window.screenTop;
-				var left = ",left="+window.screenLeft;		
-				localStorage.popOutWindowInfo = "resizable=yes"+height+width+top+left;					
+				var left = ",left="+window.screenLeft;
+				localStorage.popOutWindowInfo = "resizable=yes"+height+width+top+left;
 			}
-			
+
 			$(window).bind("unload blur", function () {
-				calcStore.save();			
+				calcStore.save();
 				// If there's a popup, update if we're enntering stuff in the dropdown
-				if (background.calcPopOut && background.calcPopOut !== window) {		
+				if (background.calcPopOut && background.calcPopOut !== window) {
 					// don't let popout overwrite most current restults
 					background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
-					background.calcPopOut.location.reload();					
+					background.calcPopOut.location.reload();
 				} else if (background.calcPopOut && background.calcPopOut === window) {
 					// save popout size and position info
 					savePopOutWindowInfo();
 				}
 			});
-			
+
 			$("body").height(0);
 
 			$("#clearAll").click(function () {
@@ -99,8 +99,8 @@ var cCalc = (function () {
 
 			$("#popOut").click(function () {
 				popOutCalc();
-			});			
-			
+			});
+
 			// Handle enter and arrow keydown events
 			$calcInput.keydown(function (e) {
 				var inputVal = this.value.trim(), iconName, iconFile, cmdArgs;
@@ -109,18 +109,18 @@ var cCalc = (function () {
 					// Check for commands
 					if (inputVal === 'clear') {
 						// Clear results
-						$calcResults.empty();			
+						$calcResults.empty();
 					} else if (inputVal.indexOf('useIcon(') == '0') { // Change Chromey's toolbar icon
 						iconName = inputVal.slice(8, inputVal.length - 1); // Strip the 'useIcon(' and ')' from our param here
-						iconFile = "icon_"+iconName +".png";	
+						iconFile = "icon_"+iconName +".png";
 						// Don't change icon unless it exsits (list of possible icons set in background.html)
 						if (background.icons.available[iconFile]) {
 							localStorage.useIcon = iconFile;
-							chrome.browserAction.setIcon({path: iconFile});							
-						}									
+							chrome.browserAction.setIcon({path: iconFile});
+						}
 					} else if (inputVal.indexOf('cc(') == '0') { // A Chromey Calculator Command
 						// Strip the 'cc(' and ')' from our param here. Make an array of arguments
-						cmdArgs = inputVal.slice(3, inputVal.length - 1).split(/\s*,\s*/);						
+						cmdArgs = inputVal.slice(3, inputVal.length - 1).split(/\s*,\s*/);
 						calcCmd[cmdArgs[0]] && calcCmd[cmdArgs[0]].apply({}, cmdArgs.slice(1));
 					} else {
 						// Do calculation
@@ -208,30 +208,30 @@ var cCalc = (function () {
 	var queryUriHead = {
 		google: "http://www.google.com/search?q=",
 		alpha: "http://www.wolframalpha.com/input/?i="
-	};	
-	
+	};
+
 	// -----------------------------------------------------------------------
 	// 	Module definitions
 	// -----------------------------------------------------------------------
-	
+
 	// -----------------------------------------------------------------------
 	// 	calcStore
 	// -----------------------------------------------------------------------
 	calcStore = (function () {
 		// make sure there is a place to store options
 		localStorage.options || (localStorage.options = {});
-		
+
 		function loadCalcInfo() {
 			// restore user options
 			calcCmd.loadOptions();
-			
+
 			// restore displayed results
 			$calcResults[0].innerHTML = localStorage.calcResults || '';
 
 			// restore results scroll position (actually... scroll to bottom);
-			if (background.calcPopOut === window) {				
+			if (background.calcPopOut === window) {
 				$calcResultsWrapper[0].scrollTop = $calcResultsWrapper[0].scrollHeight;
-			} else {				
+			} else {
 				$calcResultsWrapper[0].scrollTop = $calcResultsWrapper[0].scrollHeight;
 			}
 
@@ -246,24 +246,24 @@ var cCalc = (function () {
 			}
 			// restore last output
 			calcVar.lastAns = localStorage.lastAns;
-			
+
 			// restore calc input value and caret positon (or text selection)
 			if (localStorage.calcInput) {
 				$calcInput.val(localStorage.calcInput);
 				$calcInput[0].selectionStart = localStorage.calcSelStart;
 				$calcInput[0].selectionEnd = localStorage.calcSelEnd;
-			}			
+			}
 		}
-		
-		function storeCalcInfo() {			
+
+		function storeCalcInfo() {
 			// store results and inputs
 			$calcResults.find(".resultLink").css({display: "block", opacity: "0"});
 			localStorage.calcResults = $calcResults[0].innerHTML;
 			localStorage.prevInputs = JSON.stringify(history);
 
-			// store user variables			
+			// store user variables
 			localStorage.varMap = JSON.stringify(calcVar.varMap());
-			
+
 			// store last answer
 			localStorage.lastAns = calcVar.lastAns;
 
@@ -274,17 +274,17 @@ var cCalc = (function () {
 
 			// store scroll position
 			if (background.calcPopOut === window) {
-				localStorage.popOutScrollTop = $calcResultsWrapper.scrollTop();				
+				localStorage.popOutScrollTop = $calcResultsWrapper.scrollTop();
 			} else {
 				localStorage.scrollTop = $calcResultsWrapper.scrollTop();
-			}			
+			}
 		}
-		
+
 		return {
 			save: storeCalcInfo,
 			load: loadCalcInfo
-		}		
-	}());	
+		}
+	}());
 
 	// -----------------------------------------------------------------------
 	// 	calc
@@ -296,7 +296,7 @@ var cCalc = (function () {
 	//	calc.findResult(input, callback)
 	// 	calc.result
 	// 		{
-	//			origInput: <original user input>,	
+	//			origInput: <original user input>,
 	//			number: <original user input, only if it was a number>,
 	//			varVal: <value of variable, only if insepecting variable>,
 	//			varName: <lh side of variable assignment, only if there was an assignment>,
@@ -316,7 +316,7 @@ var cCalc = (function () {
 				"trying google, did you mean": "google",
 				"trying alpha": "alpha",
 				"failed": ""
-			},			
+			},
 			nextStatus = { // Used to decide what query to try next if last query failed
 				"trying google": "trying google, did you mean",
 				"trying google, did you mean": "trying alpha",
@@ -330,54 +330,54 @@ var cCalc = (function () {
 				varAssignNoSubst:  /^\s*@\w*\s*:=\s*.+$/,
 			};
 
-		// Extract output from query result doc			
-		function findResult(input, callback) {		
+		// Extract output from query result doc
+		function findResult(input, callback) {
 			// Reset result object
-			var result = calc.result = {prevResult: calc.result}, // Used to help contruct all the pieces of the result html				
+			var result = calc.result = {prevResult: calc.result}, // Used to help contruct all the pieces of the result html
 				inputIsVarAssignNoSubst = isVarAssignNoSubst(input);
-			
+
 			// Save original input to result object
 			result.origInput = $.trim(input);
-			
-			// Input is a variable assignment						
-			if (isVarAssign(input) || inputIsVarAssignNoSubst) {				
+
+			// Input is a variable assignment
+			if (isVarAssign(input) || inputIsVarAssignNoSubst) {
 				// Save LH and RH parts of input
 				result.varName = calcVar.getName(input);
-				result.varRhExpr = calcVar.getRhExpr(input);					
+				result.varRhExpr = calcVar.getRhExpr(input);
 				// Update input to rh expression for calcQuery
 				input = result.varRhExpr;
-			}			
+			}
 
 			// Input is nothing, no query
 			var doQuery = true;
 			if (inputIsVarAssignNoSubst) {
 				result.outputDisplay = result.outputPlain = result.varRhExpr;
 				doQuery = false;
-			} else if (isNothing(input)) {				
+			} else if (isNothing(input)) {
 				result.outputDisplay = result.outputPlain = "";
-				doQuery = false;				
+				doQuery = false;
 			// Input is just a number, no query
-			} else if (isNumber(input)) {				
+			} else if (isNumber(input)) {
 				result.outputDisplay = result.outputPlain = result.number = input;
 				doQuery = false;
 			// Input is a variable inspection, no query
-			} else if (isVarInspect(input)) {				
-				result.outputDisplay = result.outputPlain = result.varVal = calcVar.getVal(input);				
-				doQuery = false;				
+			} else if (isVarInspect(input)) {
+				result.outputDisplay = result.outputPlain = result.varVal = calcVar.getVal(input);
+				doQuery = false;
 			}
-			
+
 			// Variable substitution
 			if (!isVarInspect(input) && !inputIsVarAssignNoSubst) {
 				calcVar.subst(input);
-				input = calcVar.substResult;				
+				input = calcVar.substResult;
 			}
-			
+
 			// Update result object if there were any substitutions
 			if (input !== result.origInput && input !== result.varRhExpr) {
 				calcVar.subst(result.origInput);
-				result.varSubstInput = calcVar.substResult;				
+				result.varSubstInput = calcVar.substResult;
 				// Make output undefined sustitution contains undefined
-				if (input.match(/undefined/)) {					
+				if (input.match(/undefined/)) {
 					result.outputDisplay = result.outputPlain = "undefined";
 					doQuery = false;
 				} else if (result.varSubstInput === "too much recursion") {
@@ -387,24 +387,24 @@ var cCalc = (function () {
 					doQuery = false;
 				}
 			}
-			
+
 			if (doQuery) {
 				// Go fishing for a result
 				calcQuery(input, afterQuery);
 			} else {
-				// Done. No query needed.				
-				afterQuery();				
+				// Done. No query needed.
+				afterQuery();
 			}
-			
+
 			function afterQuery() {
-				// Save last answer				
-				calcVar.lastAns = calc.result.outputPlain;				
-				
+				// Save last answer
+				calcVar.lastAns = calc.result.outputPlain;
+
 				// Create variable if we need to
 				if (result.varRhExpr) {
 					calcVar.create(result.varName, result.outputPlain);
-				}									
-				callback && callback();	
+				}
+				callback && callback();
 			}
 		}
 
@@ -433,21 +433,21 @@ var cCalc = (function () {
 						// No result yet...
 						if (!output.plain) {
 							// If "did you mean" failed, revert back to original query input
-							if (result.status === "trying google, did you mean") {								
-								input = calcQuery.origQueryInput;	
+							if (result.status === "trying google, did you mean") {
+								input = calcQuery.origQueryInput;
 								delete calcQuery.origQueryInput;
 								delete calcQuery.correctedInput;
 							}
-							// Set status for next query					
+							// Set status for next query
 							result.status = nextStatus[result.status];
 							// See if next status is "did you mean"
 							if (result.status === "trying google, did you mean") {
 								calcQuery.correctedInput = grabDidYouMeanInput(doc);
 								// Save uncorrected query input
 								calcQuery.origQueryInput = input;
-								if (calcQuery.correctedInput) {									
+								if (calcQuery.correctedInput) {
 									// Next input query will be the corrected one
-									input = calcQuery.correctedInput;																							
+									input = calcQuery.correctedInput;
 								}
 							}
 							// Keep trying...
@@ -455,7 +455,7 @@ var cCalc = (function () {
 						// Result found.
 						} else {
 							// If input was corrected, save it
-							if (result.status === "trying google, did you mean") {							
+							if (result.status === "trying google, did you mean") {
 								// Tack variable to front of corrected input if user is doing an assignment
 								if (result.varName) {
 									// @x = <corrected stuff>
@@ -514,16 +514,16 @@ var cCalc = (function () {
 			input = input.
 				// add multipication sign between parentheses
 				replace(/\)\s*\(/g, ')*(').
-				// add multipication between digit char and "(" 
+				// add multipication between digit char and "("
 				replace(/(\d)\s*\(/g, '$1*(').
-				// add multipication between ")" and digit char				
+				// add multipication between ")" and digit char
 				replace(/\)\s*(\d)/g, ')*$1').
 				// add an equals sign at the end of expressions that end with a number, or a number followed by a ")"
 				//	NOTE: this forces expressions that look like, say, phone numbers to be evaluated
 				//	NOTE: adding the = for some expressions gives no results when wrapped in parentheses
 				//		Example: "(1000 km in ft)" works, but "(1000 km in ft)=" doesn't
 				replace(/(.*\d\s*\)*\s*)$/g, '$1=');
-				
+
 			return queryUriHead.google + encodeURIComponent(input);
 		}
 		// Wolfram|Alpha uri
@@ -568,7 +568,7 @@ var cCalc = (function () {
 					replace(/<font[^>]*>/g, '').replace(/<\/font>/g, '').
 					// ...remove spaces between numbers
 					replace(/&nbsp;/g, ' ').replace(/([0-9])\s+([0-9])/g, '$1$2');
-				
+
 				var outputDisplay = docHtml.replace(/.*=\s(.*)/, '$1'); // get stuff after = sign
 				return {
 					// get output for display (only using RH part of result for now)
@@ -643,34 +643,34 @@ var cCalc = (function () {
 	//	* Returns:
 	//		<a string>
 	resultHtml = (function () {
-		function createIntputHtml(type, expr) {			
+		function createIntputHtml(type, expr) {
 			return "<div class='input'><span class='"+type+"'>" + expr + "</span></div>";
 		}
-		
-		function createIntputHtmlEq(type, expr) {			
+
+		function createIntputHtmlEq(type, expr) {
 			return "<div class='input'><span class='"+type+"'>" + expr + " =</span></div>";
 		}
 
-		function createOutputHtml(type, expr) {			
+		function createOutputHtml(type, expr) {
 			return "<div class='output'><span class='"+type+"'>" + expr + "</span></div>";
-		}	
+		}
 
-		function createLinkHtml(queryType, uri) {			
+		function createLinkHtml(queryType, uri) {
 			var	linkText = {google: "G", alpha: "W"};
 			var $resultLink = $("<div><a target='_blank' class='resultLink'>" + (linkText[queryType] || "") + "</a></div>");
 			$resultLink = $resultLink.find("a").attr("href", calc.result.uri);
 			return $($resultLink).parent().html() || "";
-		}						
-		
+		}
+
 		function resultHtml() {
 			var result = calc.result;
 			var linkHtml = createLinkHtml(result.queryType, result.uri);
-			var resultInnerHtml = linkHtml;				
+			var resultInnerHtml = linkHtml;
 			var funcPicker = {
 				"createIntputHtml": createIntputHtml,
 				"createIntputHtmlEq": createIntputHtmlEq
-			}					
-			
+			}
+
 			var origInputType = "inputText", varSubstInputType = "inputText";
 			if (result.correctedInput) {
 				if (result.varSubstInput) {
@@ -678,37 +678,37 @@ var cCalc = (function () {
 				} else {
 					origInputType = "replacedInputText";
 				}
-			}			
-			
+			}
+
 			var resultInstructions; // [<result object property name>, <input type>, <html creator function name>]
 			if (result.varName) {
 				// Instructions for creating variable assignment input html
-				resultInstructions = [	
-					["origInput", origInputType, "createIntputHtml"], 
-					["varSubstInput", varSubstInputType, "createIntputHtml"], 
+				resultInstructions = [
+					["origInput", origInputType, "createIntputHtml"],
+					["varSubstInput", varSubstInputType, "createIntputHtml"],
 					["correctedInput", "inputText", "createIntputHtml"]
-				];			
+				];
 			} else {
-				// Instructions for regular input html								
-				resultInstructions = [						
-					["origInput", origInputType, "createIntputHtmlEq"], 
-					["varSubstInput", varSubstInputType, "createIntputHtmlEq"], 
+				// Instructions for regular input html
+				resultInstructions = [
+					["origInput", origInputType, "createIntputHtmlEq"],
+					["varSubstInput", varSubstInputType, "createIntputHtmlEq"],
 					["correctedInput", "inputText", "createIntputHtmlEq"]
 				];
-			}			
-			
+			}
+
 			// Create instructions for generating html for result
-			var instr, func, prop, type, i, len = resultInstructions.length;			
+			var instr, func, prop, type, i, len = resultInstructions.length;
 			for (i = 0; i < len; i++) {
-				instr = resultInstructions[i];	
+				instr = resultInstructions[i];
 				func = instr[2];
 				prop = instr[0];
-				type = instr[1];				
+				type = instr[1];
 				if (result[prop]) {
 					resultInnerHtml += funcPicker[func](type, result[prop]);
 				}
 			}
-		
+
 			// Output
 			resultInnerHtml += createOutputHtml('outputText', result.outputDisplay);
 
@@ -717,10 +717,10 @@ var cCalc = (function () {
 		}
 
 		return {
-			fullResult: resultHtml			
+			fullResult: resultHtml
 		};
 	}());
-	
+
 	calcVar = (function () {
 		var varMap = {};
 		// create a calculator variable
@@ -730,7 +730,7 @@ var cCalc = (function () {
 		function createVar(varName, varVal) {
 			// remove outermost parentheses before storing (if there are no inner ones)
 			varVal = varVal.replace(/\s*([\(\)])\s*/g, "$1").replace(/^\(+([^\(\)]*)\)+$/, "$1");
-			
+
 			if (varName !== "@" && varVal != null && varVal !== "undefined") { // don't save @ or undefined variables
 				varMap.size || (varMap.size = 0);
 				varMap.maxSize || (varMap.maxSize = 500);
@@ -781,11 +781,11 @@ var cCalc = (function () {
 				}
 
 				// now, prevVarName becomes varName for next time user creates a variable
-				varMap.prevVarName = varName;			
+				varMap.prevVarName = varName;
 			}
 		}
 
-		// substitute values for caclulator variables into an expression		
+		// substitute values for caclulator variables into an expression
 		function substVar(expr) {
 			var lhName = getVarLhName(expr), origExpr = expr;
 			expr = getVarRhExpr(expr);
@@ -793,13 +793,13 @@ var cCalc = (function () {
 				// extract all variable names in expr
 				var varNameArr = expr.match(/@\w+/g),
 					openParen = "(",
-					closedParen = ")";				
+					closedParen = ")";
 				// handle "@" variable
 				expr = expr.
 					// add spaces between @'s
-					replace(/@@/g, "@ @").replace(/@@/g, "@ @").					
+					replace(/@@/g, "@ @").replace(/@@/g, "@ @").
 					// wrap substitute variable and wrap in parentheses
-					replace(/@([^\w|@]+|$)/g, openParen+calc.result.prevResult.outputDisplay+closedParen+"$1");				
+					replace(/@([^\w|@]+|$)/g, openParen+calc.result.prevResult.outputDisplay+closedParen+"$1");
 				// substitute the value of each variable into the expression (wrapped in parentheses)
 				if (varNameArr) { // make sure we have variables other than the previous output "@" variable
 					$.each(varNameArr, function () {
@@ -807,18 +807,18 @@ var cCalc = (function () {
 						expr = expr.replace(/@\w+/i, openParen+val+closedParen);
 					});
 				}
-				
+
 				// get rid of spaces between parentheses
 				expr = expr.replace(/\)\s*\(/g, ")(");
 				// put lh var name back if original expr was an assignement
-				if (lhName) {	
+				if (lhName) {
 					expr = lhName + ' = ' + expr;
 				}
 			} else {
 				expr = "undefined";
-			}						
-			
-			// Keep going until we've replaced all variables					
+			}
+
+			// Keep going until we've replaced all variables
 			if (expr !== origExpr) {
 				if (substVar.numCalls > 100) {
 					substVar.numCalls = 0;
@@ -827,13 +827,13 @@ var cCalc = (function () {
 					substVar.numCalls++
 					substVar(expr);
 				}
-			} else {	
+			} else {
 				substVar.numCalls = 0;
 				calcVar.substResult = expr;
 			}
 		}
 		substVar.numCalls = 0;
-		function getVarRhExpr(input) {	
+		function getVarRhExpr(input) {
 			// clean up input
 			input = $('<div>'+input+'</div>').text();
 			// grab rh expr
@@ -848,12 +848,12 @@ var cCalc = (function () {
 			}
 		}
 		function getVarVal(varName) {
-			if (varName === '@') {				
+			if (varName === '@') {
 				return calcVar.lastAns;
 			} else {
 				return varMap[varName] && varMap[varName].val;
-			}				
-		}	
+			}
+		}
 		function setVarMap(vm) {
 			varMap = vm;
 		}
@@ -861,7 +861,7 @@ var cCalc = (function () {
 			return varMap;
 		}
 		return {
-			varMap: getVarMap,			
+			varMap: getVarMap,
 			init: setVarMap,
 			create: createVar,
 			subst: substVar,
@@ -872,61 +872,65 @@ var cCalc = (function () {
 			//lastAns: null
 		};
 	}());
-	
+
 	// -----------------------------------------------------------------------
 	// 	calcCmd
 	// -----------------------------------------------------------------------
-	calcCmd = (function () {		
-		var options = ["zoom", "width", "height"], // List of user options
-			cmd; // object containg Chromey Calc commands	
-		
-		function zoom(fac) {			
-			fac || fac == 0 || (fac = "");	
+	calcCmd = (function () {
+		// -----------------------------------------------------------------------
+		var
+		options, // List of stored options
+		obj; // Used to reference public returned object
+		// -----------------------------------------------------------------------
+		function zoom(fac) {
+			fac || fac == 0 || (fac = "");
 
 			// Chrome only allows popout to get so wide before adding scroll-bars
 			var maxAllowed = 3;
 			if (fac > maxAllowed) {
 				fac = maxAllowed;
 			}
-			
+
 			// Don't let user set things too narrow...
 			var minAllowed = .5;
 			if (fac !== "" && fac < minAllowed) {
 				fac = minAllowed;
 			}
-			
-			$("#calcResults").css("zoom", fac);			
+
+			$("#calcResults").css("zoom", fac);
 			if (this != null) {
-				localStorage.opt_zoom = JSON.stringify([fac]);			
+				localStorage.opt_zoom = JSON.stringify([fac]);
 			}
 		}
+		// -----------------------------------------------------------------------
 		function width(w) {
 			w = parseInt(w);
 			w || (w = "");
-			
+
 			// Chrome only allows popout to get so wide before adding scroll-bars
 			var maxAllowed = 800;
 			if (w > maxAllowed) {
 				w = maxAllowed;
-			}	
-			
+			}
+
 			// Don't let user set things too narrow...
 			var minAllowed = 230;
 			if (w !== "" && w < minAllowed) {
 				w = minAllowed;
 			}
-			
-			$("body").css("width", w);	
+
+			$("body").css("width", w);
 			if (this != null) {
 				localStorage.opt_width = JSON.stringify([w+"px"]);
 			}
 		}
+		// -----------------------------------------------------------------------
 		function height(min, max) {
 			min = parseInt(min);
-			max = parseInt(max);			
+			max = parseInt(max);
 			min || min === 0 || (min = "");
 			max || max === 0 || (max = "");
-			
+
 			// Chrome only allows popout to get so tall before adding scroll-bars
 			var maxAllowed = 500;
 			if (min > maxAllowed) {
@@ -934,8 +938,8 @@ var cCalc = (function () {
 			}
 			if (max > maxAllowed) {
 				max = maxAllowed;
-			}	
-			
+			}
+
 			// Don't let user set height too small (keep scroll-bars from showing up when result area is empty)...
 			var minAllowed = 35;
 			if (min !== "" && min < minAllowed) {
@@ -944,55 +948,99 @@ var cCalc = (function () {
 			if (max !== "" && max < minAllowed) {
 				max = minAllowed;
 			}
-			
-			
+
 			if (min && max) { // Set min and max
-				$("#calcResultsWrapper").css({height: "auto", minHeight: min+"px", maxHeight: max+"px"});				
+				$("#calcResultsWrapper").css({height: "auto", minHeight: min+"px", maxHeight: max+"px"});
 			} else if (min) { // Just set the height
 				$("#calcResultsWrapper").css({height: min+"px", minHeight: "", maxHeight: ""});
-			} else { // Reset				
+			} else { // Reset
 				$("#calcResultsWrapper").css({height: "", minHeight: "", maxHeight: ""});
 			}
 			if (this != null) {
-				localStorage.opt_height = JSON.stringify([min, max]);		
+				localStorage.opt_height = JSON.stringify([min, max]);
 			}
-		}		
-		
+		}
+		// -----------------------------------------------------------------------
 		// Make dropdown as big as possible
 		function big() {
 			width(10000);
 			height(10000);
 		}
-		
+		// -----------------------------------------------------------------------
+		// Fonts
+		function resultFont(fam) {
+			fam += ", times, serif";
+			$("#calcResultsWrapper").css({fontFamily: fam});
+			if (this != null) {
+				localStorage.opt_resultFont = JSON.stringify([fam]);
+			}
+		}
+		function inputFont(fam) {
+			fam += ", monospace";
+			$("#calcInput").css({fontFamily: fam});
+			if (this != null) {
+				localStorage.opt_inputFont = JSON.stringify([fam]);
+			}
+		}
+		function titleFont(fam) {
+			fam += ", monospace";
+			$("#chromeyCalcName").css({fontFamily: fam});
+			if (this != null) {
+				localStorage.opt_titleFont = JSON.stringify([fam]);
+			}
+		}
+		function headerLinksFont(fam) {
+			fam += ", arial";
+			$("#headerLinks").css({fontFamily: fam});
+			if (this != null) {
+				localStorage.opt_headerLinksFont = JSON.stringify([fam]);
+			}
+		}
+		function font(fam) {
+			resultFont(fam);
+			inputFont(fam);
+			titleFont(fam);
+			headerLinksFont(fam);
+		}
+		// -----------------------------------------------------------------------
+		// Reset options
 		function reset(opt) {
 			var args;
 			if (opt == null || opt === "all") {
-				args = options;				
+				args = options;
 			} else {
-				args = $.makeArray(arguments);				
+				args = $.makeArray(arguments);
 			}
-			$(args).each(function (i, opt) {					
-				cmd[opt] && cmd[opt]();
+			$(args).each(function (i, opt) {
+				obj[opt] && obj[opt]();
 			});
 		}
-		
-		// make sure this is called before page is loaded
-		function loadOptions() {			
-			$(options).each(function (i, opt) {					
-				cmd[opt] && cmd[opt].apply(null, JSON.parse(localStorage["opt_"+opt] || "[]"));
+		// -----------------------------------------------------------------------
+		// Load all options (make sure this is called before page is loaded)
+		function loadOptions() {
+			$(options).each(function (i, opt) {
+				obj[opt] && obj[opt].apply(null, JSON.parse(localStorage["opt_"+opt] || "[]"));
 			});
-		}		
-		
-		return cmd = {
+		}
+		// -----------------------------------------------------------------------
+		// List of stored options
+		options = ["zoom", "width", "height", "resultFont", "titleFont", "inputFont", "headerLinksFont"];
+		// -----------------------------------------------------------------------
+		return obj = {
 			loadOptions: loadOptions,
 			zoom: zoom,
 			width: width,
 			height: height,
 			big: big,
+			resultFont: resultFont,
+			inputFont: inputFont,
+			headerLinksFont: headerLinksFont,
+			titleFont: titleFont,
+			font: font,
 			reset: reset
-		}
+		};
 	}());
-	
+
 	// -----------------------------------------------------------------------
 	// 	Initialize Chromey Calculator
 	// -----------------------------------------------------------------------
