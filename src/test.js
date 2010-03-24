@@ -2,28 +2,20 @@ calc.test = function(){
 	var tests = [
 		{ i: "1 + 1", r: "2" },
 		{ i: "1 googol * 1 googol", r: "1.0 * 10^200" },
-		{ i: "2010 in roman", r: "MMX" },
-		{ i: "1/0", r: "Infinity" }
+		{ i: "1\" in '", r: "0.08333 feet" },
+		{ i: "Vars", r: "electric reactive power" }
 	], num = tests.length, failed = 0, cur;
 	
 	function run(result) {
-		if (result) {
-			cur.e.append(" Done!");
-			
-			if (result !== cur.r) {
-				Shell.raw('Test ' + (num - tests.length) + ' failed! Result was "' + result + '", should have been "' + cur.r + '".', "error", true);
-				failed++;
-			}
+		if (result && result !== cur.r) {
+			Shell.raw('Test ' + (num - tests.length) + ' failed! Result was "' + result + '", should have been "' + cur.r + '".', "error", true);
+			failed++;
 		}
 		
 		cur = tests.shift();
 		if (cur) {
-			cur.e = Shell.raw('Running test ' + (num - tests.length) + ' of ' + num + ', "' + cur.i + '"...', "", true);
-			try {
-				calc(cur.i, run);
-			} catch (e) {
-				Shell.raw('Test' + (num - tests.length) + ' generated an exception, "' + e + '"! :(', "error", true);
-			}
+			Shell.info('Running test ' + (num - tests.length) + ' of ' + num + ', "' + cur.i + '"...');
+			calc(cur.i, run);
 		} else {
 			Shell.info('Ran ' + num + ' tests, ' + failed + ' of which failed.');
 		}
