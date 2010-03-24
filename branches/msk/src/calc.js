@@ -55,7 +55,7 @@ function calc(input, cb) {
 						}
 						
 						results.forEach(function(v, i){
-							results[i] = JSON.parse(v.trim().replace(/^.+?(\{(?:.|\s)+\});$/, "$1")).stringified;
+							results[i] = eval(v.trim().replace(/^.+?(\{(?:.|\s)+\});$/, "($1)")).stringified;
 						});
 						
 						var r0 = results[0];

@@ -10,6 +10,7 @@ var commands = {
 	options: function(){ window.open("options.html", "chromey-options"); },
 	popout: function(save){
 		self.close();
+		background.popout && background.popout.close();
 		
 		if (save !== false) {
 			$input.val().trim().toLowerCase() === "popout" && $input.val("");
@@ -17,7 +18,7 @@ var commands = {
 		}
 		
 		var p = JSON.parse(localStorage.popout || '{"top":100,"left":100,"width":450,"height":450}');
-		window.open("calc.html#popout", "chromey-popout", "top=" + p.top + ",left=" + p.left + ",width=" + p.width + ",height=" + p.height);
+		background.popout = window.open("calc.html#popout", "chromey-popout", "top=" + p.top + ",left=" + p.left + ",width=" + p.width + ",height=" + p.height);
 	},
 	runtests: calc.test
 };
@@ -34,6 +35,10 @@ if (window.location.hash !== "#popup") {
 	$("body").css("width", "auto");
 	$("#output").css({ height: "auto", marginBottom: "26px" });
 	$("#input").css({ position: "fixed", bottom: 0 });
+}
+
+if (window.location.hash === "#popout") {
+	commands.popout = $.noop;
 }
 
 if ("v" in localStorage) {
@@ -56,7 +61,6 @@ $output.find(".output > a")
 	});
 
 $(window).bind("unload blur", function(){
-	saveData();
 	updateViews();
 });
 
@@ -72,11 +76,16 @@ $input.keydown(function(e){ // handle enter and up/down keypresses
 			Vars.add(a[1], a[2], function(result, source){
 				Shell.io("@" + a[1] + " = " + a[2], result, source);
 			});
-		} else if (m = val.match(/^@(\w+)\s*=?$/)) { // we're getting a variable
-			var v = Vars.list[a[1]] || { original: "", value: "undefined", source: ["", ""] };
-			Shell.raw("@" + a[1] + " =", "input");
-			Shell.raw(v.original, "replaced");
-			Shell.raw(v.value, "output").prepend($("<a/>", { html: v.source[0], href: v.source[1], target: "_tab" }).animate({ opacity: 0 }, 1500));
+		} else if (a = val.match(/^@(\w+)\s*=?$/)) { // we're getting a variable
+			var a = a[1], v = Vars.list[a];
+			if (v) {
+				Shell.raw("@" + a + " =", "input");
+				v.value !== v.original && Shell.raw(v.original, "replaced", true);
+				a = Shell.raw(v.value, "output", true);
+				v.source && a.prepend($("<a/>", { html: v.source[0], href: v.source[1], target: "_tab" }).animate({ opacity: 0 }, 1500));
+			} else {
+				Shell.io("@" + a + " =", "undefined");
+			}
 		} else { // try calculating it
 			var input = val.replace(/\s*=$/, ""); // remove trailing =
 			calc(input, function(result, source, replace){
@@ -89,7 +98,6 @@ $input.keydown(function(e){ // handle enter and up/down keypresses
 				
 				$results.length > 400 && $results.slice(0, $results.length - 400).remove(); // limit number of results
 				
-				saveData();
 				updateViews();
 			});
 		}
@@ -179,6 +187,7 @@ function loadData() {
 }
 
 function updateViews() {
+	saveData();
 	background.updateViews(window);
 }
 
