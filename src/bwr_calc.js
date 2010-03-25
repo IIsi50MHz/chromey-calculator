@@ -919,7 +919,7 @@ var cCalc = (function () {
 				w = minAllowed;
 			}
 
-			$("body").css("width", w);
+			$("#calcWrapper").css("width", w);
 			if (this != null) {
 				localStorage.opt_width = JSON.stringify([w+"px"]);
 			}
@@ -932,7 +932,7 @@ var cCalc = (function () {
 			max || max === 0 || (max = "");
 
 			// Chrome only allows popout to get so tall before adding scroll-bars
-			var maxAllowed = 500;
+			var maxAllowed = 600;
 			if (min > maxAllowed) {
 				min = maxAllowed;
 			}
@@ -950,11 +950,11 @@ var cCalc = (function () {
 			}
 
 			if (min && max) { // Set min and max
-				$("#calcResultsWrapper").css({height: "auto", minHeight: min+"px", maxHeight: max+"px"});
+				$("#calcWrapper").css({height: "auto", minHeight: min+"px", maxHeight: max+"px"});
 			} else if (min) { // Just set the height
-				$("#calcResultsWrapper").css({height: min+"px", minHeight: "", maxHeight: ""});
+				$("#calcWrapper").css({height: min+"px", minHeight: "", maxHeight: ""});
 			} else { // Reset
-				$("#calcResultsWrapper").css({height: "", minHeight: "", maxHeight: ""});
+				$("#calcWrapper").css({height: "", minHeight: "", maxHeight: ""});
 			}
 			if (this != null) {
 				localStorage.opt_height = JSON.stringify([min, max]);
@@ -968,31 +968,34 @@ var cCalc = (function () {
 			zoom(1.4);
 		}
 		// -----------------------------------------------------------------------
+		// Make dropdown as big as possible and make result text bigger
+		function small() {
+			width();
+			height();
+			zoom();
+		}
+		// -----------------------------------------------------------------------
 		// Fonts
-		function resultFont(fam) {
-			fam += ", times, serif";
-			$("#calcResultsWrapper").css({fontFamily: fam});
+		function resultFont(fam) {						
+			$("#calcResultsWrapper").css({fontFamily: fam || ""});			
 			if (this != null) {
 				localStorage.opt_resultFont = JSON.stringify([fam]);
 			}
 		}
-		function inputFont(fam) {
-			fam += ", monospace";
-			$("#calcInput").css({fontFamily: fam});
+		function inputFont(fam) {			
+			$("#calcInput").css({fontFamily: fam || ""});
 			if (this != null) {
 				localStorage.opt_inputFont = JSON.stringify([fam]);
 			}
 		}
-		function titleFont(fam) {
-			fam += ", monospace";
-			$("#chromeyCalcName").css({fontFamily: fam});
+		function titleFont(fam) {			
+			$("#chromeyCalcName").css({fontFamily: fam || ""});
 			if (this != null) {
 				localStorage.opt_titleFont = JSON.stringify([fam]);
 			}
 		}
-		function headerLinksFont(fam) {
-			fam += ", arial";
-			$("#headerLinks").css({fontFamily: fam});
+		function headerLinksFont(fam) {			
+			$("#headerLinks").css({fontFamily: fam || ""});
 			if (this != null) {
 				localStorage.opt_headerLinksFont = JSON.stringify([fam]);
 			}
@@ -1033,6 +1036,7 @@ var cCalc = (function () {
 			width: width,
 			height: height,
 			big: big,
+			small: small,
 			resultFont: resultFont,
 			inputFont: inputFont,
 			headerLinksFont: headerLinksFont,
