@@ -11,62 +11,48 @@
 		
 		<link rel="stylesheet" type="text/css" href="calc.css" />
 		<style>
-			body {				
-				width:450px;				
-			}
-			.scrollableTable {				
-				position:relative;				
-				table-layout:fixed;				
-				width:100%;
-				margin:0;
-				padding:0;
-			}
-			#calcResultsWrapper {	
-				height:318px;
-				min-height:55px;
-				max-height:500px;
+			#calcWrapper {				
+				position:relative;					
+				width:450px;
+				height:401px;				
 			}			
 		</style>
 		<script src="jquery.js"></script>
 		<script src="history.js"></script>		
 		<script src="bwr_calc.js"></script>
 	</head>
-	<body id="calc">	
-		<table class="scrollableTable">			
-			<tr>
-				<td class="shrinkCell">
-					<div id="headerWrapper">												
-						<div id="headerLinks">						
-							<a href="#popOut" id="popOut" class="headerLink">
-								<img src="popOutIcon.png"/>
-							</a>
-							<span class="headerSeparator">|</span>
-							<a href="http://www.google.com/help/calculator.html" target="_tab" id="googleCalcHelp" class="headerLink">Help</a>
-							<span class="headerSeparator">|</span>
-							<a href="#calcResults" id="clearAll" class="headerLink">Clear</a>														
-						</div>
-						<a href="https://chrome.google.com/extensions/detail/acgimceffoceigocablmjdpebeodphgc" target="_tab" id="chromeyCalcPageLink">
-							<img src="icon16.png" id="calcIcon"/>
-							<pre id="chromeyCalcName">Chromey Calculator</pre>
-						</a>
-					</div>
-				</td>
-			</tr>
-			<tr>
-				<td class="scrollableCell">					
-					<div id="calcResultsWrapper" class="scrollableCellInner">						
-						<ul id="calcResults"></ul>
-					</div>					
-				</td>		
-			</tr>
-			<tr>
-				<td class="shrinkCell">	
-					<div id="calcInputWrapper">
-						<input type="text" id="calcInput" value=""/>
-						<div id="inputMarker">></div>						
-					</div>					
-				</td>		
-			</tr>
-		</table>		
+	<body id="calc">		
+		<div id="calcWrapper" class="vbox">						
+			<!--
+				Header
+			-->
+			<div id="headerWrapper" class="boxFlex0">												
+				<div id="headerLinks">					
+					<a href="#popOut" id="popOut" class="headerLink">
+						<img src="popOutIcon.png"/>
+					</a>
+					<span class="headerSeparator">|</span>
+					<a href="http://www.google.com/help/calculator.html" target="_tab" id="googleCalcHelp" class="headerLink">Help</a>
+					<span class="headerSeparator">|</span>
+					<a href="#calcResults" id="clearAll" class="headerLink">Clear</a>														
+				</div>
+				<a href="https://chrome.google.com/extensions/detail/acgimceffoceigocablmjdpebeodphgc"target="_tab" id="chromeyCalcPageLink">					
+					<pre id="chromeyCalcName">xChromeyChromey Calculator</pre>
+				</a>
+			</div>			
+			<!--
+				Results
+			-->				
+			<div id="calcResultsWrapper" class="boxFlex1">						
+				<ul id="calcResults"></ul>
+			</div>	
+			<!--
+				Input
+			-->			
+			<div id="calcInputWrapper" class="boxFlex0">
+				<input type="text" id="calcInput"/>
+				<div id="inputMarker">></div>						
+			</div>			
+		</div>		
 	</body>	
 </html>
