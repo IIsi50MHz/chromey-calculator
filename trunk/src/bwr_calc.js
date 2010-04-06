@@ -599,8 +599,8 @@ var cCalc = (function () {
 			}
 
 			return {
-				display: output.replace(/\\n/g, "<br/>"),
-				plain: output.replace(/\\n/g, "<br/>")
+				display: output && output.replace(/\\n/g, "<br/>"),
+				plain: output && output.replace(/\\n/g, "<br/>")
 			};
 		}
 
