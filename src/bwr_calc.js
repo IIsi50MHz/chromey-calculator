@@ -18,9 +18,8 @@ var cCalc = (function () {
 		background = chrome.extension.getBackgroundPage();
 
 	// -----------------------------------------------------------------------
-	// 	Event Handlers
+	// 	Initialization Code //**TODO: clean up this section
 	// -----------------------------------------------------------------------
-	// TODO: This section pasted and chopped up from old calc.js. Still need to re-write this section, fill and fill missing pieces
 	var $calcInput,	$calcResults, $calcResultsWrapper;
 	function calcInit() {
 		//delete localStorage.calcResults; delete localStorage.prevInputs; delete localStorage.varMap, localStorage.lastAns;
@@ -207,7 +206,7 @@ var cCalc = (function () {
 	// query uri heads
 	var queryUriHead = {
 		google: "http://www.google.com/search?q=",
-		alpha: "http://www.wolframalpha.com/input/?i="
+		alpha: "http://m.wolframalpha.com/input/?i="
 	};
 
 	// -----------------------------------------------------------------------
@@ -583,48 +582,25 @@ var cCalc = (function () {
 				};
 			}
 		}
+
 		// Extract result from Wolfram|Alpha query doc
 		function extractAlphaCalcOutput(doc) {
-			var resultsArray = doc.match(/^.*context.jsonArray.popups.*$/gm) || [];
-			var context = {jsonArray: {popups: {}}};
-			var resultObj = context.jsonArray.popups;
+			var $resultPods = $(doc).filter("#results").find(".pod"),
+			input = calc.result.origInput, output,
+			firstPodHtml = $resultPods.html();
+			console.debug(doc)
+			//**TODO: show multiple results for solve
 
-			$.each(resultsArray, function (i, val) {
-				try {
-					eval(val.replace(/",.*/, '"}'));
-				}
-				catch (e) {
-					// Do nothing
-				}
-			});
-
-			var input = calc.result.origInput,
-				output, afterEqual;
-			if (resultObj.i_0100_1) {
-				afterEqual = $.trim(resultObj.i_0100_1.stringified.replace(/[^=]*/, "")).replace("=", "");
-			}
-			if (afterEqual &&  !input.match(/^\s*solve/i)) {
-				// make output look nicer
-				output = afterEqual.
-					replace("+", " + ").
-					replace("-", " - ").
-					replace(/^ - /, "-").
-					replace(/\( - /, "(-");
-				//console.log("i_0100_1", output)
-			} else if (resultObj.i_0200_1) {
-				output = resultObj.i_0200_1.stringified;
-				//console.log("i_0200_1", output)
-			} else if (resultObj.i_0300_1) {
-				output = resultObj.i_0300_1.stringified;
-				//console.log("i_0300_1", output)
-			} else if (resultObj.i_0400_1) {
-				output = resultObj.i_0400_1.stringified;
-				//console.log("i_0400_1", output)
+			// Use first pod if result is not just an input interpretation
+			if (firstPodHtml && !firstPodHtml.match('Input interpretation:')) {
+				output = $resultPods.eq(0).find("img").attr("alt");
+			} else {
+				output = $resultPods.eq(1).find("img").attr("alt");
 			}
 
 			return {
-				display: output,
-				plain: output
+				display: output.replace(/\\n/g, "<br/>"),
+				plain: output.replace(/\\n/g, "<br/>")
 			};
 		}
 
@@ -721,6 +697,10 @@ var cCalc = (function () {
 		};
 	}());
 
+	// -----------------------------------------------------------------------
+	// 	calcVar
+	// -----------------------------------------------------------------------
+	// **TODO: explain how calcVar is used
 	calcVar = (function () {
 		var varMap = {};
 		// create a calculator variable
@@ -808,7 +788,7 @@ var cCalc = (function () {
 					});
 				}
 
-				// get rid of spaces between parentheses
+				// get rid of spaces between parentheses (**TODO: see if we can get rid of this)
 				expr = expr.replace(/\)\s*\(/g, ")(");
 				// put lh var name back if original expr was an assignement
 				if (lhName) {
@@ -876,6 +856,7 @@ var cCalc = (function () {
 	// -----------------------------------------------------------------------
 	// 	calcCmd
 	// -----------------------------------------------------------------------
+	// User commands/options live here
 	calcCmd = (function () {
 		// -----------------------------------------------------------------------
 		var
@@ -976,25 +957,25 @@ var cCalc = (function () {
 		}
 		// -----------------------------------------------------------------------
 		// Fonts
-		function resultFont(fam) {						
-			$("#calcResultsWrapper").css({fontFamily: fam || ""});			
+		function resultFont(fam) {
+			$("#calcResultsWrapper").css({fontFamily: fam || ""});
 			if (this != null) {
 				localStorage.opt_resultFont = JSON.stringify([fam]);
 			}
 		}
-		function inputFont(fam) {			
+		function inputFont(fam) {
 			$("#calcInput").css({fontFamily: fam || ""});
 			if (this != null) {
 				localStorage.opt_inputFont = JSON.stringify([fam]);
 			}
 		}
-		function titleFont(fam) {			
+		function titleFont(fam) {
 			$("#chromeyCalcName").css({fontFamily: fam || ""});
 			if (this != null) {
 				localStorage.opt_titleFont = JSON.stringify([fam]);
 			}
 		}
-		function headerLinksFont(fam) {			
+		function headerLinksFont(fam) {
 			$("#headerLinks").css({fontFamily: fam || ""});
 			if (this != null) {
 				localStorage.opt_headerLinksFont = JSON.stringify([fam]);
