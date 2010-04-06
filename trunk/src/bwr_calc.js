@@ -592,7 +592,7 @@ var cCalc = (function () {
 			//**TODO: show multiple results for solve
 
 			// Use first pod if result is not just an input interpretation
-			if (firstPodHtml && !firstPodHtml.match('Input interpretation:')) {
+			if (firstPodHtml && !(firstPodHtml.match('>Input interpretation:<') || firstPodHtml.match('>Input:<'))) {
 				output = $resultPods.eq(0).find("img").attr("alt");
 			} else {
 				output = $resultPods.eq(1).find("img").attr("alt");
