@@ -585,21 +585,40 @@ var cCalc = (function () {
 
 		// Extract result from Wolfram|Alpha query doc
 		function extractAlphaCalcOutput(doc) {
-			var $resultPods = $(doc).filter("#results").find(".pod"),
-			input = calc.result.origInput, output,
-			firstPodHtml = $resultPods.html();
-			console.debug(doc)
-			//**TODO: show multiple results for solve
-
+			var 
+			input = calc.result.origInput, 
+			inputIsSolve = !!input.match(/^\s*solve[\(\[]/i),
+			$resultPods = $(doc).filter("#results").find(".pod"), 
+			$outputPod,
+			firstPodHtml = $resultPods.html(),
+			output = "";		
+			console.debug(doc)			
+			
 			// Use first pod if result is not just an input interpretation
-			if (firstPodHtml && !(firstPodHtml.match('>Input interpretation:<') || firstPodHtml.match('>Input:<'))) {
-				output = $resultPods.eq(0).find("img").attr("alt");
+			if (firstPodHtml && !(firstPodHtml.match('>Input interpretation:<') || firstPodHtml.match('>Input:<'))) {				
+				$outputPod = $resultPods.eq(0);
 			} else {
-				output = $resultPods.eq(1).find("img").attr("alt");
+				$outputPod = $resultPods.eq(1);				
 			}
-
+			if (inputIsSolve) {
+				// Show all results for solve queries
+				$outputPod.find("img").each(function () {	
+					output += $(this).attr("alt") + "<br/>"
+				});
+				output = output.replace(/<br\/>$/, "");
+			} else {
+				// Show first result only for any other queries
+				output = $outputPod.find("img").attr("alt");
+			}			
+			output = output && output
+				// Clean up "solve" results (remove exacty result if there is an approximate results)
+				.replace(/=[^=~]*~~/g, "~~")
+				.replace(/~~/g, "&asymp;")
+				// Clean up results with \n newlines
+				.replace(/\\n/g, "<br/>");
+			
 			return {
-				display: output && output.replace(/\\n/g, "<br/>"),
+				display: output && output,
 				plain: output && output.replace(/\\n/g, "<br/>")
 			};
 		}
