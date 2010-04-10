@@ -311,12 +311,14 @@ var cCalc = (function () {
 	//		}
 	calc = (function () {
 		var queryTypeByStatus = { // Used to decide to query Google or Wolfram|Alpha or give up
+				"trying js": "js",
 				"trying google": "google",
 				"trying google, did you mean": "google",
 				"trying alpha": "alpha",
 				"failed": ""
 			},
 			nextStatus = { // Used to decide what query to try next if last query failed
+				"trying js": "trying google",
 				"trying google": "trying google, did you mean",
 				"trying google, did you mean": "trying alpha",
 				"trying alpha": "failed"
@@ -409,9 +411,10 @@ var cCalc = (function () {
 
 		// Go find a result
 		function calcQuery(input, callback) {
-			// New query (start with google)
+			var uri;
+			// New query (start with js)
 			if (!calc.result.status) {
-				calc.result.status = "trying google";
+				calc.result.status = "trying js";
 			}
 			var queryType = queryTypeByStatus[calc.result.status || ""],
 				didYouMeanInfo = {},
@@ -423,54 +426,61 @@ var cCalc = (function () {
 				result.queryType = queryType;
 				callback && callback(result);
 			} else {
-				// Query for result
-				$.ajax({
-					url: createQueryUri[queryType](input),
-					success: function (doc) {
-						var output = extractCalcOutput[queryType](doc);
-						result = result || {};
-						// No result yet...
-						if (!output.plain) {
-							// If "did you mean" failed, revert back to original query input
-							if (result.status === "trying google, did you mean") {
-								input = calcQuery.origQueryInput;
-								delete calcQuery.origQueryInput;
-								delete calcQuery.correctedInput;
-							}
-							// Set status for next query
-							result.status = nextStatus[result.status];
-							// See if next status is "did you mean"
-							if (result.status === "trying google, did you mean") {
-								calcQuery.correctedInput = grabDidYouMeanInput(doc);
-								// Save uncorrected query input
-								calcQuery.origQueryInput = input;
-								if (calcQuery.correctedInput) {
-									// Next input query will be the corrected one
-									input = calcQuery.correctedInput;
-								}
-							}
-							// Keep trying...
-							calcQuery(input, callback);
-						// Result found.
-						} else {
-							// If input was corrected, save it
-							if (result.status === "trying google, did you mean") {
-								// Tack variable to front of corrected input if user is doing an assignment
-								if (result.varName) {
-									// @x = <corrected stuff>
-									result.correctedInput = result.varName + ' = ' + calcQuery.correctedInput;
-								} else {
-									result.correctedInput = calcQuery.correctedInput;
-								}
-							}
-							result.outputDisplay = output.display;
-							result.outputPlain = output.plain;
-							result.queryType = queryType;
-							result.uri = createQueryUri[queryType](input);
-							callback && callback(result);
+				uri = createQueryUri[queryType](input);
+				if (!uri) {
+					queryCallback(input);
+				} else {
+					// Query for result
+					$.ajax({
+						url: uri,
+						success: queryCallback
+					});
+				}
+			}
+
+			function queryCallback(doc) {
+				var output = extractCalcOutput[queryType](doc);
+				result = result || {};
+				// No result yet...
+				if (!output.plain) {
+					// If "did you mean" failed, revert back to original query input
+					if (result.status === "trying google, did you mean") {
+						input = calcQuery.origQueryInput;
+						delete calcQuery.origQueryInput;
+						delete calcQuery.correctedInput;
+					}
+					// Set status for next query
+					result.status = nextStatus[result.status];
+					// See if next status is "did you mean"
+					if (result.status === "trying google, did you mean") {
+						calcQuery.correctedInput = grabDidYouMeanInput(doc);
+						// Save uncorrected query input
+						calcQuery.origQueryInput = input;
+						if (calcQuery.correctedInput) {
+							// Next input query will be the corrected one
+							input = calcQuery.correctedInput;
 						}
 					}
-				});
+					// Keep trying...
+					calcQuery(input, callback);
+				// Result found.
+				} else {
+					// If input was corrected, save it
+					if (result.status === "trying google, did you mean") {
+						// Tack variable to front of corrected input if user is doing an assignment
+						if (result.varName) {
+							// @x = <corrected stuff>
+							result.correctedInput = result.varName + ' = ' + calcQuery.correctedInput;
+						} else {
+							result.correctedInput = calcQuery.correctedInput;
+						}
+					}
+					result.outputDisplay = output.display;
+					result.outputPlain = output.plain;
+					result.queryType = queryType;
+					result.uri = createQueryUri[queryType](input);
+					callback && callback(result);
+				}
 			}
 		}
 
@@ -508,6 +518,11 @@ var cCalc = (function () {
 	//	* Returns:
 	//		<a uri>
 	createQueryUri = (function () {
+		// no uri for javascript "query"
+		function generateJsUri(input) {
+			return false;
+		}
+
 		// Google uri
 		function generateInputGoogleQueryUri(input) {
 			input = input.
@@ -530,6 +545,7 @@ var cCalc = (function () {
 			return queryUriHead.alpha + encodeURIComponent(input);
 		}
 		return {
+			js: generateJsUri,
 			google: generateInputGoogleQueryUri,
 			alpha: generateInputAlphaQueryUri
 		};
@@ -548,6 +564,33 @@ var cCalc = (function () {
 	//			plain: <output for storing in variables>
 	// 		}
 	extractCalcOutput = (function () {
+		// Extract output from javascript "query"
+		function extractJsCalcOutput(input) {
+			var output, regexExclusions,
+			regexJsExclusions = /(\^)/, // let Google or W|Alpha handle powers
+			regexJsInclusions = /function/ // ^ is ok in user functions... (still doesn't do powers though)
+			try {
+				// try using js to evaluate input
+				output = isolatedEval(input);
+				if (regexJsInclusions.test(input) || typeof output === "number" && !regexJsExclusions.test(input)) {
+					return {
+						display: output,
+						plain: output
+					};
+				} else {
+					return {
+						display: null,
+						plain: null
+					};
+				}
+ 			} catch (err) {
+				return {
+					display: null,
+					plain: null
+				};
+			}
+		}
+
 		// Extract output from google query result doc
 		function extractGoogleCalcOutput(doc) {
 			var $doc = $(doc);
@@ -585,38 +628,38 @@ var cCalc = (function () {
 
 		// Extract result from Wolfram|Alpha query doc
 		function extractAlphaCalcOutput(doc) {
-			var 
-			input = calc.result.origInput, 
+			var
+			input = calc.result.origInput,
 			inputIsSolve = !!input.match(/^\s*solve[\(\[]/i),
-			$resultPods = $(doc).filter("#results").find(".pod"), 
+			$resultPods = $(doc).filter("#results").find(".pod"),
 			$outputPod,
 			firstPodHtml = $resultPods.html(),
-			output = "";		
-			console.debug(doc)			
-			
+			output = "";
+			//console.debug(doc)
+
 			// Use first pod if result is not just an input interpretation
-			if (firstPodHtml && !(firstPodHtml.match('>Input interpretation:<') || firstPodHtml.match('>Input:<'))) {				
+			if (firstPodHtml && !(firstPodHtml.match('>Input interpretation:<') || firstPodHtml.match('>Input:<'))) {
 				$outputPod = $resultPods.eq(0);
 			} else {
-				$outputPod = $resultPods.eq(1);				
+				$outputPod = $resultPods.eq(1);
 			}
 			if (inputIsSolve) {
 				// Show all results for solve queries
-				$outputPod.find("img").each(function () {	
+				$outputPod.find("img").each(function () {
 					output += $(this).attr("alt") + "<br/>"
 				});
 				output = output.replace(/<br\/>$/, "");
 			} else {
 				// Show first result only for any other queries
 				output = $outputPod.find("img").attr("alt");
-			}			
+			}
 			output = output && output
 				// Clean up "solve" results (remove exacty result if there is an approximate results)
 				.replace(/=[^=~]*~~/g, "~~")
 				.replace(/~~/g, "&asymp;")
 				// Clean up results with \n newlines
 				.replace(/\\n/g, "<br/>");
-			
+
 			return {
 				display: output && output,
 				plain: output && output.replace(/\\n/g, "<br/>")
@@ -624,6 +667,7 @@ var cCalc = (function () {
 		}
 
 		return {
+			js: extractJsCalcOutput,
 			google: extractGoogleCalcOutput,
 			alpha: extractAlphaCalcOutput
 		}
@@ -1051,3 +1095,6 @@ var cCalc = (function () {
 	// -----------------------------------------------------------------------
 	calcInit();
 }());
+function isolatedEval(input, isolatedEval, cCalc, History, window, undefined) {
+	return eval(input);
+}
