@@ -564,6 +564,17 @@ var cCalc = (function () {
 	//			plain: <output for storing in variables>
 	// 		}
 	extractCalcOutput = (function () {
+		// Attempt js eval only if input is safe
+		function sanitaryEval(input) {
+			var output, regexInputNotSanitary = /[^+-\/*.()\d\s]/;	
+			if (regexInputNotSanitary.test(input)) {
+				output = null;
+			} else {
+				output = eval(input);
+			}
+			return output;
+		}
+		
 		// Extract output from javascript "query"
 		function extractJsCalcOutput(input) {
 			var output, regexExclusions,
@@ -571,7 +582,7 @@ var cCalc = (function () {
 			regexJsInclusions = /function/ // ^ is ok in user functions... (still doesn't do powers though)
 			try {
 				// try using js to evaluate input
-				output = isolatedEval(input);
+				output = sanitaryEval(input);
 				if (regexJsInclusions.test(input) || typeof output === "number" && !regexJsExclusions.test(input)) {
 					return {
 						display: output,
@@ -1095,6 +1106,3 @@ var cCalc = (function () {
 	// -----------------------------------------------------------------------
 	calcInit();
 }());
-function isolatedEval(input, isolatedEval, cCalc, History, window, undefined) {
-	return eval(input);
-}
