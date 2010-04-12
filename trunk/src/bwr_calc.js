@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Brent Weston Robinett
+ * Copyright (c) 2009, 2010 Brent Weston Robinett <bwrobinett@gmail.com>
  * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
  */
 var cCalc = (function () {
