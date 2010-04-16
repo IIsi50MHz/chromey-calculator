@@ -566,15 +566,16 @@ var cCalc = (function () {
 	extractCalcOutput = (function () {
 		// Attempt js eval only if input is safe
 		function sanitaryEval(input) {
-			var output, regexInputNotSanitary = /[^+-\/*.()\d\s]/;	
+			var output, dec = Math.pow(10, 8), regexInputNotSanitary = /[^+-\/*.()\d\s]/;
 			if (regexInputNotSanitary.test(input)) {
 				output = null;
 			} else {
-				output = eval(input);
+				// Try to fix it so we don't get goofy results when calculating things like 2.01 - 2.0
+				output = Math.round(dec*eval(input))/dec;
 			}
 			return output;
 		}
-		
+
 		// Extract output from javascript "query"
 		function extractJsCalcOutput(input) {
 			var output, regexExclusions,
