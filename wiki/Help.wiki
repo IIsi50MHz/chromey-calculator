@@ -1,0 +1,11 @@
+#summary Chromey Calculator Help.
+
+= Entering expressions =
+= Variables =
+== Valid variable names ==
+== Unevaluated expressions ==
+= History =
+= Copy/Paste tricks =
+= Source links for results =
+= Examples =
+
