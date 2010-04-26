@@ -2,7 +2,7 @@
  * Copyright (c) 2009, 2010 Brent Weston Robinett <bwrobinett@gmail.com>
  * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
  */
-var cCalc = (function (window) {	
+var cCalc = (function (window, document) {	
 	// -----------------------------------------------------------------------
 	// 	Module declarations
 	// -----------------------------------------------------------------------
@@ -55,6 +55,7 @@ var cCalc = (function (window) {
 	function calcInit(currentWindow) {
 		// Set window to whatever window was passed to calcInit
 		window = currentWindow;
+		document = window.document;
 		// Make sure we're using jQuery for current window
 		$ = jQuery = background.jQuery = background.$ = window.jQuery;
 		//delete localStorage.calcResults; delete localStorage.prevInputs; delete localStorage.varMap, localStorage.lastAns;
@@ -1078,11 +1079,11 @@ var cCalc = (function (window) {
 			titleFont(fam);
 			headerLinksFont(fam);
 		}
-		// -----------------------------------------------------------------------
-		// Quick Key
-		function quickKeyOn(isOn) {
-			localStorage.opt_quickKeyOn = JSON.stringify([!!isOn]);
-		}
+		// // -----------------------------------------------------------------------
+		// // Quick Key
+		// function quickKeyOn(isOn) {
+			// localStorage.opt_quickKeyOn = JSON.stringify([!!isOn]);
+		// }
 		// -----------------------------------------------------------------------
 		// Reset options
 		function reset(opt) {
@@ -1105,7 +1106,7 @@ var cCalc = (function (window) {
 		}
 		// -----------------------------------------------------------------------
 		// List of stored options
-		options = ["zoom", "width", "height", "resultFont", "titleFont", "inputFont", "headerLinksFont", "quickKeyOn"];
+		options = ["zoom", "width", "height", "resultFont", "titleFont", "inputFont", "headerLinksFont"];
 		// -----------------------------------------------------------------------
 		return obj = {
 			loadOptions: loadOptions,
@@ -1119,7 +1120,7 @@ var cCalc = (function (window) {
 			headerLinksFont: headerLinksFont,
 			titleFont: titleFont,
 			font: font,
-			quickKeyOn: quickKeyOn,
+			//quickKeyOn: quickKeyOn,
 			reset: reset
 		};
 	}());
