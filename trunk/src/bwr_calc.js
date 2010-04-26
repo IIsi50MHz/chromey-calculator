@@ -95,6 +95,7 @@ var cCalc = (function (window) {
 			});
 			
 			$(window).bind("unload blur", function () {
+				calcStore.save();
 				// If there's a popup, update if we're enntering stuff in the dropdown
 				if (background.calcPopOut && background.calcPopOut !== window) {
 					// don't let popout overwrite most current restults
@@ -989,7 +990,8 @@ var cCalc = (function (window) {
 
 			$("#calcWrapper").css("width", w);
 			if (this != null) {
-				localStorage.opt_width = JSON.stringify([w+"px"]);
+				!w || (w += "px");
+				localStorage.opt_width = JSON.stringify([w]);
 			}
 		}
 		// -----------------------------------------------------------------------
@@ -1009,7 +1011,7 @@ var cCalc = (function (window) {
 			}
 
 			// Don't let user set height too small (keep scroll-bars from showing up when result area is empty)...
-			var minAllowed = 35;
+			var minAllowed = 153;
 			if (min !== "" && min < minAllowed) {
 				min = minAllowed;
 			}
@@ -1025,6 +1027,8 @@ var cCalc = (function (window) {
 				$("#calcWrapper").css({height: "", minHeight: "", maxHeight: ""});
 			}
 			if (this != null) {
+				!min || (min += "px");
+				!max || (max += "px");
 				localStorage.opt_height = JSON.stringify([min, max]);
 			}
 		}
@@ -1075,6 +1079,11 @@ var cCalc = (function (window) {
 			headerLinksFont(fam);
 		}
 		// -----------------------------------------------------------------------
+		// Quick Key
+		function quickKeyOn(isOn) {
+			localStorage.opt_quickKeyOn = JSON.stringify([!!isOn]);
+		}
+		// -----------------------------------------------------------------------
 		// Reset options
 		function reset(opt) {
 			var args;
@@ -1096,7 +1105,7 @@ var cCalc = (function (window) {
 		}
 		// -----------------------------------------------------------------------
 		// List of stored options
-		options = ["zoom", "width", "height", "resultFont", "titleFont", "inputFont", "headerLinksFont"];
+		options = ["zoom", "width", "height", "resultFont", "titleFont", "inputFont", "headerLinksFont", "quickKeyOn"];
 		// -----------------------------------------------------------------------
 		return obj = {
 			loadOptions: loadOptions,
@@ -1110,6 +1119,7 @@ var cCalc = (function (window) {
 			headerLinksFont: headerLinksFont,
 			titleFont: titleFont,
 			font: font,
+			quickKeyOn: quickKeyOn,
 			reset: reset
 		};
 	}());
@@ -1120,6 +1130,7 @@ var cCalc = (function (window) {
 	//calcInit();
 	return {
 		init: calcInit,
+		calcCmd: calcCmd,
 		popOutCalc: popOutCalc
 	}
 }());

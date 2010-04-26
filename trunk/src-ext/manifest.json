@@ -2,7 +2,7 @@
 	"name": "Extend Chromey Calculator",
 	"version": "0.1",
 	"description": "Adds features to Chromey Caclulator.",
-	"background_page": "background.html",	
+	"background_page": "background.html",		
 	"icons": { 
 		"16": "icon16.png",
 		"32": "icon32.png",

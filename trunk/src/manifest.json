@@ -3,6 +3,7 @@
 	"version": "3.2.5",
 	"description": "A shockingly versatile scrolling calculator for Chrome. Results are generated using Google and Wolfram|Alpha.",
 	"background_page": "background.html",
+	"options_page": "options.html",
 	"browser_action": {
 		"popup": "popup.html",
 		"default_icon": "icon.png",
