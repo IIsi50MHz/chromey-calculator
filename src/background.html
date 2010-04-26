@@ -25,13 +25,6 @@
 		
 		var background = {};		
 		
-		// For simple requests:
-		chrome.extension.onRequestExternal.addListener(function(request, sender, sendResponse) {			
-			if (request.openPopOut) {							
-				background.calcPopOut = window.open('calc.html', 'calcPopOut', localStorage.popOutWindowInfo);
-			}				
-			sendResponse({});
-		});
 		
 		// var extendChromeyCalcId = "njloeiaipgbkinikjhenmgacopoecbci";		
 		// setInterval(function () {			
@@ -44,4 +37,14 @@
 	<script src="jquery.js"></script>
 	<script src="history.js"></script>	
 	<script src="bwr_calc.js"></script>
+	<script>
+		// open popout when asked
+		chrome.extension.onRequestExternal.addListener(function(request, sender, sendResponse) {			
+			if (request.openPopOut) {		
+				console.debug("hwlo", cCalc.popOutCalc)
+				cCalc.popOutCalc();
+			}				
+			sendResponse({});
+		});
+	</script>
 </html>

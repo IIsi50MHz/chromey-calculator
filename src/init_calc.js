@@ -4,5 +4,5 @@
  */
 (function () {
 	var background = chrome.extension.getBackgroundPage();	
-	background.cc = background.cCalc.init.call(window, window, jQuery);	
+	background.cCalc.init(window);	
 }());
