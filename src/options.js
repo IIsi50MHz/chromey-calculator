@@ -28,6 +28,6 @@
 	$(document).delegate(optionSel, "keyup change blur", updateOption);
 	$(document).delegate(".reset", "click", function () {		
 		var $option = $(this).closest("tr").find("input").val("").focus();
-		updateOption.call($option[0].id);
+		updateOption.call($option[0]);
 	});	
 }());
