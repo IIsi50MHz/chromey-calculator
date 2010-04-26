@@ -40,7 +40,9 @@
 	<script>
 		// open popout when asked
 		chrome.extension.onRequestExternal.addListener(function(request, sender, sendResponse) {			
-			if (request.openPopOut) {		
+			var qkOn = JSON.parse(localStorage.opt_quickKeyOn)[0];
+			console.debug("qkon", qkOn);
+			if (request.openPopOut && qkOn) {		
 				console.debug("hwlo", cCalc.popOutCalc)
 				cCalc.popOutCalc();
 			}				

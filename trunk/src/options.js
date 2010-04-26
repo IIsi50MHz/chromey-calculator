@@ -5,14 +5,16 @@
 (function () {
 	var background = chrome.extension.getBackgroundPage();	
 	var cCalc = background.cCalc;
-	var optionSel = "input[type=text]";
+	var optionSel = "input";
 	var $options = $(optionSel);
 	function loadOptionValues() {
 		console.debug("otpoins", $options.length);
 		$(optionSel).each(function() {
 			var val = JSON.parse(localStorage["opt_"+this.id] || "[]")[0];
-			if (this.id !== "height") {
+			if (this.id == "height") {
 				this.value = val || "";
+			} else if (this.id == "quickKeyOn") {
+				$(this).attr("checked", !!val);
 			} else {
 				this.value = val || "";
 			}
