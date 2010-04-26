@@ -16,7 +16,38 @@ var cCalc = (function (window) {
 		lastRawOutput, // gets substitued for @ (last result) variable
 		lastAns,
 		background = chrome.extension.getBackgroundPage();
+	
+	// -----------------------------------------------------------------------
+	// 	Some functions that need a better home...
+	// -----------------------------------------------------------------------
+	// function to copy text to the clipboard
+	function Copy(v) {
+		var txt = $("<textarea/>").val(v).css({ position: "absolute", left: "-100%" }).appendTo("body");
+		txt[0].select();
+		document.execCommand("Copy");
+		txt.remove();
+	}
 
+	function popOutCalc() {
+		var defaultPopOutWindowInfo = "width=300,height=400,scrollbars=no"
+		//calcStore.save();
+		console.debug("hello!????? paoputp;/?")
+		if (background.calcPopOut) {
+			// don't let popout overwrite most current restults
+			background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
+			background.calcPopOut.close();
+		}
+		background.calcPopOut = background.open('calc.html', 'calcPopOut', localStorage.popOutWindowInfo || defaultPopOutWindowInfo);
+	}
+
+	// Store pop-out position and dimentions as a single string that can be passed to window.open()
+	function savePopOutWindowInfo() {
+		var height = ",height="+window.innerHeight;
+		var width = ",width="+window.innerWidth;
+		var top = ",top="+window.screenTop;
+		var left = ",left="+window.screenLeft;
+		localStorage.popOutWindowInfo = "resizable=yes"+height+width+top+left;
+	}			
 	// -----------------------------------------------------------------------
 	// 	Initialization Code //**TODO: clean up this section
 	// -----------------------------------------------------------------------
@@ -41,7 +72,7 @@ var cCalc = (function (window) {
 
 		//////
 		// Stuff to do once DOM is ready
-		var ccRevealedInitFuncs = $(function () {			
+		$(function () {			
 			$calcInput = $("#calcInput");
 			$calcResults = $("#calcResults");
 			$calcResultsWrapper = $("#calcResultsWrapper");			
@@ -50,48 +81,7 @@ var cCalc = (function (window) {
 			calcStore.load();
 
 			// Focus input area
-			$calcInput.focus();
-
-			// function to copy text to the clipboard
-			function Copy(v) {
-				var txt = $("<textarea/>").val(v).css({ position: "absolute", left: "-100%" }).appendTo("body");
-				txt[0].select();
-				document.execCommand("Copy");
-				txt.remove();
-			}
-
-			function popOutCalc() {
-				var defaultPopOutWindowInfo = "width=300,height=400,scrollbars=no"
-				calcStore.save();
-				if (background.calcPopOut) {
-					// don't let popout overwrite most current restults
-					background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
-					background.calcPopOut.close();
-				}
-				background.calcPopOut = background.open('calc.html', 'calcPopOut', localStorage.popOutWindowInfo || defaultPopOutWindowInfo);
-			}
-
-			// Store pop-out position and dimentions as a single string that can be passed to window.open()
-			function savePopOutWindowInfo() {
-				var height = ",height="+window.innerHeight;
-				var width = ",width="+window.innerWidth;
-				var top = ",top="+window.screenTop;
-				var left = ",left="+window.screenLeft;
-				localStorage.popOutWindowInfo = "resizable=yes"+height+width+top+left;
-			}
-
-					// $(window).bind("unload blur", function () {
-						// calcStore.save();
-						// // If there's a popup, update if we're enntering stuff in the dropdown
-						// if (background.calcPopOut && background.calcPopOut !== window) {
-							// // don't let popout overwrite most current restults
-							// background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
-							// background.calcPopOut.location.reload();
-						// } else if (background.calcPopOut && background.calcPopOut === window) {
-							// // save popout size and position info
-							// savePopOutWindowInfo();
-						// }
-					// });
+			$calcInput.focus();				
 
 			$("body").height(0);
 
@@ -102,6 +92,17 @@ var cCalc = (function (window) {
 
 			$("#popOut").click(function () {
 				popOutCalc();
+			});
+			
+			$(window).bind("unload blur", function () {
+				// If there's a popup, update if we're enntering stuff in the dropdown
+				if (background.calcPopOut && background.calcPopOut !== window) {
+					// don't let popout overwrite most current restults
+					background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");					
+				} else if (background.calcPopOut && background.calcPopOut === window) {
+					// save popout size and position info
+					savePopOutWindowInfo();
+				}
 			});
 
 			// Handle enter and arrow keydown events
@@ -206,9 +207,7 @@ var cCalc = (function (window) {
 
 			// refocus calc input no matter where user clicks
 			$(document).click(function () {$calcInput.focus();});
-			$calcResultsWrapper.scroll(function () {$calcInput.focus();});
-			
-			return ccRevealedInitFuncs;
+			$calcResultsWrapper.scroll(function () {$calcInput.focus();});			
 		});
 	}
 	// -----------------------------------------------------------------------
@@ -1120,6 +1119,7 @@ var cCalc = (function (window) {
 	// -----------------------------------------------------------------------
 	//calcInit();
 	return {
-		init: calcInit,	
+		init: calcInit,
+		popOutCalc: popOutCalc
 	}
 }());
