@@ -68,15 +68,16 @@ var cCalc = (function (window, document) {
 			$(this).animate({opacity: "0"}, 500);
 		}
 		// Show/hide link to result source on hover
-		$(".resultLink").live("mouseenter", showSourceLink);
-		$(".resultLink").live("mouseleave", hideSourceLink);
+		$(document).undelegate();
+		$(document).delegate(".resultLink", "mouseenter", showSourceLink);
+		$(document).delegate(".resultLink", "mouseleave", hideSourceLink);
 
 		//////
 		// Stuff to do once DOM is ready
 		$(function () {			
-			$calcInput = $("#calcInput");
-			$calcResults = $("#calcResults");
-			$calcResultsWrapper = $("#calcResultsWrapper");			
+			$calcInput = $("#calcInput").unbind();
+			$calcResults = $("#calcResults").unbind();
+			$calcResultsWrapper = $("#calcResultsWrapper").unbind();			
 
 			// Restore calculator state
 			calcStore.load();
@@ -86,16 +87,16 @@ var cCalc = (function (window, document) {
 
 			$("body").height(0);
 
-			$("#clearAll").click(function () {
+			$("#clearAll").unbind().click(function () {
 				// Clear results
 				$calcResults.empty();
 			});
 
-			$("#popOut").click(function () {
+			$("#popOut").unbind().click(function () {
 				popOutCalc();
 			});
 			
-			$(window).bind("unload blur", function () {
+			$(window).unbind().bind("unload blur", function () {
 				calcStore.save();
 				// If there's a popup, update if we're enntering stuff in the dropdown
 				if (background.calcPopOut && background.calcPopOut !== window) {
@@ -179,7 +180,7 @@ var cCalc = (function (window, document) {
 			});
 
 			// insert result when user clicks on it
-			$(".outputText, .inputText, .replacedInputText, .errorInputText, .errorOutputText, .inputTextWithVars, .replacedVarAssignmentInputText, .varAssignmentInputText, .varAssignmentOutputText").live("click", function (e) {
+			$(document).delegate(".outputText, .inputText, .replacedInputText, .errorInputText, .errorOutputText, .inputTextWithVars, .replacedVarAssignmentInputText, .varAssignmentInputText, .varAssignmentOutputText", "click", function (e) {
 				var $this = $(this);
 				var resultText = $this.text().replace(/\s*=\s*$/, '');  // prepare result text for insertion
 
