@@ -1,0 +1,21 @@
+body {
+	font-family:arial, sans-serif;			
+}
+
+h1 {
+	text-align:center;	
+}
+table {
+	margin-top: 10px;
+	position:relative;
+	margin:auto;
+}
+th {
+	text-align:left;
+	font-size:120%;
+	padding:15px 0px 5px;
+}
+
+input[type=text] {
+	width:120px;	
+}
