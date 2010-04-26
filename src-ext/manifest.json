@@ -1,7 +1,7 @@
 {
 	"name": "Extend Chromey Calculator",
 	"version": "0.1",
-	"description": "Add feature to Chromey Caclulator.",
+	"description": "Adds features to Chromey Caclulator.",
 	"background_page": "background.html",	
 	"icons": { 
 		"16": "icon16.png",
@@ -13,8 +13,7 @@
 		"matches": ["http://*/*", "https://*/*"],
 		"css": ["cc_extend.css"],
 		"js": ["cc_extend.js"],
-		"all_frames": true
-		
+		"all_frames": true		
 	}],
 	"permissions": [		
 		"http://*/*",
