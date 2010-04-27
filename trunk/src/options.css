@@ -19,3 +19,19 @@ th {
 input[type=text] {
 	width:120px;	
 }
+
+.optionInfo  {
+	opacity:.8;
+	margin-top: -8px;
+	margin-bottom: 8px;
+	font-size: 80%;
+	position:relative;
+	width:230px;	
+}
+
+#localGoogleUrl {	
+	width:100%;
+}
+.fullInput {
+	padding-left:23px;
+}

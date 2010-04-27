@@ -7,14 +7,16 @@
 	var cCalc = background.cCalc;
 	var optionSel = "input";
 	var $options = $(optionSel);
-	function loadOptionValues() {
-		console.debug("otpoins", $options.length);
+	function loadOptionValues() {		
+		//console.debug("otpoins", $options.length, $this.attr("type"));
 		$(optionSel).each(function() {
+			var $this = $(this);
+			console.debug("otpoins", $options.length, this.id, $this.attr("type"));
 			var val = JSON.parse(localStorage["opt_"+this.id] || "[]")[0];
 			if (this.id == "height") {
 				this.value = val || "";
-			} else if (this.id == "quickKeyOn") {
-				$(this).attr("checked", !!val);
+			} else if ($this.attr("type") === "checkbox") {				
+				$this.attr("checked", !!val);
 			} else {
 				this.value = val || "";
 			}
