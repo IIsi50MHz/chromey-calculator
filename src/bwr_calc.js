@@ -1080,10 +1080,20 @@ var cCalc = (function (window, document) {
 			titleFont(fam);
 			headerLinksFont(fam);
 		}
-		// // -----------------------------------------------------------------------
+		// -----------------------------------------------------------------------
 		// Quick Key
 		function quickKeyOn(isOn) {
 			localStorage.opt_quickKeyOn = JSON.stringify([!!isOn]);
+		}
+		// -----------------------------------------------------------------------
+		// Local Google URL
+		function localGoogleOn(isOn) {
+			localStorage.opt_localGoogleOn = JSON.stringify([!!isOn]);
+		}
+		// -----------------------------------------------------------------------
+		// Local Google URL
+		function localGoogleUrl(url) {
+			localStorage.opt_localGoogleUrl = JSON.stringify([url]);
 		}
 		// -----------------------------------------------------------------------
 		// Reset options
@@ -1107,7 +1117,10 @@ var cCalc = (function (window, document) {
 		}
 		// -----------------------------------------------------------------------
 		// List of stored options
-		options = ["zoom", "width", "height", "resultFont", "titleFont", "inputFont", "headerLinksFont", "quickKeyOn"];
+		options = [
+			"zoom", "width", "height", "resultFont", "titleFont", "inputFont", "headerLinksFont", 
+			"quickKeyOn", "localGoogleOn", "localGoogleUrl"
+		];
 		// -----------------------------------------------------------------------
 		return obj = {
 			loadOptions: loadOptions,
@@ -1122,6 +1135,8 @@ var cCalc = (function (window, document) {
 			titleFont: titleFont,
 			font: font,
 			quickKeyOn: quickKeyOn,
+			localGoogleOn: localGoogleOn,
+			localGoogleUrl: localGoogleUrl,
 			reset: reset
 		};
 	}());
