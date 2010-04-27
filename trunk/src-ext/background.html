@@ -5,25 +5,29 @@
  */
 -->
 <html> 
+	<script src="jquery.js"></script>
 	<script>		
 		var background = {};
 		
-		chromeyCalcId = "ddemjgejmgakdkemjilldlljelclimcd";		
-		console.debug("Is this thing on? 1")
-		// setInterval(function () {
-			// console.debug("Is this thing on? 2")
-			// // Make a simple request:
-			// chrome.extension.sendRequest(chromeyCalcId, {openPopOut: "DING DONG!!!!!"}, function (response) {
-				// console.debug("Is this thing on? 3")				
-			// });
-		// }, 5000);
+		chromeyCalcId = "mgmpajefleiinfpfmpippabcgcjicpna";	// dev id
+		//chromeyCalcId = "acgimceffoceigocablmjdpebeodphgc"; // release id
+		console.debug("Chromey Calculator Helper");				
 		
-		// For simple requests:
-		// chrome.extension.onRequestExternal.addListener(function(request, sender, sendResponse) {
-			// if (request.openPopOut) {
-				// console.debug("----hell????----", request.openPopOut)
-			// }				
-			// sendResponse({});
-		// });
+		chrome.extension.onRequestExternal.addListener(function(request, sender, sendResponse) {			
+			if (request.queryUri) {				
+				// Query for result
+				$.ajax({
+					url: request.queryUri,
+					success: function (doc) {						
+						sendResponse({doc: doc});						
+					}, 
+					error: function () {						
+						sendResponse({});						
+					}
+				});				
+			} else {			
+				sendResponse({});
+			}
+		});
 	</script> 
 </html>
