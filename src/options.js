@@ -25,7 +25,7 @@
 	
 	loadOptionValues();
 	
-	function updateOption() {
+	function updateOption() {		
 		cCalc.calcCmd[this.id](this.value);
 		return this;
 	}

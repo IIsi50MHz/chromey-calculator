@@ -15,7 +15,9 @@ var cCalc = (function (window, document) {
 		maxResults = 500, history = History(maxResults), // variables for history
 		lastRawOutput, // gets substitued for @ (last result) variable
 		lastAns,
-		background = chrome.extension.getBackgroundPage();
+		background = chrome.extension.getBackgroundPage(), 
+		chromeyCalcHelperId = "kncknbclhdncdolkfleoeefggfbclgpp"; // dev id
+		//chromeyCalcHelperId = "kncknbclhdncdolkfleoeefggfbclgpp"; // relase id
 	
 	// -----------------------------------------------------------------------
 	// 	Some functions that need a better home...
@@ -48,11 +50,21 @@ var cCalc = (function (window, document) {
 		var left = ",left="+window.screenLeft;
 		localStorage.popOutWindowInfo = "resizable=yes"+height+width+top+left;
 	}			
+	
+	// Get option value from localStorage
+	function getOption(opt, getFirst) {		
+		return JSON.parse(localStorage["opt_"+opt]);
+	}
+	
 	// -----------------------------------------------------------------------
 	// 	Initialization Code //**TODO: clean up this section
 	// -----------------------------------------------------------------------
 	var $calcInput,	$calcResults, $calcResultsWrapper;
-	function calcInit(currentWindow) {
+	function calcInit(currentWindow) {		
+		background.helperIsInstalled = false;
+		chrome.extension.sendRequest(chromeyCalcHelperId, {"ding": "dong"}, function (response) {
+			background.helperIsInstalled = true;			
+		});
 		// Set window to whatever window was passed to calcInit
 		window = currentWindow;
 		document = window.document;
@@ -97,7 +109,8 @@ var cCalc = (function (window, document) {
 			});
 			
 			$(window).unbind().bind("unload blur", function () {
-				calcStore.save();
+				calcStore.save();				
+				
 				// If there's a popup, update if we're enntering stuff in the dropdown
 				if (background.calcPopOut && background.calcPopOut !== window) {
 					// don't let popout overwrite most current restults
@@ -106,7 +119,16 @@ var cCalc = (function (window, document) {
 					// save popout size and position info
 					savePopOutWindowInfo();
 				}
+			}).bind("blur.helperFlag", function () {
+				console.debug("blur.helperFlag")
+				// update flag for chekcing if helper extention is isntalled
+				background.helperIsInstalled = false;
+				chrome.extension.sendRequest(chromeyCalcHelperId, {"ding": "dong"}, function (response) {
+					background.helperIsInstalled = true;			
+				});
 			});
+			
+			
 
 			// Handle enter and arrow keydown events
 			$calcInput.keydown(function (e) {
@@ -220,9 +242,36 @@ var cCalc = (function (window, document) {
 
 	// query uri heads
 	var queryUriHead = {
+		defaultGoogle: "http://www.google.com/search?q=",
 		google: "http://www.google.com/search?q=",
 		alpha: "http://m.wolframalpha.com/input/?i="
 	};
+	
+	// Set google url
+	function setGoogleQueryUriHead() {
+		var localGoogleOn, localGoogleUrl, uri;
+		if (background.helperIsInstalled && getOption("localGoogleOn") && getOption("localGoogleUrl")) {
+			localGoogleOn = getOption("localGoogleOn")[0];
+			localGoogleUrl = getOption("localGoogleUrl")[0];
+			if (localGoogleOn && localGoogleUrl) {
+				uri = localGoogleUrl
+					.replace(/^(?!https?:\/\/)(.*)$/, "http://$1")
+					.replace(/([^\/])$/, "$1/")
+					+ "search?q=";
+				queryUriHead.google = uri;				
+			} else {				
+				queryUriHead.google = queryUriHead.defaultGoogle;
+			}
+		} else {
+			queryUriHead.google = queryUriHead.defaultGoogle;
+		}
+	}
+	
+	function doHelperQuery(queryType) {
+		console.debug("------->", queryType, queryType === "google" && queryUriHead.google !== queryUriHead.defaultGoogle, 
+		"\n-->", queryUriHead.google, "\n-->", background.helperIsInstalled, queryUriHead.defaultGoogle)
+		return background.helperIsInstalled && queryType === "google" && queryUriHead.google !== queryUriHead.defaultGoogle;
+	}
 
 	// -----------------------------------------------------------------------
 	// 	Module definitions
@@ -426,7 +475,9 @@ var cCalc = (function (window, document) {
 
 		// Go find a result
 		function calcQuery(input, callback) {
-			var uri;
+			console.debug("xx1helo! request queryURI")
+			var uri;			
+			
 			// New query (start with js)
 			if (!calc.result.status) {
 				calc.result.status = "trying js";
@@ -441,15 +492,33 @@ var cCalc = (function (window, document) {
 				result.queryType = queryType;
 				callback && callback(result);
 			} else {
+				if (getOption("localGoogleUrl")) {
+					localGoogleOn = getOption("localGoogleOn")[0];
+					localGoogleUrl = getOption("localGoogleUrl")[0];
+					if (localGoogleOn && localGoogleUrl) {
+					}
+				}				
+				// Set google query head
+				setGoogleQueryUriHead();				
+				// Create query uri
 				uri = createQueryUri[queryType](input);
 				if (!uri) {
 					queryCallback(input);
 				} else {
 					// Query for result
-					$.ajax({
-						url: uri,
-						success: queryCallback
-					});
+					console.debug("1helo! request queryURI")					
+					if (doHelperQuery(queryType)) {
+						// Let Chromey Calculator Helper handle query
+						chrome.extension.sendRequest(chromeyCalcHelperId, {queryUri: uri}, function (response) {
+							console.debug("heloo;!! respense")
+							queryCallback(response.doc);		
+						});
+					} else {
+						$.ajax({
+							url: uri,
+							success: queryCallback
+						});
+					}
 				}
 			}
 
@@ -596,26 +665,33 @@ var cCalc = (function (window, document) {
 			var output, regexExclusions,
 			regexJsExclusions = /(\^)/, // let Google or W|Alpha handle powers
 			regexJsInclusions = /function/ // ^ is ok in user functions... (still doesn't do powers though)
-			try {
-				// try using js to evaluate input
-				output = sanitaryEval(input);
-				if (regexJsInclusions.test(input) || typeof output === "number" && !regexJsExclusions.test(input)) {
-					return {
-						display: output,
-						plain: output
-					};
-				} else {
-					return {
-						display: null,
-						plain: null
-					};
-				}
- 			} catch (err) {
-				return {
-					display: null,
-					plain: null
-				};
-			}
+			
+			// For now, don't use javscript ever
+			return {
+				display: null,
+				plain: null
+			};
+				
+			// try {
+				// // try using js to evaluate input
+				// output = sanitaryEval(input);
+				// if (regexJsInclusions.test(input) || typeof output === "number" && !regexJsExclusions.test(input)) {
+					// return {
+						// display: output,
+						// plain: output
+					// };
+				// } else {
+					// return {
+						// display: null,
+						// plain: null
+					// };
+				// }
+ 			// } catch (err) {
+				// return {
+					// display: null,
+					// plain: null
+				// };
+			// }
 		}
 
 		// Extract output from google query result doc
@@ -1100,7 +1176,7 @@ var cCalc = (function (window, document) {
 		function reset(opt) {
 			var args;
 			if (opt == null || opt === "all") {
-				args = options;
+				args = options;	
 			} else {
 				args = $.makeArray(arguments);
 			}
