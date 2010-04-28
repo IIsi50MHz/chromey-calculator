@@ -1,7 +1,7 @@
 {
-	"name": "Extend Chromey Calculator",
-	"version": "0.1",
-	"description": "Adds features to Chromey Caclulator.",
+	"name": "Chromey Calculator Enhancer",
+	"version": "2.7.1.8",
+	"description": "From the author of Chromey Calculator, this extension adds features to Chromey Calculator when installed along side it.",
 	"background_page": "background.html",		
 	"icons": { 
 		"16": "icon16.png",

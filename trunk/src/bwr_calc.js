@@ -16,8 +16,8 @@ var cCalc = (function (window, document) {
 		lastRawOutput, // gets substitued for @ (last result) variable
 		lastAns,
 		background = chrome.extension.getBackgroundPage(), 
-		chromeyCalcHelperId = "kncknbclhdncdolkfleoeefggfbclgpp"; // dev id
-		//chromeyCalcHelperId = "kncknbclhdncdolkfleoeefggfbclgpp"; // relase id
+		//chromeyCalcHelperId = "kncknbclhdncdolkfleoeefggfbclgpp"; // dev id
+		chromeyCalcHelperId = "hfgnndipkjcpghbagmmcemdbjfclkcla"; // relase id
 	
 	// -----------------------------------------------------------------------
 	// 	Some functions that need a better home...
@@ -508,7 +508,7 @@ var cCalc = (function (window, document) {
 					// Query for result
 					console.debug("1helo! request queryURI")					
 					if (doHelperQuery(queryType)) {
-						// Let Chromey Calculator Helper handle query
+						// Let Chromey Calculator Enhancer handle query
 						chrome.extension.sendRequest(chromeyCalcHelperId, {queryUri: uri}, function (response) {
 							console.debug("heloo;!! respense")
 							queryCallback(response.doc);		
