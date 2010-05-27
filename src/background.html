@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script>
 function updateViews(activewin) {
 	chrome.extension.getViews().forEach(function(win){
 		if (win.location.pathname !== "/calc.html" || win === activewin) { return; }
