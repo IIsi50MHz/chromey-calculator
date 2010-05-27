@@ -3,7 +3,8 @@ calc.test = function(){
 		{ i: "1 + 1", r: "2" },
 		{ i: "1 googol * 1 googol", r: "1.0 * 10^200" },
 		{ i: "1\" in '", r: "0.08333 feet" },
-		{ i: "Vars", r: "electric reactive power" }
+		{ i: "Vars", r: "electric reactive power" },
+		{ i: "1/2", r: "0.5" }
 	], num = tests.length, failed = 0, cur;
 	
 	function run(result) {

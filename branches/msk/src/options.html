@@ -26,8 +26,8 @@
 		<h2>General</h2>
 		<input type="checkbox" id="defaultToPopout"><label for="defaultToPopout">Open the popout instead of the popup when clicking the toolbar button.</label>
 		
-		<script type="text/javascript" src="jquery.js"></script>
-		<script type="text/javascript">
+		<script src="jquery.js"></script>
+		<script>
 		$("[id]").each(function(){
 			if (this.type === "checkbox") {
 				this.checked = this.id in localStorage && localStorage[this.id] === "true";

@@ -1,4 +1,4 @@
-(function(window, document, localStorage, undefined){
+(function(window, document, $, localStorage, undefined){
 
 /*** variables ***/
 var $links = $("#links"), $input = $("#input > input"), $output = $("#output"), background = chrome.extension.getBackgroundPage();
@@ -199,4 +199,4 @@ function Copy(v) { // copies text to the clipboard
 	$input.focus();
 }
 
-})(this, this.document, this.localStorage);
+})(this, this.document, this.$, this.localStorage);

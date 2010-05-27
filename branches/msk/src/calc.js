@@ -16,6 +16,8 @@ var Vars = {
 	}
 };
 
+// bugs:
+// in the w|a section, replaced needs to be reset to false if dym !== false AND there are no vars that have been replaced... but how? :(
 function calc(input, cb) {
 	var replaced = false, original = input, dym = false;
 	
