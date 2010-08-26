@@ -1,37 +1,44 @@
+/*** elements ***/
 body {
-	font-family:arial, sans-serif;			
+	font-family: arial, sans-serif;
 }
 
 h1 {
-	text-align:center;	
+	text-align: center;
 }
+
 table {
+	margin: auto;
 	margin-top: 10px;
-	position:relative;
-	margin:auto;
+	position: relative;
 }
 th {
-	text-align:left;
-	font-size:120%;
-	padding:15px 0px 5px;
+	font-size: 120%;
+	padding: 15px 0px 5px 0px;
+	text-align: left;
 }
 
-input[type=text] {
-	width:120px;	
+input[type="text"] {
+	width: 120px;
 }
 
-.optionInfo  {
-	opacity:.8;
-	margin-top: -8px;
-	margin-bottom: 8px;
+
+/*** classes ***/
+.optionInfo {
 	font-size: 80%;
-	position:relative;
-	width:230px;	
+	margin-bottom: 8px;
+	margin-top: -8px;
+	opacity: .8;
+	position: relative;
+	width: 230px;
 }
 
-#localGoogleUrl {	
-	width:100%;
-}
 .fullInput {
-	padding-left:23px;
+	padding-left: 23px;
+}
+
+
+/*** ids ***/
+#localGoogleUrl {
+	width: 100%;
 }
