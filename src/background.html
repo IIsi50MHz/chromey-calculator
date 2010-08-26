@@ -5,14 +5,14 @@
  */
 -->
 <!DOCTYPE html>
-<script>		
+<script>
 	// restore user's preference for the main icon. Chrome might briefly show the default icon while loading the extension, though.
 	// To prevent flicker, we should really load a completely transparent icon, then replace with either default or user preference.
 	var icons = {
-		"pi": "icons/19.png",
-		"classic": "icons/19-classic.png"
+		"icon_pi.png": "icons/19.png",
+		"icon_classic.png": "icons/19-classic.png"
 	};
-	chrome.browserAction.setIcon({path: icons[localStorage.useIcon] || icons.pi});
+	chrome.browserAction.setIcon({path: icons[localStorage.useIcon] || icons["icon_pi.png"]});
 	
 	var background = {};
 </script> 

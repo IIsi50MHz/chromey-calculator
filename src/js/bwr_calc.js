@@ -140,7 +140,7 @@ var cCalc = (function (window, document) {
 						// Clear results
 						$calcResults.empty();
 					} else if (inputVal.indexOf('useIcon(') == '0') { // Change Chromey's toolbar icon
-						iconName = inputVal.slice(8, inputVal.length - 1); // Strip the 'useIcon(' and ')' from our param here
+						iconName = "icon_" + inputVal.slice(8, inputVal.length - 1) + ".png"; // Strip the 'useIcon(' and ')' from our param here
 						// Don't change icon unless it exsits (list of possible icons set in background.html)
 						if (iconName in background.icons) {
 							localStorage.useIcon = iconName;
