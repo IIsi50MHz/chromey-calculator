@@ -4,55 +4,45 @@
  * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
  */
 -->
-<html> 
-	<script>		
-		// restore user's preference for the main icon. Chrome might briefly show the default icon while loading the extension, though.
-		// To prevent flicker, we should really load a completely transparent icon, then replace with either default or user preference.			
-		var icons = (function () {
-			var availableIcons = {
-				'icon_pi.png': 'icon_pi.png',
-				'icon_classic.png': 'icon_classic.png'
-			};		
-			var useIcon = localStorage.useIcon;
-			var defaultIcon = 'icon_pi.png';
-			chrome.browserAction.setIcon({path: availableIcons[useIcon] || defaultIcon});
-
-			return {
-				available: availableIcons,
-				defaultIcon: defaultIcon
-			}
-		}());		
+<!DOCTYPE html>
+<script>		
+	// restore user's preference for the main icon. Chrome might briefly show the default icon while loading the extension, though.
+	// To prevent flicker, we should really load a completely transparent icon, then replace with either default or user preference.			
+	var icons = (function(){
+		var availableIcons = {
+			'icon_pi.png': 'icon_pi.png',
+			'icon_classic.png': 'icon_classic.png'
+		};
+		var useIcon = localStorage.useIcon;
+		var defaultIcon = 'icon_pi.png';
+		chrome.browserAction.setIcon({path: availableIcons[useIcon] || defaultIcon});
 		
-		var background = {};		
-		
-		
-		// var extendChromeyCalcId = "njloeiaipgbkinikjhenmgacopoecbci";		
-		// setInterval(function () {			
-			// // Make a simple request:
-			// chrome.extension.sendRequest(extendChromeyCalcId, {openPopOut: "DING DONG!!!!! frome CHROMEY"}, function (response) {
-				// console.debug("Is this thing on? 3")				
-			// });
-		// }, 2000);
-	</script> 
-	<script src="jquery.js"></script>
-	<script src="history.js"></script>	
-	<script src="bwr_calc.js"></script>
-	<script>
-		// open popout when asked
-		chrome.extension.onRequestExternal.addListener(function(request, sender, sendResponse) {			
-			var qkOn = JSON.parse(localStorage.opt_quickKeyOn)[0];
-			console.debug("qkon", qkOn);
-			if (request.helperIsInstalled === "yep") {
-				console.debug("YEP-----------------")
-				background.helperIsInstalled = true;
-			} else if (request.helperIsInstalled === "nope") {
-				console.debug("NOPE-----------------")
-				background.helperIsInstalled = false;
-			} else if (request.openPopOut && qkOn) {		
-				console.debug("hwlo", cCalc.popOutCalc)
-				cCalc.popOutCalc();
-			}
-			sendResponse({});
-		});
-	</script>
-</html>
+		return {
+			available: availableIcons,
+			defaultIcon: defaultIcon
+		}
+	}());
+	
+	var background = {};
+</script> 
+<script src="jquery.js"></script>
+<script src="history.js"></script>	
+<script src="bwr_calc.js"></script>
+<script>
+	// open popout when asked
+	chrome.extension.onRequestExternal.addListener(function(request, sender, sendResponse) {			
+		var qkOn = JSON.parse(localStorage.opt_quickKeyOn)[0];
+		console.debug("qkon", qkOn);
+		if (request.helperIsInstalled === "yep") {
+			console.debug("YEP-----------------")
+			background.helperIsInstalled = true;
+		} else if (request.helperIsInstalled === "nope") {
+			console.debug("NOPE-----------------")
+			background.helperIsInstalled = false;
+		} else if (request.openPopOut && qkOn) {		
+			console.debug("hwlo", cCalc.popOutCalc)
+			cCalc.popOutCalc();
+		}
+		sendResponse({});
+	});
+</script>
