@@ -132,7 +132,7 @@ var cCalc = (function (window, document) {
 
 			// Handle enter and arrow keydown events
 			$calcInput.keydown(function (e) {
-				var inputVal = this.value.trim(), iconName, iconFile, cmdArgs, $calcPopOut, bg$;
+				var inputVal = this.value.trim(), iconName, cmdArgs, $calcPopOut, bg$;
 				// Handle special keys
 				if (e.which === 13 && inputVal) { // Enter
 					// Check for commands
@@ -141,11 +141,10 @@ var cCalc = (function (window, document) {
 						$calcResults.empty();
 					} else if (inputVal.indexOf('useIcon(') == '0') { // Change Chromey's toolbar icon
 						iconName = inputVal.slice(8, inputVal.length - 1); // Strip the 'useIcon(' and ')' from our param here
-						iconFile = "icon_"+iconName +".png";
 						// Don't change icon unless it exsits (list of possible icons set in background.html)
-						if (background.icons.available[iconFile]) {
-							localStorage.useIcon = iconFile;
-							chrome.browserAction.setIcon({path: iconFile});
+						if (iconName in background.icons) {
+							localStorage.useIcon = iconName;
+							chrome.browserAction.setIcon({path: background.icons[iconName]});
 						}
 					} else if (inputVal.indexOf('cc(') == '0') { // A Chromey Calculator Command
 						// Strip the 'cc(' and ')' from our param here. Make an array of arguments
