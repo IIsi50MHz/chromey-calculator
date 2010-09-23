@@ -1,0 +1,33 @@
+<!--
+/*
+ * Copyright (c) 2010 Brent Weston Robinett
+ * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
+ */
+-->
+<html> 
+	<script src="jquery.js"></script>
+	<script>		
+		var background = {};
+		
+		// chromeyCalcId = "mgmpajefleiinfpfmpippabcgcjicpna";	// dev id
+		chromeyCalcId = "acgimceffoceigocablmjdpebeodphgc"; // release id
+		console.debug("Chromey Calculator Enhancer");				
+		
+		chrome.extension.onRequestExternal.addListener(function(request, sender, sendResponse) {			
+			if (request.queryUri) {				
+				// Query for result
+				$.ajax({
+					url: request.queryUri,
+					success: function (doc) {						
+						sendResponse({doc: doc});						
+					}, 
+					error: function () {						
+						sendResponse({});						
+					}
+				});				
+			} else {			
+				sendResponse({});
+			}
+		});
+	</script> 
+</html>
