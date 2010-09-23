@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Chromey Calculator Options</title>
+		<link rel="stylesheet" href="css/options.css">			
+	</head>
+	<body>
+		<h1>Chromey Calculator Options</h1>		
+		
+		<table>
+			<!--zoom-->	
+			<tr>
+				<th colspan="3">Zoom</th>
+			</tr>
+			<tr>
+				<td><label>Results</label></td>
+				<td><input id="zoom" type="text" tabindex="1"/></td>	
+				<td><button class="reset" tabindex="2">reset</button></td>				
+			</tr>
+			
+			<!--size-->		
+			<tr>
+				<th colspan="3">Dropdown Size</th>
+			</tr>
+			<tr>
+				<td><label>Height</label></td>
+				<td><input id="height" type="text" tabindex="1"/></td>	
+				<td><button class="reset" tabindex="2">reset</button></td>				
+			</tr>
+			<tr>
+				<td><label>Width</label></td>
+				<td><input id="width" type="text" tabindex="1"/></td>		
+				<td><button class="reset" tabindex="2">reset</button></td>				
+			</tr>
+			<!--font face-->		
+			<tr>
+				<th colspan="3">Font Face</th>
+			</tr>
+		<!--	<tr>
+				<td><label>Default</label></td>
+				<td><input id="font" type="text" tabindex="1"/></td>
+				<td><button class="reset" tabindex="2">reset</button></td>				
+			</tr>-->
+			<tr>
+				<td><label>Title</label></td>
+				<td><input id="titleFont" type="text" tabindex="1"/></td>
+				<td><button class="reset" tabindex="2">reset</button></td>				
+			</tr>			
+			<tr>
+				<td><label>Links</label></td>
+				<td><input id="headerLinksFont" type="text" tabindex="1"/></td>	
+				<td><button class="reset" tabindex="2">reset</button></td>				
+			</tr>
+			<tr>
+				<td><label>Results</label></td>
+				<td><input id="resultFont" type="text" tabindex="1"/></td>								
+				<td><button class="reset" tabindex="2">reset</button></td>
+			</tr>
+			<tr>
+				<td><label>Input</label></td>
+				<td><input id="inputFont" type="text" tabindex="1"/></td>	
+				<td><button class="reset" tabindex="2">reset</button></td>				
+			</tr>
+			<!--shortcut key-->
+			<tr>
+				<th colspan="3">More Options</th>
+			</tr>
+			<tr>
+				<td colspan="3">
+					<div class="optionInfo">
+						NOTE: These options require <br/><a href="https://chrome.google.com/extensions/detail/hfgnndipkjcpghbagmmcemdbjfclkcla" target="_tab">Chromey Calculator Enhancer</a> 
+					</div>
+				</td>
+			</tr>			
+			<tr>
+				<td colspan="3">
+					<input type="checkbox" id="quickKeyOn"/>
+					<label for="quickKeyOn">Enable quick key (Alt+C)</label>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3">					
+					<input type="checkbox" id="localGoogleOn"/>
+					<label for="localGoogleOn">Use local Google URL</label>						
+					<div class="fullInput">						
+						<input type="text" id="localGoogleUrl"/>
+					</div>
+				</td>				
+			</tr>
+		</table>
+		
+		<script src="js/jquery.js"></script>	
+		<script src="js/options.js"></script>	
+	</body>	
+</html>

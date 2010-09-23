@@ -1,0 +1,59 @@
+<!--
+/*
+ * Copyright (c) 2009, 2010 Brent Weston Robinett <bwrobinett@gmail.com>
+ * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
+ */
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>Chromey Calculator</title>		
+		
+		<link rel="stylesheet" type="text/css" href="css/calc.css" />
+		<style>
+			#calcWrapper {				
+				position:relative;					
+				width:450px;
+				height:401px;				
+			}			
+		</style>
+		<script src="js/jquery.js"></script>				
+		<script src="js/init_calc.js"></script>
+	</head>
+	<body id="calc">		
+		<div id="calcWrapper" class="vbox">						
+			<!--
+				Header
+			-->
+			<div id="headerWrapper" class="boxFlex0">												
+				<div id="headerLinks">					
+					<a href="#popOut" id="popOut" class="headerLink">
+						<img src="icons/popout.png"/>
+					</a>
+					<span class="headerSeparator">|</span>
+					<a href="http://www.google.com/help/calculator.html" target="_tab" id="googleCalcHelp" class="headerLink">Help</a>
+					<span class="headerSeparator">|</span>
+					<a href="options.html" target="_tab" id="googleCalcHelp" class="headerLink">Options</a>
+					<span class="headerSeparator">|</span>
+					<a href="#calcResults" id="clearAll" class="headerLink">Clear</a>													
+				</div>
+				<a href="https://chrome.google.com/extensions/detail/acgimceffoceigocablmjdpebeodphgc"target="_tab" id="chromeyCalcPageLink">					
+					<pre id="chromeyCalcName">Chromey Calculator</pre>
+				</a>
+			</div>			
+			<!--
+				Results
+			-->				
+			<div id="calcResultsWrapper" class="boxFlex1">						
+				<ul id="calcResults"></ul>
+			</div>	
+			<!--
+				Input
+			-->			
+			<div id="calcInputWrapper" class="boxFlex0">
+				<input type="text" id="calcInput"/>
+				<div id="inputMarker">></div>						
+			</div>			
+		</div>		
+	</body>	
+</html>
