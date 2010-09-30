@@ -703,7 +703,7 @@ var cCalc = (function (window, document) {
 				filter(function () {return $(this).text().match(' = ')}).
 				slice(-1).html();
 			if (!docHtml) {
-				docHtml = $doc.find("img[src*=calculator-40.gif]").
+				docHtml = $doc.find("img[src*=calc_img.gif]").
 				parents('td:eq(0)').siblings().find('*').
 				filter(function () {return $(this).text().match(' = ')}).
 				slice(-1).html();					
