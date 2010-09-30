@@ -698,10 +698,16 @@ var cCalc = (function (window, document) {
 			var $doc = $(doc);
 
 			// grab result of calculation (doing fragile, goofy stuff to find google calculation within google search results)
-			var docHtml = $doc.find("img[src*=calc_img.gif]").
+			var docHtml = $doc.find("img[src*=calculator-40.gif]").
 				parents('td:eq(0)').siblings().find('*').
 				filter(function () {return $(this).text().match(' = ')}).
 				slice(-1).html();
+			if (!docHtml) {
+				docHtml = $doc.find("img[src*=calculator-40.gif]").
+				parents('td:eq(0)').siblings().find('*').
+				filter(function () {return $(this).text().match(' = ')}).
+				slice(-1).html();					
+			}
 
 			if (docHtml) {
 				// clean up result for copy/paste...
