@@ -734,7 +734,6 @@ var cCalc = (function (window, document) {
 					parents('td:eq(0)').siblings().find('*').
 					filter(function () {return $(this).text().match(' = ')}).
 					slice(-1).html();
-				console.debug('docHtml = ', docHtml);
 				}
 				
 			if (docHtml) {
