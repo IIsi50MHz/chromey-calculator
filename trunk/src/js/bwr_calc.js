@@ -31,9 +31,9 @@ var cCalc = (function (window, document) {
 	}
 
 	function popOutCalc() {
-		var defaultPopOutWindowInfo = "width=300,height=400,scrollbars=no"
+		var defaultPopOutWindowInfo = "width=300,height=400,scrollbars=no";
 		//calcStore.save();
-		console.debug("hello!????? paoputp;/?")
+		console.debug("hello!????? paoputp;/?");
 		if (background.calcPopOut) {
 			// don't let popout overwrite most current restults
 			background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
@@ -120,7 +120,7 @@ var cCalc = (function (window, document) {
 					savePopOutWindowInfo();
 				}
 			}).bind("blur.helperFlag", function () {
-				console.debug("blur.helperFlag")
+				console.debug("blur.helperFlag");
 				// update flag for chekcing if helper extention is isntalled
 				background.helperIsInstalled = false;
 				chrome.extension.sendRequest(chromeyCalcHelperId, {"ding": "dong"}, function (response) {
@@ -131,7 +131,7 @@ var cCalc = (function (window, document) {
 			
 
 			// Handle enter and arrow keydown events
-			$calcInput.keydown(function (e) {
+			$calcInput.keydown(function (e) {				
 				var inputVal = this.value.trim(), iconName, cmdArgs, $calcPopOut, bg$;
 				// Handle special keys
 				if (e.which === 13 && inputVal) { // Enter
@@ -151,6 +151,18 @@ var cCalc = (function (window, document) {
 						cmdArgs = inputVal.slice(3, inputVal.length - 1).split(/\s*,\s*/);
 						calcCmd[cmdArgs[0]] && calcCmd[cmdArgs[0]].apply({}, cmdArgs.slice(1));
 					} else {
+						// ============================================================  CHECK ME  ==============================================================
+						// Continue from previous result? (When we can)						
+						if (getOption('continueFromResult')[0]) {																					
+							// Looking for: + - * / ^ % (sticking with the basics for now...)
+							if (inputVal.match(/^[+\-*\/^%]/)) { // operator doesn't need space before it
+								inputVal = '@' + inputVal;							
+							} else if (inputVal.match(/^plus\s+|^minus\s+|^times\s+|^x\s+|^divided\s+by\s+|^mod\s+|^modulo\s+|^modulus\s+/i)) { // operator needs space before it
+								inputVal = '@ ' + inputVal;
+							}
+						}
+						// ===========================================================  /CHECK ME  ==============================================================
+						
 						// Do calculation
 						calc.findResult(inputVal, function () {
 							function updateResultsArea($calcResults, $calcResultsWrapper) {
@@ -268,7 +280,7 @@ var cCalc = (function (window, document) {
 	
 	function doHelperQuery(queryType) {
 		console.debug("------->", queryType, queryType === "google" && queryUriHead.google !== queryUriHead.defaultGoogle, 
-		"\n-->", queryUriHead.google, "\n-->", background.helperIsInstalled, queryUriHead.defaultGoogle)
+		"\n-->", queryUriHead.google, "\n-->", background.helperIsInstalled, queryUriHead.defaultGoogle);
 		return background.helperIsInstalled && queryType === "google" && queryUriHead.google !== queryUriHead.defaultGoogle;
 	}
 
@@ -391,7 +403,7 @@ var cCalc = (function (window, document) {
 				integer: /^\s*\d+\s*$/,
 				varInspect: /^\s*@\w*\s*=*\s*$/,
 				varAssign:  /^\s*@\w*\s*=\s*.+$/,
-				varAssignNoSubst:  /^\s*@\w*\s*:=\s*.+$/,
+				varAssignNoSubst:  /^\s*@\w*\s*:=\s*.+$/
 			};
 
 		// Extract output from query result doc
@@ -474,8 +486,12 @@ var cCalc = (function (window, document) {
 
 		// Go find a result
 		function calcQuery(input, callback) {
-			console.debug("xx1helo! request queryURI")
+			console.debug("xx1helo! request queryURI");
 			var uri;			
+			
+			// ======================================================  CHECK ME  ========================================================
+			// 	This might be a good place to put a query-rate limiter, to prevent spamming Google and WolframAlpha
+			// ======================================================  /CHECK ME  ========================================================
 			
 			// New query (start with js)
 			if (!calc.result.status) {
@@ -505,11 +521,11 @@ var cCalc = (function (window, document) {
 					queryCallback(input);
 				} else {
 					// Query for result
-					console.debug("1helo! request queryURI")					
+					console.debug("1helo! request queryURI");					
 					if (doHelperQuery(queryType)) {
 						// Let Chromey Calculator Enhancer handle query
 						chrome.extension.sendRequest(chromeyCalcHelperId, {queryUri: uri}, function (response) {
-							console.debug("heloo;!! respense")
+							console.debug("heloo;!! respense");
 							queryCallback(response.doc);		
 						});
 					} else {
@@ -640,57 +656,76 @@ var cCalc = (function (window, document) {
 	//  Extracts output from query result doc.
 	//	* Examples:
 	//		output = extractCalcOutput[queryType](doc);
-	//		outputdisplay = output.display;
+	//		outputDisplay = output.display;
 	//	* Returns:
 	//		{
 	//			display: <output for display>,
 	//			plain: <output for storing in variables>
 	// 		}
 	extractCalcOutput = (function () {
-		// Attempt js eval only if input is safe
-		function sanitaryEval(input) {
-			var output, dec = Math.pow(10, 8), regexInputNotSanitary = /[^+-\/*.()\d\s]/;
-			if (regexInputNotSanitary.test(input)) {
-				output = null;
-			} else {
+		var maxDigits = 13;
+		// Check to see if input has numbers too big for js or google to calculate accurately
+		function hasBigNumbers(input) {
+			var numArr = input.match(/\d+\.\d*|\d*\.\d+|\d+/g);
+			var hasBigNum = false;
+			var i = numArr.length;
+			while (i--) {				
+				if (numArr[i].replace('.', '').length > maxDigits) {					
+					hasBigNum = true;
+				};				
+			};			
+			return hasBigNum;
+		}		
+		
+		// Attempt js eval only if input is safe and (checks for big numbers too)
+		function sanitaryEval(input) {			
+			var output = null, max = Math.pow(10, maxDigits), regexInputNotSanitary = /[^+\-*\/%.()\d\s]/;
+			var inputIsSanitary = !regexInputNotSanitary.test(input);
+			if (inputIsSanitary && !hasBigNumbers(input)) {				
 				// Try to fix it so we don't get goofy results when calculating things like 2.01 - 2.0
-				output = Math.round(dec*eval(input))/dec;
-			}
+				output = Math.round(max*eval(input))/max;
+			}			
 			return output;
 		}
 
 		// Extract output from javascript "query"
 		function extractJsCalcOutput(input) {
-			var output, regexExclusions,
-			regexJsExclusions = /(\^)/, // let Google or W|Alpha handle powers
-			regexJsInclusions = /function/ // ^ is ok in user functions... (still doesn't do powers though)
-			
-			// For now, don't use javscript ever
-			return {
-				display: null,
-				plain: null
-			};
+			var output, displayOutput;
+						
+			// // For now, don't use javscript ever
+			// return {
+				// display: null,
+				// plain: null
+			// };
 				
-			// try {
-				// // try using js to evaluate input
-				// output = sanitaryEval(input);
-				// if (regexJsInclusions.test(input) || typeof output === "number" && !regexJsExclusions.test(input)) {
-					// return {
-						// display: output,
-						// plain: output
-					// };
-				// } else {
-					// return {
-						// display: null,
-						// plain: null
-					// };
-				// }
- 			// } catch (err) {
-				// return {
-					// display: null,
-					// plain: null
-				// };
-			// }
+			try {
+				// try using js to evaluate input
+				output = sanitaryEval(input);					
+				
+				if (typeof output === "number") {					
+					// Make js scientific notation look like google				
+					output = output.toString();
+					if (/e[+-]\d+$/.test(output)) {
+						displayOutput = output.replace(/(.*)e\+*(-*\d+)/, '$1 &times; 10<div style="display:inline-block; opacity:0; width:0px;">^</div><sup>$2</sup>');
+					} else {
+						displayOutput = output;
+					}
+					return {
+						display: displayOutput,
+						plain: $('<div>'+displayOutput+'</div>').text() // output cleaned of all markup
+					};
+				} else {
+					return {
+						display: null,
+						plain: null
+					};
+				}
+ 			} catch (err) {
+				return {
+					display: null,
+					plain: null
+				};
+			}
 		}
 
 		// Extract output from google query result doc
@@ -1018,7 +1053,7 @@ var cCalc = (function (window, document) {
 			subst: substVar,
 			getRhExpr: getVarRhExpr,
 			getName: getVarLhName,
-			getVal: getVarVal,
+			getVal: getVarVal
 			//substResult: null;
 			//lastAns: null
 		};
@@ -1054,6 +1089,12 @@ var cCalc = (function (window, document) {
 				localStorage.opt_zoom = JSON.stringify([fac]);
 			}
 		}
+		// -----------------------------------------------------------------------
+		// =====================================================================  C HECK ME  =================================================================================
+		function continueFromResult(isOn) {
+			localStorage.opt_continueFromResult = JSON.stringify([!!isOn]);
+		}
+		// =====================================================================  /C HECK ME  =================================================================================
 		// -----------------------------------------------------------------------
 		function width(w) {
 			w = parseInt(w);
@@ -1198,13 +1239,15 @@ var cCalc = (function (window, document) {
 		}
 		// -----------------------------------------------------------------------
 		// List of stored options
+		// =====================================================================  C HECK ME  =================================================================================
 		options = [
-			"zoom", "width", "height", "resultFont", "titleFont", "inputFont", "headerLinksFont", 
+			"zoom", "continueFromResult", "width", "height", "resultFont", "titleFont", "inputFont", "headerLinksFont", 
 			"quickKeyOn", "localGoogleOn", "localGoogleUrl"
 		];
 		// -----------------------------------------------------------------------
 		return obj = {
 			loadOptions: loadOptions,
+			continueFromResult: continueFromResult,
 			zoom: zoom,
 			width: width,
 			height: height,
@@ -1221,6 +1264,7 @@ var cCalc = (function (window, document) {
 			reset: reset
 		};
 	}());
+	// =====================================================================  /C HECK ME  =================================================================================
 
 	// -----------------------------------------------------------------------
 	// 	Initialize Chromey Calculator
