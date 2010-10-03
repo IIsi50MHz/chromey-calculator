@@ -32,8 +32,7 @@ var cCalc = (function (window, document) {
 
 	function popOutCalc() {
 		var defaultPopOutWindowInfo = "width=300,height=400,scrollbars=no";
-		//calcStore.save();
-		console.debug("hello!????? paoputp;/?");
+		//calcStore.save();		
 		if (background.calcPopOut) {
 			// don't let popout overwrite most current restults
 			background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
@@ -119,8 +118,7 @@ var cCalc = (function (window, document) {
 					// save popout size and position info
 					savePopOutWindowInfo();
 				}
-			}).bind("blur.helperFlag", function () {
-				console.debug("blur.helperFlag");
+			}).bind("blur.helperFlag", function () {				
 				// update flag for chekcing if helper extention is isntalled
 				background.helperIsInstalled = false;
 				chrome.extension.sendRequest(chromeyCalcHelperId, {"ding": "dong"}, function (response) {
@@ -485,8 +483,7 @@ var cCalc = (function (window, document) {
 		}
 
 		// Go find a result
-		function calcQuery(input, callback) {
-			console.debug("xx1helo! request queryURI");
+		function calcQuery(input, callback) {			
 			var uri;			
 			
 			// ======================================================  CHECK ME  ========================================================
@@ -520,12 +517,10 @@ var cCalc = (function (window, document) {
 				if (!uri) {
 					queryCallback(input);
 				} else {
-					// Query for result
-					console.debug("1helo! request queryURI");					
+					// Query for result								
 					if (doHelperQuery(queryType)) {
 						// Let Chromey Calculator Enhancer handle query
-						chrome.extension.sendRequest(chromeyCalcHelperId, {queryUri: uri}, function (response) {
-							console.debug("heloo;!! respense");
+						chrome.extension.sendRequest(chromeyCalcHelperId, {queryUri: uri}, function (response) {							
 							queryCallback(response.doc);		
 						});
 					} else {
@@ -777,8 +772,7 @@ var cCalc = (function (window, document) {
 			$resultPods = $(doc).filter("#results").find(".pod"),
 			$outputPod,
 			firstPodHtml = $resultPods.html(),
-			output = "";
-			//console.debug(doc)
+			output = "";			
 
 			// Use first pod if result is not just an input interpretation
 			if (firstPodHtml && !(firstPodHtml.match('>Input interpretation:<') || firstPodHtml.match('>Input:<'))) {
