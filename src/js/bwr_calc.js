@@ -12,13 +12,12 @@ var cCalc = (function (window, document) {
 	// 	Variables
 	// -----------------------------------------------------------------------
 	var	calcSelStart, calcSelEnd, // variables to keep track of caret postion or selection in calc input area
-		maxResults = 500, history = History(maxResults), // variables for history
-		lastRawOutput, // gets substitued for @ (last result) variable
-		lastAns,
+		maxResults = 500, history = History(maxResults), // variables for history		
+		queryCount = 0,		
 		background = chrome.extension.getBackgroundPage(), 
 		//chromeyCalcHelperId = "kncknbclhdncdolkfleoeefggfbclgpp"; // dev id
 		chromeyCalcHelperId = "hfgnndipkjcpghbagmmcemdbjfclkcla"; // relase id
-	
+		
 	// -----------------------------------------------------------------------
 	// 	Some functions that need a better home...
 	// -----------------------------------------------------------------------
@@ -316,8 +315,8 @@ var cCalc = (function (window, document) {
 			if (localStorage.varMap) {
 				calcVar.init(JSON.parse(localStorage.varMap));
 			}
-			// restore last output
-			calcVar.lastAns = localStorage.lastAns;
+			// restore last output			
+			calcVar.lastAns = localStorage.lastAns;			
 
 			// restore calc input value and caret positon (or text selection)
 			if (localStorage.calcInput) {
@@ -338,7 +337,7 @@ var cCalc = (function (window, document) {
 
 			// store last answer
 			localStorage.lastAns = calcVar.lastAns;
-
+			
 			// store state of calc input ares
 			localStorage.calcInput = $calcInput.val();
 			localStorage.calcSelStart = $calcInput[0].selectionStart;
@@ -460,11 +459,19 @@ var cCalc = (function (window, document) {
 					result.varSubstInput = null;
 					doQuery = false;
 				}
-			}
+			}			
 
 			if (doQuery) {
 				// Go fishing for a result
-				calcQuery(input, afterQuery);
+				(function () {
+					var queryNum = ++queryCount;					
+					calcQuery(input, function () {
+						// Don't bother doing anything with the result if a new query was made before this one came back.
+						if (queryNum === queryCount) {
+							afterQuery.call(this, arguments);
+						}
+					});
+				}());				
 			} else {
 				// Done. No query needed.
 				afterQuery();
@@ -971,20 +978,14 @@ var cCalc = (function (window, document) {
 			expr = getVarRhExpr(expr);
 			if (expr) {
 				// extract all variable names in expr
-				var varNameArr = expr.match(/@\w+/g),
+				var varNameArr = expr.match(/@\w+|@/g),
 					openParen = "(",
-					closedParen = ")";
-				// handle "@" variable
-				expr = expr.
-					// add spaces between @'s
-					replace(/@@/g, "@ @").replace(/@@/g, "@ @").
-					// wrap substitute variable and wrap in parentheses
-					replace(/@([^\w|@]+|$)/g, openParen+calc.result.prevResult.outputDisplay+closedParen+"$1");
+					closedParen = ")";				
 				// substitute the value of each variable into the expression (wrapped in parentheses)
 				if (varNameArr) { // make sure we have variables other than the previous output "@" variable
-					$.each(varNameArr, function () {
-						var val = getVarVal(this);
-						expr = expr.replace(/@\w+/i, openParen+val+closedParen);
+					$.each(varNameArr, function (i, varName) {				
+						var val = getVarVal(varName);						
+						expr = expr.replace(/@\w+|@/, openParen+val+closedParen);
 					});
 				}
 
@@ -1027,8 +1028,8 @@ var cCalc = (function (window, document) {
 				return input.replace(/^\s*(@\w*)\s*:*=\s*.+\s*$/i, "$1");
 			}
 		}
-		function getVarVal(varName) {
-			if (varName === '@') {
+		function getVarVal(varName) {			
+			if (varName == '@') {
 				return calcVar.lastAns;
 			} else {
 				return varMap[varName] && varMap[varName].val;
