@@ -19,7 +19,8 @@ th {
 }
 
 input[type="text"] {
-	width: 120px;
+	width: 125px;
+	padding-left: 3px;
 }
 
 

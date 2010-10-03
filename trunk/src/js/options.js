@@ -31,7 +31,8 @@
 	}
 	$(document).delegate(optionSel, "keyup change blur", updateOption);
 	$(document).delegate(".reset", "click", function () {		
-		var $option = $(this).closest("tr").find("input").val("").focus();
+		var $option = $(this).closest("tr").find("input");
+		$option.val(cCalc.calcCmd.defaultOptions[$option[0].id]).focus();
 		updateOption.call($option[0]);
 	});	
 }());

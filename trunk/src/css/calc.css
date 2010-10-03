@@ -42,13 +42,13 @@ ul {list-style-type:none; margin-left:-15px;}
 	cursor:pointer;
 }
 .outputText {position:relative;}
-.resultLink {display: block; position: absolute; top: -3px; left: -21px; width: 17px;
-	color: #3E5785; opacity: 0.6;
-	font-family: Georgia, serif; font-size: 16px;
-	text-align: center; text-decoration: none;
+.resultLink {display: block; position: absolute; top:-3px; left:-21px; width:17px;
+	color:#3E5785; opacity:0.6;
+	font-family:Georgia,serif; font-size:16px;
+	text-align: center; text-decoration:none;
 }
 .resultLink:hover {color:#1D1ECE; opacity:1; text-decoration:underline;}
-.result {position:relative; font-size:15px; margin-left:-25px; border-left:solid 25px transparent;}
+.result {position:relative; font-size:16px; margin-left:-25px; border-left:solid 25px transparent;}
 .input {color:grey;}
 .output {margin-bottom:10px;}
 .errorOutputText {font-style:normal;}

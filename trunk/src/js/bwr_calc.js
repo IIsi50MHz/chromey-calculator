@@ -50,8 +50,12 @@ var cCalc = (function (window, document) {
 	}			
 	
 	// Get option value from localStorage
-	function getOption(opt, getFirst) {		
-		return JSON.parse(localStorage["opt_"+opt]);
+	function getOption(opt, getFirst) {
+		if (localStorage["opt_"+opt]) {
+			return JSON.parse(localStorage["opt_"+opt]);
+		} else {
+			return "";
+		}
 	}
 	
 	// -----------------------------------------------------------------------
@@ -68,7 +72,7 @@ var cCalc = (function (window, document) {
 		document = window.document;
 		// Make sure we're using jQuery for current window
 		$ = jQuery = background.jQuery = background.$ = window.jQuery;
-		//delete localStorage.calcResults; delete localStorage.prevInputs; delete localStorage.varMap, localStorage.lastAns;
+		//delete localStorage.calcResults; delete localStorage.prevInputs; delete localStorage.varMap, localStorage.lastAns;		
 		//////
 		// Stuff to do before DOM is ready
 		function showSourceLink(e) {
@@ -123,8 +127,8 @@ var cCalc = (function (window, document) {
 				chrome.extension.sendRequest(chromeyCalcHelperId, {"ding": "dong"}, function (response) {
 					background.helperIsInstalled = true;			
 				});
-			});
-			
+			});			
+
 			
 
 			// Handle enter and arrow keydown events
@@ -290,11 +294,14 @@ var cCalc = (function (window, document) {
 	// -----------------------------------------------------------------------
 	calcStore = (function () {
 		// make sure there is a place to store options
-		localStorage.options || (localStorage.options = {});
+		localStorage.options || (localStorage.options = {});	
 
-		function loadCalcInfo() {
+		function loadCalcInfo() {			
 			// restore user options
 			calcCmd.loadOptions();
+			
+			// set default options
+			calcCmd.setDefaultOptions();
 
 			// restore displayed results
 			$calcResults[0].innerHTML = localStorage.calcResults || '';
@@ -1233,6 +1240,30 @@ var cCalc = (function (window, document) {
 			});
 		}
 		// -----------------------------------------------------------------------
+		// Set default options
+		var defaultOptions = {
+			zoom: 1,
+			continueFromResult: true,
+			width: "450px",
+			height: "400px", 
+			resultFont: "times",
+			inputFont: "courier",
+			titleFont: "courier",
+			headerLinksFont: "arial"
+		};
+		function setDefaultOptions() {
+			var key;
+			for (key in defaultOptions) {
+				console.debug("otpn", key, getOption(key)[0], typeof getOption(key)[0])
+				if (!localStorage["opt_"+key] || getOption(key)[0] === "") {
+					obj[key](defaultOptions[key]);
+				}
+			}		
+		}
+		function resetOption(optName) {
+			obj[optName](defaultOptions[optName]);
+		}
+		// -----------------------------------------------------------------------
 		// List of stored options
 		// =====================================================================  C HECK ME  =================================================================================
 		options = [
@@ -1242,6 +1273,9 @@ var cCalc = (function (window, document) {
 		// -----------------------------------------------------------------------
 		return obj = {
 			loadOptions: loadOptions,
+			defaultOptions: defaultOptions,
+			setDefaultOptions: setDefaultOptions,
+			resetOption: resetOption,
 			continueFromResult: continueFromResult,
 			zoom: zoom,
 			width: width,
@@ -1268,6 +1302,6 @@ var cCalc = (function (window, document) {
 	return {
 		init: calcInit,
 		calcCmd: calcCmd,
-		popOutCalc: popOutCalc
+		popOutCalc: popOutCalc	
 	}
 }());
