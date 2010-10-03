@@ -1,6 +1,6 @@
 {
 	"name": "Chromey Calculator",
-	"version": "4.0.3",
+	"version": "4.1",
 	"description": "A shockingly versatile scrolling calculator for Chrome. Results are generated using Google and Wolfram|Alpha.",
 	"icons": {
 		"16": "icons/16.png",
