@@ -32,6 +32,11 @@ input[type="text"] {
 	position: relative;
 	width: 230px;
 }
+.subInfo {
+	margin-left:15px;
+	margin-top:-2px;
+	margin-bottom: 0px;
+}
 
 .fullInput {
 	padding-left: 23px;

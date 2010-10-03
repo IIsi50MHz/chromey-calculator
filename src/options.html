@@ -8,6 +8,23 @@
 		<h1>Chromey Calculator Options</h1>		
 		
 		<table>
+			<!--continue calculations-->
+			<tr>
+				<th colspan="3">Basic Behaviour</th>
+			</tr>
+			<tr>
+				<td colspan="3">
+					<input type="checkbox" id="continueFromResult">
+					<label for="continueFromResult">Continue Calculations</label>
+				</td>
+				<tr>
+				<td colspan="3">
+					<div class="optionInfo subInfo">
+						If a calculation starts with an operator (+, -, *, /, etc.), continue calculation from previous result.
+					</div>
+				</td>
+			</tr>
+			</tr>
 			<!--zoom-->	
 			<tr>
 				<th colspan="3">Zoom</th>
@@ -16,8 +33,7 @@
 				<td><label>Results</label></td>
 				<td><input id="zoom" type="text" tabindex="1"/></td>	
 				<td><button class="reset" tabindex="2">reset</button></td>				
-			</tr>
-			
+			</tr>		
 			<!--size-->		
 			<tr>
 				<th colspan="3">Dropdown Size</th>
