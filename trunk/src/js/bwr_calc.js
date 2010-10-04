@@ -679,21 +679,59 @@ var cCalc = (function (window, document) {
 			var hasBigNum = false;
 			var i = numArr.length;
 			while (i--) {				
-				if (numArr[i].replace('.', '').length > maxDigits) {					
+				if (numArr[i].replace(/\./, '').length > maxDigits) {					
 					hasBigNum = true;
 				};				
 			};			
 			return hasBigNum;
 		}		
 		
+		function roundResult(unroundedResult, totalDigits) {
+			var orderOfMag, numWholeDigits, resultWithoutDecimal, roundableResult, roundedResult, readjustedResult, zeroPadding;
+			zeroPadding = "00000000000000000000000000000";
+			unroundedResult = unroundedResult.toString();		
+			console.debug("unroundedResult ===>", unroundedResult);
+			// 123.456e+24 => 123
+			wholeDigits = unroundedResult.replace(/\..*$/, '');
+			console.debug("// 123.456e+24 => 123 ===>", wholeDigits);
+			// 123.456e+24 => e+24
+			orderOfMag = unroundedResult.replace(/^.*(e.*)$|^.*$/, '$1');			
+			console.debug("// 123.456e+24 => e+24 ===>", orderOfMag);
+			// 123.456 => 12345600000000000000000000000000000
+			resultWithoutDecimal = unroundedResult.replace(/\.|e.*$/g, '') + zeroPadding;			
+			console.debug("// 123.456 => 12345600000000000000000000000000000 ===>", resultWithoutDecimal)
+			// 12345600000000000000000000000000000 => 1234560000000.0000000000000000000000			
+			roundableResult = resultWithoutDecimal.replace(RegExp('^(.{'+totalDigits+'})'), '$1.');			
+			console.debug("// 12345600000000000000000000000000000 => 1234560000000.0000000000000000000000 ===>", roundableResult);
+			// 1234560000000.0000000000000000000000 => 12345600000000000000000000000000000
+			roundedResult = Math.round(roundableResult).toString().replace(/e.*$|\./g, '') + zeroPadding;			
+			console.debug("// 1234560000000.0000000000000000000000 => 123456000000 ===>", roundedResult);
+			// 1234560000000 => 123.4560000000e+24
+			readjustedResult = roundedResult.replace(RegExp('^(.{'+wholeDigits.length+'})(.*)$'), '$1.$2'+orderOfMag);			
+			console.debug("// 1234560000000 => 123.4560000000e+24 ===>", readjustedResult);
+			// 123.4560000000e+24 => 1.23456e+26
+			console.debug("// 123.4560000000e+24 => 1.23456e+26 ===>", +readjustedResult)
+			return (+readjustedResult).toString();
+		}	
+		
 		// Attempt js eval only if input is safe and (checks for big numbers too)
 		function sanitaryEval(input) {			
 			var output = null, max = Math.pow(10, maxDigits), regexInputNotSanitary = /[^+\-*\/%.()\d\s]/;
-			var inputIsSanitary = !regexInputNotSanitary.test(input);
-			if (inputIsSanitary && !hasBigNumbers(input)) {				
+			var inputIsSanitary = !regexInputNotSanitary.test(input);			
+			var unroundedResult;		
+			console.debug("inputIsSanitary", inputIsSanitary)
+			if (inputIsSanitary && !hasBigNumbers(input)) {		
 				// Try to fix it so we don't get goofy results when calculating things like 2.01 - 2.0
-				output = Math.round(max*eval(input))/max;
+				unroundedResult = eval(input).toString();
+				isWholeNumber = unroundedResult.search(/\./) === -1;	
+				console.debug("isWholeNumber", unroundedResult, isWholeNumber, unroundedResult.search(/\./))
+				if (!isWholeNumber) {
+					output = +roundResult(unroundedResult, maxDigits);
+				} else {
+					output = +unroundedResult;
+				}
 			}			
+			console.debug("sanitart Output?", output)
 			return output;
 		}
 
@@ -710,8 +748,9 @@ var cCalc = (function (window, document) {
 			try {
 				// try using js to evaluate input
 				output = sanitaryEval(input);					
-				
-				if (typeof output === "number") {					
+				console.debug("typeof output", typeof output)
+				if (typeof output === "number") {	
+					console.debug("1helodp!!!!!!!!!!")
 					// Make js scientific notation look like google				
 					output = output.toString();
 					if (/e[+-]\d+$/.test(output)) {
@@ -719,6 +758,7 @@ var cCalc = (function (window, document) {
 					} else {
 						displayOutput = output;
 					}
+					console.debug("2helodp!!!!!!!!!!", displayOutput)
 					return {
 						display: displayOutput,
 						plain: $('<div>'+displayOutput+'</div>').text() // output cleaned of all markup
