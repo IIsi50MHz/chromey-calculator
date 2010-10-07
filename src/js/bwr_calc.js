@@ -16,8 +16,99 @@ var cCalc = (function (window, document) {
 		queryCount = 0,		
 		background = chrome.extension.getBackgroundPage(), 
 		//chromeyCalcHelperId = "kncknbclhdncdolkfleoeefggfbclgpp"; // dev id
-		chromeyCalcHelperId = "hfgnndipkjcpghbagmmcemdbjfclkcla"; // relase id
-		
+		chromeyCalcHelperId = "hfgnndipkjcpghbagmmcemdbjfclkcla"; // relase id	
+	var queryMode = {
+		all: {
+			firstStatus: "trying js",
+			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up
+				"trying js": "js",
+				"trying google": "google",
+				"trying google, did you mean": "google",
+				"trying alpha": "alpha",
+				"failed": ""
+			},
+			nextStatus: { // Used to decide what query to try next if last query failed
+				"trying js": "trying google",
+				"trying google": "trying google, did you mean",
+				"trying google, did you mean": "trying alpha",
+				"trying alpha": "failed"
+			}
+		},		
+		js: { // Only "query" js
+			firstStatus: "trying js",
+			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up
+				"trying js": "js",				
+				"failed": ""
+			},
+			nextStatus: { // Used to decide what query to try next if last query failed
+				"trying js": "failed"				
+			}			
+		},
+		google: { // Only query Google
+			firstStatus: "trying google",
+			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up
+				"trying google": "google",
+				"trying google, did you mean": "google",				
+				"failed": ""
+			},
+			nextStatus: { // Used to decide what query to try next if last query failed
+				"trying google": "trying google, did you mean",
+				"trying google, did you mean": "failed",				
+			}			
+		},
+		alpha: { // Only query Wolfram|Alpha
+			firstStatus: "trying alpha",
+			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up
+				"trying alpha": "alpha",				
+				"failed": ""
+			},
+			nextStatus: { // Used to decide what query to try next if last query failed
+				"trying alpha": "failed"								
+			}			
+		},
+		jsGoogle: { // query js, then Google
+			firstStatus: "trying js",
+			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up
+				"trying js": "js",
+				"trying google": "google",
+				"trying google, did you mean": "google",				
+				"failed": ""
+			},
+			nextStatus: { // Used to decide what query to try next if last query failed
+				"trying js": "trying google",
+				"trying google": "trying google, did you mean",
+				"trying google, did you mean": "failed"								
+			}			
+		},
+		googleAlpha: {
+			firstStatus: "trying js",
+			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up				
+				"trying google": "google",
+				"trying google, did you mean": "google",
+				"trying alpha": "alpha",
+				"failed": ""
+			},
+			nextStatus: { // Used to decide what query to try next if last query failed				
+				"trying google": "trying google, did you mean",
+				"trying google, did you mean": "trying alpha",
+				"trying alpha": "failed"
+			}
+		},
+		jsAlpha: {
+			firstStatus: "trying js",
+			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up
+				"trying js": "js",				
+				"trying alpha": "alpha",
+				"failed": ""
+			},
+			nextStatus: { // Used to decide what query to try next if last query failed
+				"trying js": "trying alpha",				
+				"trying alpha": "failed"
+			}
+		},
+	};
+	var currentQueryMode = queryMode.all;
+	var rxCleanInput = /:\s*(g|w|c|cg|cw|gw)$/i;
 	// -----------------------------------------------------------------------
 	// 	Some functions that need a better home...
 	// -----------------------------------------------------------------------
@@ -127,15 +218,32 @@ var cCalc = (function (window, document) {
 				chrome.extension.sendRequest(chromeyCalcHelperId, {"ding": "dong"}, function (response) {
 					background.helperIsInstalled = true;			
 				});
-			});			
-
-			
+			});		
 
 			// Handle enter and arrow keydown events
 			$calcInput.keydown(function (e) {				
 				var inputVal = this.value.trim(), iconName, cmdArgs, $calcPopOut, bg$;
 				// Handle special keys
-				if (e.which === 13 && inputVal) { // Enter
+				if (e.which === 13 && inputVal) { // Enter					
+					// Update query mode					
+					if (inputVal.match(/:\s*g$/i)) {						
+						currentQueryMode = queryMode.google;
+					} else if (inputVal.match(/:\s*w$/i)) {
+						currentQueryMode = queryMode.alpha;
+					} else if (inputVal.match(/:\s*c$/i)) {
+						currentQueryMode = queryMode.js;
+					} else if (inputVal.match(/:\s*cg$/i)) {
+						currentQueryMode = queryMode.jsGoogle;
+					} else if (inputVal.match(/:\s*cw$/i)) {
+						currentQueryMode = queryMode.jsAlpha;
+					} else if (inputVal.match(/:\s*gw$/i)) {
+						currentQueryMode = queryMode.googleAlpha;
+					} else {
+						currentQueryMode = queryMode.all;
+					}					
+					//inputVal = inputVal.replace(rxCleanInput, '');
+					//console.debug('inputVal', inputVal, currentQueryMode)
+					
 					// Check for commands
 					if (inputVal === 'clear') {
 						// Clear results
@@ -388,21 +496,8 @@ var cCalc = (function (window, document) {
 	//			outputDisplay: <final output for display>,
 	//			outputPlain: <final plain text output>
 	//		}
-	calc = (function () {
-		var queryTypeByStatus = { // Used to decide to query Google or Wolfram|Alpha or give up
-				"trying js": "js",
-				"trying google": "google",
-				"trying google, did you mean": "google",
-				"trying alpha": "alpha",
-				"failed": ""
-			},
-			nextStatus = { // Used to decide what query to try next if last query failed
-				"trying js": "trying google",
-				"trying google": "trying google, did you mean",
-				"trying google, did you mean": "trying alpha",
-				"trying alpha": "failed"
-			},
-			rx = { // regexp
+	calc = (function () {		
+		var rx = { // regexp
 				nothing: /^\s*$/,
 				integer: /^\s*\d+\s*$/,
 				varInspect: /^\s*@\w*\s*=*\s*$/,
@@ -498,16 +593,19 @@ var cCalc = (function (window, document) {
 
 		// Go find a result
 		function calcQuery(input, callback) {			
-			var uri;			
+			var uri;
+			var queryTypeByStatus = currentQueryMode.queryTypeByStatus;
+			var nextStatus = currentQueryMode.nextStatus;			
 			
 			// ======================================================  CHECK ME  ========================================================
 			// 	This might be a good place to put a query-rate limiter, to prevent spamming Google and WolframAlpha
 			// ======================================================  /CHECK ME  ========================================================
 			
-			// New query (start with js)
+			// New query (set starting query type "try js", "try google", etc.)
 			if (!calc.result.status) {
-				calc.result.status = "trying js";
+				calc.result.status = currentQueryMode.firstStatus;
 			}
+			console.debug('[----calc.result.status----]::::::', calc.result.status);
 			var queryType = queryTypeByStatus[calc.result.status || ""],
 				didYouMeanInfo = {},
 				result = calc.result;
@@ -527,7 +625,7 @@ var cCalc = (function (window, document) {
 				// Set google query head
 				setGoogleQueryUriHead();				
 				// Create query uri
-				uri = createQueryUri[queryType](input);
+				uri = createQueryUri[queryType](input.replace(rxCleanInput, ''));				
 				if (!uri) {
 					queryCallback(input);
 				} else {
@@ -586,7 +684,7 @@ var cCalc = (function (window, document) {
 					result.outputDisplay = output.display;
 					result.outputPlain = output.plain;
 					result.queryType = queryType;
-					result.uri = createQueryUri[queryType](input);
+					result.uri = createQueryUri[queryType](input.replace(rxCleanInput, ''));
 					callback && callback(result);
 				}
 			}
@@ -673,6 +771,7 @@ var cCalc = (function (window, document) {
 	// 		}
 	extractCalcOutput = (function () {
 		var maxDigits = 13;
+		
 		// Check to see if input has numbers too big for js or google to calculate accurately
 		function hasBigNumbers(input) {
 			var numArr = input.match(/\d+\.\d*|\d*\.\d+|\d+/g);
@@ -686,52 +785,48 @@ var cCalc = (function (window, document) {
 			return hasBigNum;
 		}		
 		
-		function roundResult(unroundedResult, totalDigits) {
-			var orderOfMag, numWholeDigits, resultWithoutDecimal, roundableResult, roundedResult, readjustedResult, zeroPadding;
-			zeroPadding = "00000000000000000000000000000";
-			unroundedResult = unroundedResult.toString();		
-			console.debug("unroundedResult ===>", unroundedResult);
-			// 123.456e+24 => 123
-			wholeDigits = unroundedResult.replace(/\..*$/, '');
-			console.debug("// 123.456e+24 => 123 ===>", wholeDigits);
-			// 123.456e+24 => e+24
-			orderOfMag = unroundedResult.replace(/^.*(e.*)$|^.*$/, '$1');			
-			console.debug("// 123.456e+24 => e+24 ===>", orderOfMag);
-			// 123.456 => 12345600000000000000000000000000000
-			resultWithoutDecimal = unroundedResult.replace(/\.|e.*$/g, '') + zeroPadding;			
-			console.debug("// 123.456 => 12345600000000000000000000000000000 ===>", resultWithoutDecimal)
-			// 12345600000000000000000000000000000 => 1234560000000.0000000000000000000000			
-			roundableResult = resultWithoutDecimal.replace(RegExp('^(.{'+totalDigits+'})'), '$1.');			
-			console.debug("// 12345600000000000000000000000000000 => 1234560000000.0000000000000000000000 ===>", roundableResult);
-			// 1234560000000.0000000000000000000000 => 12345600000000000000000000000000000
-			roundedResult = Math.round(roundableResult).toString().replace(/e.*$|\./g, '') + zeroPadding;			
-			console.debug("// 1234560000000.0000000000000000000000 => 123456000000 ===>", roundedResult);
-			// 1234560000000 => 123.4560000000e+24
-			readjustedResult = roundedResult.replace(RegExp('^(.{'+wholeDigits.length+'})(.*)$'), '$1.$2'+orderOfMag);			
-			console.debug("// 1234560000000 => 123.4560000000e+24 ===>", readjustedResult);
-			// 123.4560000000e+24 => 1.23456e+26
-			console.debug("// 123.4560000000e+24 => 1.23456e+26 ===>", +readjustedResult)
-			return (+readjustedResult).toString();
+		// Round to specified number of significant figues so we don't get weird looking results for things like 2.01 - 2.0 -> 0.009999999999999787
+		function sigFigRound(num, numSigFig) {			
+			var numStr, ordMagExp;
+			// figure out exponent for order of magnitude of num				
+			numStr = (+num).toString();
+			ordMagExp = +numStr.replace(/^.*e(.*)$|^.*$/, '$1'); // case: 1.23456e+78		
+			if (!ordMagExp) {
+				if (numStr.match(/^0/)) { // case: 0.00123456
+					ordMagExp = -numStr.search(/[^0.]/) + 1;					
+				} else { // case: 123456 or 12.3456 
+					ordMagExp = numStr.replace(/\..*/, '').length - 1;					
+				}
+			}			
+			// Remove decimal and "e". Remove leading zeros. Pad end with zeros...			
+			numStr = numStr.replace(/\.|e.*$/g, '').replace(/^0+/, '') + '000000000000000000000000000000';			
+			// ...Insert decimal for rounding
+			numStr = numStr.replace(RegExp('^(.{'+numSigFig+'})(.*)$'), '$1.$2');						
+			// Round number
+			numStr = Math.round(numStr).toString();			
+			// Remove decimal and "e". Remove leading zeros. Pad end with zeros...			
+			numStr = numStr.replace(/\.|e.*$/g, '').replace(/^0+/, '') + '000000000000000000000000000000';			
+			// convert to number with order of magnitude of one
+			numStr = numStr.replace(/^(\d)/, '$1.');			
+			// restore number to original order of magnitude			
+			return +(numStr.replace(/$/, 'e'+ordMagExp));			
 		}	
 		
 		// Attempt js eval only if input is safe and (checks for big numbers too)
 		function sanitaryEval(input) {			
 			var output = null, max = Math.pow(10, maxDigits), regexInputNotSanitary = /[^+\-*\/%.()\d\s]/;
 			var inputIsSanitary = !regexInputNotSanitary.test(input);			
-			var unroundedResult;		
-			console.debug("inputIsSanitary", inputIsSanitary)
+			var unroundedResult;
+			// Get rid of leading zeros (otherwise js will treat them as octal)
+			input = input.replace(/(^|[^\d.])0+([^.])/g, '$1$2');			
 			if (inputIsSanitary && !hasBigNumbers(input)) {		
-				// Try to fix it so we don't get goofy results when calculating things like 2.01 - 2.0
+				// Try to fix it so we don't get goofy results when calculating things like 2.01 - 2.0				
 				unroundedResult = eval(input).toString();
-				isWholeNumber = unroundedResult.search(/\./) === -1;	
-				console.debug("isWholeNumber", unroundedResult, isWholeNumber, unroundedResult.search(/\./))
-				if (!isWholeNumber) {
-					output = +roundResult(unroundedResult, maxDigits);
-				} else {
-					output = +unroundedResult;
+				isWholeNumber = unroundedResult.search(/\./) === -1;				
+				if (unroundedResult <= max) {
+					output = +sigFigRound(unroundedResult, maxDigits);				
 				}
 			}			
-			console.debug("sanitart Output?", output)
 			return output;
 		}
 
@@ -744,21 +839,20 @@ var cCalc = (function (window, document) {
 				// display: null,
 				// plain: null
 			// };
-				
+			
+			input = input.replace(rxCleanInput, '');
 			try {
 				// try using js to evaluate input
 				output = sanitaryEval(input);					
 				console.debug("typeof output", typeof output)
-				if (typeof output === "number") {	
-					console.debug("1helodp!!!!!!!!!!")
+				if (typeof output === "number") {						
 					// Make js scientific notation look like google				
 					output = output.toString();
 					if (/e[+-]\d+$/.test(output)) {
 						displayOutput = output.replace(/(.*)e\+*(-*\d+)/, '$1 &times; 10<div style="display:inline-block; opacity:0; width:0px;">^</div><sup>$2</sup>');
 					} else {
 						displayOutput = output;
-					}
-					console.debug("2helodp!!!!!!!!!!", displayOutput)
+					}					
 					return {
 						display: displayOutput,
 						plain: $('<div>'+displayOutput+'</div>').text() // output cleaned of all markup
