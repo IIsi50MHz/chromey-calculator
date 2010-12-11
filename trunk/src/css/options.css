@@ -1,10 +1,15 @@
-/*** elements ***/
+/*** global ***/
 body {
 	font-family: arial, sans-serif;
 }
 
 h1 {
 	text-align: center;
+}
+
+input[type="text"] {
+	width: 125px;
+	padding-left: 3px;
 }
 
 table {
@@ -18,13 +23,10 @@ th {
 	text-align: left;
 }
 
-input[type="text"] {
-	width: 125px;
-	padding-left: 3px;
+.fullInput {
+	padding-left: 23px;
 }
 
-
-/*** classes ***/
 .optionInfo {
 	font-size: 80%;
 	margin-bottom: 8px;
@@ -39,12 +41,6 @@ input[type="text"] {
 	margin-bottom: 0px;
 }
 
-.fullInput {
-	padding-left: 23px;
-}
-
-
-/*** ids ***/
 #localGoogleUrl {
 	width: 100%;
 }
