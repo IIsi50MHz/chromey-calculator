@@ -1,6 +1,20 @@
-#summary Chromey Calculator Help.
-
+#summary Chromey Calculator help
 = Entering expressions =
+== Basic examples ==
+Some basic calculations are handled by Chromey Calculator itself.
+ * 1+1
+ * _add more examples..._
+
+== Google Calculator examples ==
+When Chromey Calculator can't do the job, Google Calculator handles the calculation.
+ * 10 ft in meters
+ * _add more examples..._
+
+== Wolfram|Alpha examples ==
+If neither Chromey Calculator nor Google Calculator comes up with a result, the expression will get sent on to Wolfram|Alpha.
+ * d x^2 / dx
+ * _add more examples..._
+
 = Variables =
 == Valid variable names ==
 == Unevaluated expressions ==
@@ -8,4 +22,3 @@
 = Copy/Paste tricks =
 = Source links for results =
 = Examples =
-
