@@ -1,5 +1,2 @@
-#summary One-sentence summary of this page.
-
-<wiki:toc max_depth="1" />
 * [http://code.google.com/p/chromey-calculator/issues/entry Report a bug]
 * [https://chrome.google.com/extensions/detail/acgimceffoceigocablmjdpebeodphgc Chromey Calculator extension page]
