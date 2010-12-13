@@ -20,10 +20,15 @@ When Chromey Calculator can't do the job, Google Calculator handles the calculat
 Google Guide maintains an excellent list with may more examples: [http://www.googleguide.com/help/calculator.html Google Calculator (Cheat Sheet)]
 
 == Wolfram|Alpha examples ==
-If neither Chromey Calculator nor Google Calculator comes up with a result, the expression will get sent on to Wolfram|Alpha.
+If neither Chromey Calculator nor Google Calculator comes up with a result, the expression will get sent on to Wolfram|Alpha. Wolfram|Alpha can handle things like derivative, integrals, equation solving, and vector arithmetic. 
+
  * d x^2 / dx
+ * integral x^2 dx
  * solve(2 x^2 - 1 = 0)
- * _add more examples..._
+ * {1,2,3}.{1,2,3}
+ * {1,2,3}x{1,2,3}
+
+Wolfram|Alpha maintains a huge list of examples: [http://www.wolframalpha.com/examples/  Wolfram|Alpha Examples] (NOTE: Many, but not all Wolfram|Alpha queries are supported.)
 
 = Source links for results =
 You can hover over the the space just to the left of a result to reveal a "G" or "W" link. Click the link to see the original source of a result. (NOTE: You won't find any link for simple calculations handled directly by Chromey Calcuator.)
