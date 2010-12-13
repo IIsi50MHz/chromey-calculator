@@ -7,17 +7,17 @@ Some basic calculations are handled by Chromey Calculator itself.
  * 100 - (1+2+5+7+11)`*`2.71828
 
 == Google Calculator examples ==
-When Chromey Calculator can't do the job, Google Calculator handles the calculation.
- * *Mixed unit calculations:* 2 mi + 4 km + 3 light-years in feet
- * *Unit conversion:* 1/4 cup in tablespoons
- * *Currency conversion:* 56 dollars in euros
- * *Hex, octal, binary:* 4 + 0xAF + 0o71 + 0b10 in hex
- * *Trig functions (argument in radians):* cos(pi/2)
- * *Trig functions (argument in degrees):* sin(60 degrees)
- * *log (base 10):* log(123)
- * *Natural log (base e):* ln(123)
- * *Mathematical and physical constants:* pi, e, h, c, etc.
- * *Google Guide lists many more:* [http://www.googleguide.com/help/calculator.html Google Calculator (Cheat Sheet)]
+When Chromey Calculator can't do the job, Google Calculator handles the calculation. Google can handle things like mixed unit calculations, unit conversions, currency converions, hex and binary arithmetic, trig functions, basic mathematical and physical constants, and much more.
+ * 2 mi + 4 km + 3 light-years in feet
+ * 1/4 cup in tablespoons
+ * 56 dollars in euros
+ * 4 + 0xAF + 0o71 + 0b10 in hex
+ * cos(pi/2)
+ * sin(60 degrees)
+ * log(123)
+ * ln(123)
+ 
+Google Guide maintains an excellent list with may more examples: [http://www.googleguide.com/help/calculator.html Google Calculator (Cheat Sheet)]
 
 == Wolfram|Alpha examples ==
 If neither Chromey Calculator nor Google Calculator comes up with a result, the expression will get sent on to Wolfram|Alpha.
@@ -25,10 +25,11 @@ If neither Chromey Calculator nor Google Calculator comes up with a result, the 
  * solve(2 x^2 - 1 = 0)
  * _add more examples..._
 
+= Source links for results =
+You can hover over the the space just to the left of a result to reveal a "G" or "W" link. Click the link to see the original source of a result. (NOTE: You won't find any link for simple calculations handled directly by Chromey Calcuator.)
+
+= Copy/Paste tricks =
 = Variables =
 == Valid variable names ==
 == Unevaluated expressions ==
 = History =
-= Copy/Paste tricks =
-= Source links for results =
-= Examples =
