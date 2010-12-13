@@ -1,6 +1,5 @@
 #summary Chromey Calculator help
 #sidebar HelpSideBar
-HelpSideBar
 <wiki:toc max_depth="1" />
 = Entering expressions =
 == Basic examples ==
