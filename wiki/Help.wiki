@@ -31,7 +31,7 @@ If neither Chromey Calculator nor Google Calculator comes up with a result, the 
 Wolfram|Alpha maintains a huge list of examples: [http://www.wolframalpha.com/examples/  Wolfram|Alpha Examples] (NOTE: Many, but not all Wolfram|Alpha queries are supported.)
 
 = Source links for results =
-You can hover over the the space just to the left of a result to reveal a "G" or "W" link. Click the link to see the original source of a result. (NOTE: Fore simple calculations handled directly by Chromey Calculator, you won't find any link.)
+You can hover over the the space just to the left of a result to reveal a "G" or "W" link. Click the link to see the original source of a result. (NOTE: For simple calculations handled directly by Chromey Calculator, you won't find any link.)
 
 = Copy/Paste tricks =
 = Variables =
