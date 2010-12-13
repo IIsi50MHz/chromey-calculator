@@ -1,5 +1,7 @@
 #summary Chromey Calculator help
-#sidebar TableOfContents
+#sidebar HelpSideBar
+HelpSideBar
+<wiki:toc max_depth="1" />
 = Entering expressions =
 == Basic examples ==
 Some basic calculations are handled by Chromey Calculator itself.
