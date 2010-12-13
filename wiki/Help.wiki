@@ -1,5 +1,5 @@
 #summary Chromey Calculator help
-<div style="width:500px; margin:auto;">
+<div style="color:red;">
 = Entering expressions =
 == Basic examples ==
 Some basic calculations are handled by Chromey Calculator itself.
