@@ -1,2 +1,2 @@
-* [http://code.google.com/p/chromey-calculator/issues/entry Report a bug]
-* [https://chrome.google.com/extensions/detail/acgimceffoceigocablmjdpebeodphgc Chromey Calculator extension page]
+ * [http://code.google.com/p/chromey-calculator/issues/entry Report a bug]
+ * [https://chrome.google.com/extensions/detail/acgimceffoceigocablmjdpebeodphgc Chromey Calculator extension page]
