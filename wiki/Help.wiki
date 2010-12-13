@@ -1,4 +1,5 @@
 #summary Chromey Calculator help
+<div style="width:500px; margin:auto;">
 = Entering expressions =
 == Basic examples ==
 Some basic calculations are handled by Chromey Calculator itself.
@@ -38,3 +39,4 @@ You can hover over the the space just to the left of a result to reveal a "G" or
 == Valid variable names ==
 == Unevaluated expressions ==
 = History =
+</div>
