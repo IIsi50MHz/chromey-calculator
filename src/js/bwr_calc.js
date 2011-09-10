@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2010 Brent Weston Robinett <bwrobinett@gmail.com>
+ * Copyright (c) 2009, 2010, 2011 Brent Weston Robinett <bwrobinett@gmail.com>
  * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
  */
 var cCalc = (function (window, document) {	
@@ -221,7 +221,7 @@ var cCalc = (function (window, document) {
 			});		
 
 			// Handle enter and arrow keydown events
-			$calcInput.keydown(function (e) {				
+			$calcInput.keydown(function (e) {		
 				var inputVal = this.value.trim(), iconName, cmdArgs, $calcPopOut, bg$;
 				// Handle special keys
 				if (e.which === 13 && inputVal) { // Enter					
@@ -325,8 +325,10 @@ var cCalc = (function (window, document) {
 			$(document).delegate(".outputText, .inputText, .replacedInputText, .errorInputText, .errorOutputText, .inputTextWithVars, .replacedVarAssignmentInputText, .varAssignmentInputText, .varAssignmentOutputText", "click", function (e) {
 				var $this = $(this);
 				var resultText = $this.text().replace(/\s*=\s*$/, '');  // prepare result text for insertion
-
-				if (e.ctrlKey || e.metaKey) {
+				console.debug("e.target()", e.target, $(e.target).is(".plotLink"));
+				if ($(e.target).is(".plotLink")) {
+					// do nothing
+				} else if (e.ctrlKey || e.metaKey) {
 					Copy(resultText);
 					$this.css({opacity: "0"});
 					$this.animate({opacity: "1"}, 700);
@@ -785,33 +787,6 @@ var cCalc = (function (window, document) {
 			return hasBigNum;
 		}		
 		
-		// Round to specified number of significant figues so we don't get weird looking results for things like 2.01 - 2.0 -> 0.009999999999999787
-		function sigFigRound(num, numSigFig) {			
-			var numStr, ordMagExp;
-			// figure out exponent for order of magnitude of num				
-			numStr = (+num).toString();
-			ordMagExp = +numStr.replace(/^.*e(.*)$|^.*$/, '$1'); // case: 1.23456e+78		
-			if (!ordMagExp) {
-				if (numStr.match(/^0/)) { // case: 0.00123456
-					ordMagExp = -numStr.search(/[^0.]/) + 1;					
-				} else { // case: 123456 or 12.3456 
-					ordMagExp = numStr.replace(/\..*/, '').length - 1;					
-				}
-			}			
-			// Remove decimal and "e". Remove leading zeros. Pad end with zeros...			
-			numStr = numStr.replace(/\.|e.*$/g, '').replace(/^0+/, '') + '000000000000000000000000000000';			
-			// ...Insert decimal for rounding
-			numStr = numStr.replace(RegExp('^(.{'+numSigFig+'})(.*)$'), '$1.$2');						
-			// Round number
-			numStr = Math.round(numStr).toString();			
-			// Remove decimal and "e". Remove leading zeros. Pad end with zeros...			
-			numStr = numStr.replace(/\.|e.*$/g, '').replace(/^0+/, '') + '000000000000000000000000000000';			
-			// convert to number with order of magnitude of one
-			numStr = numStr.replace(/^(\d)/, '$1.');			
-			// restore number to original order of magnitude			
-			return +(numStr.replace(/$/, 'e'+ordMagExp));			
-		}	
-		
 		// Attempt js eval only if input is safe and (checks for big numbers too)
 		function sanitaryEval(input) {			
 			var output = null, max = Math.pow(10, maxDigits), regexInputNotSanitary = /[^+\-*\/%.()\d\s]/;
@@ -821,10 +796,11 @@ var cCalc = (function (window, document) {
 			input = input.replace(/(^|[^\d.])0+([^.])/g, '$1$2');			
 			if (inputIsSanitary && !hasBigNumbers(input)) {		
 				// Try to fix it so we don't get goofy results when calculating things like 2.01 - 2.0				
-				unroundedResult = eval(input).toString();
-				isWholeNumber = unroundedResult.search(/\./) === -1;				
-				if (unroundedResult <= max) {
-					output = +sigFigRound(unroundedResult, maxDigits);				
+				unroundedResult = eval(input);				
+				if (unroundedResult <= max) {					
+					output = +(unroundedResult.toFixed(maxDigits));				
+					console.debug("unroundedResult", unroundedResult);
+					console.debug("roundedResult", output);
 				}
 			}			
 			return output;
@@ -916,7 +892,8 @@ var cCalc = (function (window, document) {
 		function extractAlphaCalcOutput(doc) {
 			var
 			input = calc.result.origInput,
-			inputIsSolve = !!input.match(/^\s*solve[\(\[]/i),
+			inputIsSolve = !!input.match(/^\s*solve\s*[\(\[]/i),
+			inputIsPlot= !!input.match(/^\s*plot\s*[\(\[]/i),
 			$resultPods = $(doc).filter("#results").find(".pod"),
 			$outputPod,
 			firstPodHtml = $resultPods.html(),
@@ -934,6 +911,9 @@ var cCalc = (function (window, document) {
 					output += $(this).attr("alt") + "<br/>"
 				});
 				output = output.replace(/<br\/>$/, "");
+			} else if (inputIsPlot) {
+				// Show link to result				
+				output = "<a target='_blank' class='outputLink plotLink' href='"+createQueryUri['alpha'](input.replace(rxCleanInput, ''))+"'>Wolfram|Alpha Plot</a>";
 			} else {
 				// Show first result only for any other queries
 				output = $outputPod.find("img").attr("alt");
@@ -1034,6 +1014,12 @@ var cCalc = (function (window, document) {
 			}
 
 			// Output
+			// open plots in a new tab... 
+			// var $out = $(result.outputDisplay);			
+			// if ($out.is('.plotLink')) {
+				// //background.open($out.attr('href'));
+				// //$out.trigger('click'); // doesn't work
+			// }
 			resultInnerHtml += createOutputHtml('outputText', result.outputDisplay);
 
 			// Full result html
@@ -1228,6 +1214,7 @@ var cCalc = (function (window, document) {
 		// -----------------------------------------------------------------------
 		// =====================================================================  C HECK ME  =================================================================================
 		function continueFromResult(isOn) {
+			console.debug("continueFromResult", isOn);
 			localStorage.opt_continueFromResult = JSON.stringify([!!isOn]);
 		}
 		// =====================================================================  /C HECK ME  =================================================================================
@@ -1370,7 +1357,8 @@ var cCalc = (function (window, document) {
 		// Load all options (make sure this is called before page is loaded)
 		function loadOptions() {
 			$(options).each(function (i, opt) {
-				obj[opt] && obj[opt].apply(null, JSON.parse(localStorage["opt_"+opt] || "[]"));
+				console.debug("LAOD!", opt, "->", JSON.parse(localStorage["opt_"+opt] || "false"), "->", [defaultOptions[opt]], "???", defaultOptions);
+				obj[opt] && obj[opt].apply(null, JSON.parse(localStorage["opt_"+opt] || "false") || [defaultOptions[opt]]);
 			});
 		}
 		// -----------------------------------------------------------------------
@@ -1388,8 +1376,10 @@ var cCalc = (function (window, document) {
 		function setDefaultOptions() {
 			var key;
 			for (key in defaultOptions) {
-				console.debug("otpn", key, getOption(key)[0], typeof getOption(key)[0])
+				console.debug("otpn!!!!!!!!", key, getOption(key)[0], typeof getOption(key)[0]);
+				console.debug('localStorage["opt_'+key+'"]:', localStorage["opt_"+key], 'getOption("'+key+'")[0]', getOption(key)[0]); 
 				if (!localStorage["opt_"+key] || getOption(key)[0] === "") {
+					console.debug("set opt '", key, "' to:", defaultOptions[key]);
 					obj[key](defaultOptions[key]);
 				}
 			}		
