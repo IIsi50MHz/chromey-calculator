@@ -1,15 +1,15 @@
-#summary Chromey Calculator help
+#summary Cloudy Calculator help
 #sidebar HelpSideBar
 <wiki:toc max_depth="1" />
 = Entering expressions =
 == Basic examples ==
-Some basic calculations are handled by Chromey Calculator itself.
+Some basic calculations are handled by Cloudy Calculator itself.
  * 2+2
  * 2`*`4
  * 100 - (1+2+5+7+11)`*`2.71828
 
 == Google Calculator examples ==
-When Chromey Calculator can't do the job, Google Calculator handles the calculation. Google can handle things like mixed unit calculations, unit conversions, currency converions, hex and binary arithmetic, trig functions, basic mathematical and physical constants, and much more.
+When Cloudy Calculator can't do the job, Google Calculator handles the calculation. Google can handle things like mixed unit calculations, unit conversions, currency converions, hex and binary arithmetic, trig functions, basic mathematical and physical constants, and much more.
  * 2 mi + 4 km + 3 light-years in feet
  * 1/4 cup in tablespoons
  * 56 dollars in euros
@@ -22,7 +22,7 @@ When Chromey Calculator can't do the job, Google Calculator handles the calculat
 Google Guide maintains an excellent list with may more examples: [http://www.googleguide.com/help/calculator.html Google Calculator (Cheat Sheet)]
 
 == Wolfram|Alpha examples ==
-If neither Chromey Calculator nor Google Calculator comes up with a result, the expression will get sent on to Wolfram|Alpha. Wolfram|Alpha can handle things like derivative, integrals, equation solving, and vector arithmetic. 
+If neither Cloudy Calculator nor Google Calculator comes up with a result, the expression will get sent on to Wolfram|Alpha. Wolfram|Alpha can handle things like derivative, integrals, equation solving, and vector arithmetic. 
 
  * d x^2 / dx
  * integral x^2 dx
@@ -33,7 +33,7 @@ If neither Chromey Calculator nor Google Calculator comes up with a result, the 
 Wolfram|Alpha maintains a huge list of examples: [http://www.wolframalpha.com/examples/  Wolfram|Alpha Examples] (NOTE: Many, but not all Wolfram|Alpha queries are supported.)
 
 = Source links for results =
-You can hover over the the space just to the left of a result to reveal a "G" or "W" link. Click the link to see the original source of a result. (NOTE: For simple calculations handled directly by Chromey Calculator, you won't find any link.)
+You can hover over the the space just to the left of a result to reveal a "G" or "W" link. Click the link to see the original source of a result. (NOTE: For simple calculations handled directly by Cloudy Calculator, you won't find any link.)
 
 = Copy/Paste tricks =
 = Variables =
