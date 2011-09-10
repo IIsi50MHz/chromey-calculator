@@ -1,0 +1,55 @@
+Math geeks rejoice! 
+
+Cloudy Calculator is a scrolling calculator for Chrome. All calculations are are generated using Google and Wolfram|Alpha.
+
+NOTE: Many, but not all Wolfram|Alpha queries are supported.
+
+Feature Highlights
+* User variables
+* Persistent calculation history
+* Links to externally generated result source
+
+========
+New in 5.0
+* Many basic calculations now done internally.
+* Option to continue calculations from previous result.
+ 
+New in 4.0
+* Enable these features with Cloudy Calculator Enhancer (http://goo.gl/B74v):
+  - Alt+C quick key
+  - Use localized Google URL for calculations
+========
+
+Quick Tips  
+* Use up/down arrow keys to access input history.
+* Click on any result to insert it into the input area.
+* Ctrl+Click on any result to copy to clipboard.
+* Click the little arrow at the upper right to pop out to new window.
+* Last result can be accessed using the "@" variable.
+* Create your own user variables -- @abc_123 = 42
+* Store an unevaluated expression -- @x := 10 meters
+* Hover over the the space to the left of a result to reveal a 
+  "G" or "W" link. Click the link to see the original source of a result.
+
+Features
+* Mixed unit calculations -- 2 mi + 4 km + 3 light-years in feet
+* Unit conversion -- 1/4 cup in tablespoons
+* Currency conversion -- 56 dollars in euros
+* Hex, octal, binary -- 4 + 0xAF + 0o71 + 0b10 in hex
+* Equation solving -- solve(2 x^2 - 1 = 0)
+* Mathematical functions -- sin, cos, tan, log, etc.
+* Mathematical and physical constants -- pi, e, h, c, etc.
+* Basic calculus
+* Vector arithmetic
+* And more... 
+
+Google calculator examples
+* http://www.googleguide.com/calculator.html
+
+Wolfram|Alpha examples
+* http://www.wolframalpha.com/examples/Math.html
+
+Tell us your feature requests and any bugs you've found
+* http://code.google.com/p/chromey-calculator/issues/entry
+
+(Special Thanks to MinstormsKid and IIsi 50MHz)
