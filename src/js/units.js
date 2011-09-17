@@ -28,7 +28,7 @@ var global = this;
 		"degree":{dim:{}, factor:Math.PI/180, alias:["degree", "degrees", "deg", "degs"]},
 		
 		// LENGTH
-		"meter":{dim:{L:1}, factor:1, alias:["meter", "meters", "metre", "metres", "m"]},
+		"meter":{dim:{L:1}, factor:1, alias:["meter", "meters", "metre", "metres", "m"]},	
 		"centimeter":{dim:{L:1}, factor:0.01, alias:["centimeter", "centimeters", "centimetre", "centimetres", "cm"]},
 		"milimeter":{dim:{L:1}, factor:0.001, alias:["milimeter", "milimeters", "milimetre", "milimetres", "mm"]},
 		"micron":{dim:{L:1}, factor:1e-6, alias:["micron", "microns"]},
@@ -42,7 +42,7 @@ var global = this;
 		
 		// AREA
 		//"xxx":{dim:{L:1}, factor:1, alias:["xxx", "xxx"]},
-		"acre":{dim:{L:2}, factor:Math.pow(1609.344,2)/640, alias:["acre", "acres"]},
+		"acre":{dim:{L:2}, factor:Math.pow(1609.344,2)/640 , alias:["acre", "acres"]},
 		
 		// VOLUME
 		"liter":{dim:{L:3}, factor:0.001, alias:["liter", "liters", "litre", "litres", "ltr"]},
@@ -273,7 +273,7 @@ var global = this;
 		str = str.replace(/^\s+|\s+$/g, "");
 		// replace stuff like "sine*", with "sin "
 		str = normalizeWordTokens(str);
-		
+		// console.debug("str", str);
 		return str;
 	}		
 	
@@ -295,11 +295,13 @@ var global = this;
 	//------------------------------------------
 	function unitConvert(str, unitStr) {
 		var strResult = calcFromNestedParenStr(str);
+		// console.debug("unitConvert main expr > ", strResult);
 		if (unitStr) {
 			var unitObj = calcStrToUnit(strResult);
-			var toUnit = calcStrToUnit(unitStr);
-			if (dimsMatch(unitObj, toUnit)) {
-				return "" + unitObj.factor/toUnit.factor + " " + unitStr; 
+			var newUnit = calcStrToUnit(unitStr);
+			// console.debug(">>>>>>>>>>>>>>>>", unitObj, newUnit);
+			if (dimsMatch(unitObj, newUnit)) {
+				return "" + unitObj.factor/newUnit.factor + " " + unitStr; 
 			} else {
 				throw incompatibleDimError;
 			}
@@ -367,25 +369,32 @@ var global = this;
 	}
 	//------------------------------------------
 	function calcWithUnitConversion(str) {
+		console.time("calcWithUnitConversion");
 		// TODO: handle "in a", "per" **NOTE: per is took tricky...
 		// Split on "in" or "to" or "into"
-		var resultStr, resultUnitObj, splitArr, numberPart, unitPart, splitStrArr, precision = 13, smallest = 1e-4;
+		var resultStr, resultUnitObj, splitArr, numberPart, abs, unitPart, splitStrArr,  
+			precision 	= 13, 
+			smallest 	= 1e-4;
 		
 		splitStrArr = str.replace(/^(\s*[a-zA-Z].*)\s+in\s+a[n]?\s+([a-zA-Z].*)$/, "$2 in $1"); // Handle "in a" and "per". TODO: What if we have multiple "per"'s?
 		splitStrArr = splitStrArr.replace(/(\s+)(into|in|to)(\s+[a-zA-Z])/, "$1@@@$3").split(/\s+@@@\s+/);
+		// console.debug("splitStrArr", splitStrArr);
 		resultStr = unitConvert(splitStrArr[0], splitStrArr[1]);
-		// Split number part and other part
-		splitArr = resultStr.split(/(\s+.*)$/);
-		// Make stuff like 2.01 - 2 look good
-		numberPart = +splitArr[0];
-		numberPart = +(numberPart.toPrecision(precision));
-
-		if (Math.abs(numberPart) < smallest || Math.abs(numberPart) >= Math.pow(10, precision)) {
-			numberPart = numberPart.toExponential();
-		}
-		unitPart = splitArr[1] || "";	
-		
-		return "" + numberPart + unitPart;
+		// console.debug("resultStr  >  ", resultStr);
+		// Make stuff like 2.01 - 2 look good. **TODO: This code should be handled by what ever is creating the view. Need to move it out of here.
+		// // Split number part and other part 
+		// splitArr = resultStr.split(/(\s+.*)$/);	
+		// numberPart = +splitArr[0];
+		// numberPart = +(numberPart.toPrecision(precision));
+		// abs = Math.abs(numberPart);
+		// console.debug("nubmerbpart", abs, numberPart);
+		// if (abs !== 0 && (abs < smallest || abs >= Math.pow(10, precision))) {
+			// numberPart = numberPart.toExponential();
+		// }
+		// unitPart = splitArr[1] || "";	
+		// console.timeEnd("calcWithUnitConversion");
+		// return "" + numberPart + unitPart;
+		return resultStr;
 	}
 	//------------------------------------------
 	// Take a string and convert a nested array that duplicates the form of nested parentheses in the string.
@@ -497,192 +506,203 @@ var global = this;
 	}
 	
 	
-var numberRx 			= /(\d.\d+)/,
-	notWordRx 			= /(^|[^\w]|$)/
-	parsedRx 			= /([\w\[\]\,\.\-]+)/,
-	numberOrParsedRx	= RegExp(numberRx.source + "|" + parsedRx.source);
+	var numberRx 			= /(\d.\d+)/,
+		notWordRx 			= /(^|[^\w]|$)/
+		parsedRx 			= /([\w\[\]\,\.\-]+)/,
+		numberOrParsedRx	= RegExp(numberRx.source + "|" + parsedRx.source);
 
-var surroundedTokenRx = {
-	"infix": function (rx) {
-		return RegExp(parsedRx.source + "\\s*(" + rx.source + ")\\s*" + parsedRx.source, "g");
-	},
-	"suffix": function (rx) {
-		return RegExp("("+numberOrParsedRx.source+")+" + rx.source + "("+notWordRx.source+")+", "g");
-	},
-	"prefix": function (rx) {
-		return RegExp(notWordRx.source + "\\s*(" +rx.source + ")\\s*" + parsedRx.source, "g");
-	}
-}
-var replaceToken = {
-	"infix": function (lh, tokenName, rh) {
-		return "["+tokenName+","+lh+","+rh+"]";
-	},
-	"suffix": function (lh, tokenName, rh) {
-		return "["+tokenName+","+lh+"]"+rh;
-	},
-	"prefix": function (lh, tokenName, rh) {
-		return lh+"["+tokenName+","+rh+"]";
-	},
-	"nofix": function (lh, tokenName, rh) {
-		return lh+"["+tokenName+"]"+rh;
-	}
-}
-var tokenObjArr = [
-	// Mixed numbers get hightst priority
-	{token:"&", name:"Divide", rx:/&/, type:"infix"},
-	{token:"#", name:"Plus", rx:/#/, type:"infix"},
-	// Units come next
-	{token:"`", name:"Divide", rx:/`/, type:"infix"},
-	{token:"|", name:"Times", rx:/\|/, type:"infix"},
-	// Power
-	{token:"^", name:"Power", rx:/\^/, type:"infix"},
-	// Space before function name 
-	{token:" ", name:"Identity", rx:/\s/, type:"prefix"},
-	// Functions
-	{token:"sin", name:"Sin", aliasRx:/sin(e|)/, type:"prefix"},
-	{token:"cos", name:"Cos", aliasRx:/cos(ine|)/, type:"prefix"},
-	{token:"tan", name:"Tan", aliasRx:/tan(ent|)/, type:"prefix"},
-	{token:"asin", name:"Asin", aliasRx:/a(rc|)sin(e|)/, type:"prefix"},
-	{token:"acos", name:"Acos", aliasRx:/a(rc|)cos(ine|)/, type:"prefix"},
-	{token:"atan", name:"Atan", aliasRx:/a(rc|)tan(gent|)/, type:"prefix"},
-	{token:"csc", name:"Csc", aliasRx:/csc|cosec(ant|)/, type:"prefix"},
-	{token:"sec", name:"Sec", aliasRx:/sec(ant|)/, type:"prefix"},
-	{token:"cot", name:"Cot", aliasRx:/cot(an(gent|)|)/, type:"prefix"},
-	{token:"acsc", name:"Acsc", aliasRx:/a(rc|)(csc|cosec(ant|))/, type:"prefix"},
-	{token:"asec", name:"Asec", aliasRx:/a(rc|)sec(ant|)/, type:"prefix"},
-	{token:"acot", name:"Acot", aliasRx:/a(rc|)cot(an(gent|))/, type:"prefix"},
-	{token:"exp", name:"Exp", aliasRx:/exp/, type:"prefix"},
-	{token:"log", name:"Log", aliasRx:/log/, type:"prefix"},
-	{token:"ln", name:"Ln", aliasRx:/ln/, type:"prefix"},
-	// Times, Divide
-	{token:"/", name:"Divide", rx:/\//, type:"infix"},
-	{token:"*", name:"Times", rx:/\*/, type:"infix"},
-	// Plus, Minus
-	{token:"~", name:"Minus", rx:/~/, type:"infix"},
-	{token:"+", name:"Plus", rx:/\+/, type:"infix"}
-];
-// var tokenMap = (function () {
-	// var map = {}, i = tokenObjArr.length;
-	// while (i--) map[tokenObjArr[i].name] = tokenObjArr[i];
-	// return map;
-// }());
-
-function normalizeWordTokens(str) {
-	var tokenObj, rx;
-	var	arr = [], 
-		i 	= tokenObjArr.length;
-	
-	while (i--) {
-		tokenObj = tokenObjArr[i];
-		if (tokenObj.aliasRx) {
-			rx = RegExp("\\b("+tokenObj.aliasRx.source+")\\b.", "gi")
-			str = str.replace(rx, tokenObj.token + " ");
+	var surroundedTokenRx = {
+		"infix": function (rx) {
+			return RegExp(parsedRx.source + "\\s*(" + rx.source + ")\\s*" + parsedRx.source, "g");
+		},
+		"suffix": function (rx) {
+			return RegExp("("+numberOrParsedRx.source+")+" + rx.source + "("+notWordRx.source+")+", "g");
+		},
+		"prefix": function (rx) {
+			return RegExp(notWordRx.source + "\\s*(" +rx.source + ")\\s*" + parsedRx.source, "g");
 		}
 	}
-	return str;
-}
+	var replaceToken = {
+		"infix": function (lh, tokenName, rh) {
+			return "["+tokenName+","+lh+","+rh+"]";
+		},
+		"suffix": function (lh, tokenName, rh) {
+			return "["+tokenName+","+lh+"]"+rh;
+		},
+		"prefix": function (lh, tokenName, rh) {
+			return lh+"["+tokenName+","+rh+"]";
+		},
+		"nofix": function (lh, tokenName, rh) {
+			return lh+"["+tokenName+"]"+rh;
+		}
+	}
+	var tokenObjArr = [
+		// Mixed numbers get hightst priority
+		{token:"&", name:"Divide", rx:/&/, type:"infix"},
+		{token:"#", name:"Plus", rx:/#/, type:"infix"},
+		// Space after function name 
+		{token:" ", name:"Identity", rx:/\s/, type:"prefix"},
+		// Functions
+		{token:"sin", name:"Sin", aliasRx:/sin(e|)/, type:"prefix"},
+		{token:"cos", name:"Cos", aliasRx:/cos(ine|)/, type:"prefix"},
+		{token:"tan", name:"Tan", aliasRx:/tan(ent|)/, type:"prefix"},
+		{token:"asin", name:"Asin", aliasRx:/a(rc|)sin(e|)/, type:"prefix"},
+		{token:"acos", name:"Acos", aliasRx:/a(rc|)cos(ine|)/, type:"prefix"},
+		{token:"atan", name:"Atan", aliasRx:/a(rc|)tan(gent|)/, type:"prefix"},
+		{token:"csc", name:"Csc", aliasRx:/csc|cosec(ant|)/, type:"prefix"},
+		{token:"sec", name:"Sec", aliasRx:/sec(ant|)/, type:"prefix"},
+		{token:"cot", name:"Cot", aliasRx:/cot(an(gent|)|)/, type:"prefix"},
+		{token:"acsc", name:"Acsc", aliasRx:/a(rc|)(csc|cosec(ant|))/, type:"prefix"},
+		{token:"asec", name:"Asec", aliasRx:/a(rc|)sec(ant|)/, type:"prefix"},
+		{token:"acot", name:"Acot", aliasRx:/a(rc|)cot(an(gent|))/, type:"prefix"},
+		{token:"exp", name:"Exp", aliasRx:/exp/, type:"prefix"},
+		{token:"log", name:"Log", aliasRx:/log/, type:"prefix"},
+		{token:"ln", name:"Ln", aliasRx:/ln/, type:"prefix"},
+		// Power // Need separate token for unit powers...
+		{token:"^", name:"Power", rx:/\^/, type:"infix"},
+		// Units come next
+		{token:"`", name:"Divide", rx:/`/, type:"infix"},
+		{token:"|", name:"Times", rx:/\|/, type:"infix"},
+		// Times, Divide
+		{token:"/", name:"Divide", rx:/\//, type:"infix"},
+		{token:"*", name:"Times", rx:/\*/, type:"infix"},
+		// Plus, Minus
+		{token:"~", name:"Minus", rx:/~/, type:"infix"},
+		{token:"+", name:"Plus", rx:/\+/, type:"infix"}
+	];
+	// var tokenMap = (function () {
+		// var map = {}, i = tokenObjArr.length;
+		// while (i--) map[tokenObjArr[i].name] = tokenObjArr[i];
+		// return map;
+	// }());
 
-function normalizeToken(str, tokenObj) {
-	var strMatch, replacementStr;
-	var tokenType		= tokenObj.type,
-		tokenName 		= tokenObj.name;
-		tokenReplaceRx	= tokenObj.rx || RegExp(tokenObj.token),
-		rx 				= surroundedTokenRx[tokenType](tokenReplaceRx),
-		execArr			= rx.exec(str); // index, input, [0] -> last match chars, [1]...[n] -> parenthesised substring matches
-	
-	while (execArr) {
-		strMatch = execArr[0];
-		replacementStr = replaceToken[tokenType](execArr[1], tokenName, execArr[3]);
-		str = str.slice(0,execArr.index) + replacementStr + str.slice(execArr.index + strMatch.length);
-		rx.lastIndex = 0;
-		// next match...
-		execArr = rx.exec(str);
-	}
-	return str;
-}
-function stringExprToNormalizedArrExpr(str) {
-	var resultArr = reformatStr(str);
-	
-	for (var i = 0, len = tokenObjArr.length; i < len; i++) {
-		resultArr = normalizeToken(resultArr, tokenObjArr[i]);
-	}
-	
-	resultArr = resultArr.replace(/,\[/g, "[").replace(/\],/g, "]").replace(/\],\[/g, "][");
-	resultArr = normalizedStrExprToArr(resultArr)[0];
-	
-	if (typeof resultArr === "string") {
-		resultArr = ["Identity", resultArr];
-	}
-	
-	return resultArr;
-}
-var unitFuncMap = {
-	Plus:unitPlus,
-	Minus:unitMinus,
-	Times:unitTimes,
-	Divide:unitDiv,
-	Power:unitPow,
-	Sin:function (u) {
-		return {dim:{}, factor:Math.sin(toUnit(u).factor)};
-	},
-	Cos:function (u) {
-		return {dim:{}, factor:Math.cos(toUnit(u).factor)};
-	},
-	Tan:function (u) {
-		return {dim:{}, factor:Math.tan(toUnit(u).factor)};
-	},
-	Asin:function (u) {
-		return {dim:{}, factor:Math.asin(toUnit(u).factor)};
-	},
-	Acos:function (u) {
-		return {dim:{}, factor:Math.acos(toUnit(u).factor)};
-	},
-	Atan:function (u) {
-		return {dim:{}, factor:Math.atan(toUnit(u).factor)};
-	},
-	Csc:function (u) {
-		return {dim:{}, factor:1/Math.sin(toUnit(u).factor)};
-	},
-	Sec:function (u) {
-		return {dim:{}, factor:1/Math.cos(toUnit(u).factor)};
-	},
-	Cot:function (u) {
-		return {dim:{}, factor:1/Math.tan(toUnit(u).factor)};
-	},
-	Acsc:function (u) {
-		return {dim:{}, factor:Math.asin(1/toUnit(u).factor)};
-	},
-	Asec:function (u) {
-		return {dim:{}, factor:Math.acos(1/toUnit(u).factor)};
-	},
-	Acot:function (u) {
-		return {dim:{}, factor:Math.atan(1/toUnit(u).factor)};
-	},
-	Identity:function (u) {
-		return toUnit(u);
-	}
-}
-function calcSingleOpToUnit(arr) {
-	return unitFuncMap[arr[0]].apply(null, arr.slice(1));
-}
-function calcArrFormToUnit(arr) {
-	var item, i, len = arr.length;
-	if (len > 1 && arr.join("").match(/,/)) {				
-		for (i = 1; i < len; i++) {
-			item = arr[i];
-			if (item.constructor === Array) {
-				arr[i] = calcArrFormToUnit(item);
+	function normalizeWordTokens(str) {
+		var tokenObj, rx;
+		var	arr = [], 
+			i 	= tokenObjArr.length;
+		
+		while (i--) {
+			tokenObj = tokenObjArr[i];
+			if (tokenObj.aliasRx) {
+				rx = RegExp("\\b("+tokenObj.aliasRx.source+")\\b.", "gi")
+				str = str.replace(rx, tokenObj.token + " ");
 			}
 		}
+		return str;
 	}
-	return calcSingleOpToUnit(arr);
-}
-function calcStrToUnit(str) {
-	return calcArrFormToUnit(stringExprToNormalizedArrExpr(str))
-}
-// Do multi op calculation (no parens) 
-function calcStrToStr(str) {
-	return unitToStr(calcStrToUnit(str));
+
+	function normalizeToken(str, tokenObj) {
+		var strMatch, replacementStr;
+		var tokenType		= tokenObj.type,
+			tokenName 		= tokenObj.name;
+			tokenReplaceRx	= tokenObj.rx || RegExp(tokenObj.token),
+			rx 				= surroundedTokenRx[tokenType](tokenReplaceRx),
+			execArr			= rx.exec(str); // index, input, [0] -> last match chars, [1]...[n] -> parenthesised substring matches
+		
+		while (execArr) {
+			strMatch = execArr[0];
+			replacementStr = replaceToken[tokenType](execArr[1], tokenName, execArr[3]);
+			str = str.slice(0,execArr.index) + replacementStr + str.slice(execArr.index + strMatch.length);
+			rx.lastIndex = 0;
+			// next match...
+			execArr = rx.exec(str);
+		}
+		return str;
+	}
+	function stringExprToNormalizedArrExpr(str) {
+		var resultArr = reformatStr(str);
+		
+		for (var i = 0, len = tokenObjArr.length; i < len; i++) {
+			resultArr = normalizeToken(resultArr, tokenObjArr[i]);
+		}
+		
+		resultArr = resultArr.replace(/,\[/g, "[").replace(/\],/g, "]").replace(/\],\[/g, "][");
+		// console.debug("resultArrStr", resultArr);
+		resultArr = normalizedStrExprToArr(resultArr)[0];
+		// console.debug("resultArrArr>>", resultArr);
+		
+		if (typeof resultArr === "string") {
+			resultArr = ["Identity", resultArr];
+		}
+		
+		return resultArr;
+	}
+	var unitFuncMap = {
+		Plus:unitPlus,
+		Minus:unitMinus,
+		Times:unitTimes,
+		Divide:unitDiv,
+		Power:unitPow,
+		Sin:function (u) {
+			return {dim:{}, factor:Math.sin(toUnit(u).factor)};
+		},
+		Cos:function (u) {
+			return {dim:{}, factor:Math.cos(toUnit(u).factor)};
+		},
+		Tan:function (u) {
+			return {dim:{}, factor:Math.tan(toUnit(u).factor)};
+		},
+		Asin:function (u) {
+			return {dim:{}, factor:Math.asin(toUnit(u).factor)};
+		},
+		Acos:function (u) {
+			return {dim:{}, factor:Math.acos(toUnit(u).factor)};
+		},
+		Atan:function (u) {
+			return {dim:{}, factor:Math.atan(toUnit(u).factor)};
+		},
+		Csc:function (u) {
+			return {dim:{}, factor:1/Math.sin(toUnit(u).factor)};
+		},
+		Sec:function (u) {
+			return {dim:{}, factor:1/Math.cos(toUnit(u).factor)};
+		},
+		Cot:function (u) {
+			return {dim:{}, factor:1/Math.tan(toUnit(u).factor)};
+		},
+		Acsc:function (u) {
+			return {dim:{}, factor:Math.asin(1/toUnit(u).factor)};
+		},
+		Asec:function (u) {
+			return {dim:{}, factor:Math.acos(1/toUnit(u).factor)};
+		},
+		Acot:function (u) {
+			return {dim:{}, factor:Math.atan(1/toUnit(u).factor)};
+		},
+		Exp:function (u) {
+			return {dim:{}, factor:Math.exp(toUnit(u).factor)};
+		},
+		Log:function (u) {
+			return {dim:{}, factor:Math.log(toUnit(u).factor)/Math.LN10};
+		},
+		Ln:function (u) {
+			return {dim:{}, factor:Math.log(toUnit(u).factor)};
+		},
+		Identity:function (u) {
+			return toUnit(u);
+		}
+	}
+	function calcSingleOpToUnit(arr) {
+		return unitFuncMap[arr[0]].apply(null, arr.slice(1));
+	}
+	function calcArrFormToUnit(arr) {
+		var item, i, len = arr.length;
+		if (len > 1 && arr.join("").match(/,/)) {				
+			for (i = 1; i < len; i++) {
+				item = arr[i];
+				if (item.constructor === Array) {
+					arr[i] = calcArrFormToUnit(item);
+				}
+			}
+		}
+		return calcSingleOpToUnit(arr);
+	}
+	function calcStrToUnit(str) {
+		return calcArrFormToUnit(stringExprToNormalizedArrExpr(str))
+	}
+	// Do multi op calculation (no parens) 
+	function calcStrToStr(str) {
+		return unitToStr(calcStrToUnit(str));
 }
 //}());
 
