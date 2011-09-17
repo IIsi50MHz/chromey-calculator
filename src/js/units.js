@@ -94,11 +94,6 @@ var global = this;
 		},
 		"Kelvin":{dim:{TEMP:1}, factor:1, alias:["Kelvin", "kelvin", "K"]},
 		
-		// FUNCTIONS
-		"sine": {dim:{}, alias:["sine", "sin"], f:function (x) {
-			return Math.sin(toNum(x));
-		}},
-		
 		// CONSTANTS
 		"pi": {dim:{}, factor:Math.PI, alias:["pi", "Pi", "PI"]},
 		"e": {dim:{}, factor:Math.E, alias:["e", "E"]} //
@@ -297,7 +292,7 @@ var global = this;
 		
 		// replace "Sine*", with "sin ", etc.
 		str = normalizeWordTokens(str);
-		console.debug("wordTokenRx str aFRET?", str);
+		console.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.. FInal tokenized >>>>", str);
 		
 		return str;
 		//console.debug(arrPlus);
@@ -378,7 +373,7 @@ var global = this;
 		var i = nestedParenArr.length, item, resultStr;
 		if (i === 1) { 
 			// If the array contains a single string, we want replace it with the result (string)
-			return calcStrResult(nestedParenArr[0]);
+			return doReallyFullCalc(nestedParenArr[0]);
 		} else {
 			// Otherwise we need to make sure everything in this array is a string, join those strings together, and calculate that (string) result. 
 			while(i--) {
@@ -387,7 +382,7 @@ var global = this;
 					nestedParenArr[i] = calcFromNestedParenArr(item);
 				}
 			}
-			return calcStrResult(nestedParenArr.join(""));
+			return doReallyFullCalc(nestedParenArr.join(""));
 		}
 	}
 	//------------------------------------------
@@ -540,7 +535,7 @@ function surroundedSuffixRx(rx) {
 	return RegExp("("+numberOrParsedRx.source+")+" + rx.source + "("+notWordRx.source+")+", "g");
 }
 function surroundedPrefixRx(rx) {
-	return RegExp(notWordRx.source + "\\b(" +rx.source + ")\\b" + parsedRx.source, "g");
+	return RegExp(notWordRx.source + "\\s*(" +rx.source + ")\\s*" + parsedRx.source, "g");
 }
 var surroundedTokenRx = {
 	"infix": surroundedInfixRx,
@@ -622,11 +617,12 @@ function normalizeWordTokens(str) {
 		//console.debug("normalizeWordTokens >", i);
 		if (tokenObj.aliasRx) {
 			//console.debug("tokenObj.aliasRx.source >>>", tokenObj.aliasRx.source);
-			rx = RegExp("\\b("+tokenObj.aliasRx.source+")\\b", "gi")
-			str = str.replace(rx, tokenObj.token + "%%%");
-			//console.debug("str ********************", str)
+			rx = RegExp("\\b("+tokenObj.aliasRx.source+")\\b.", "gi")
+			str = str.replace(rx, tokenObj.token + " ");
+			//console.debug("str ********************", rx.source, str)
 		}
 	}
+	//console.debug("str ********************", rx.source, str)
 	return str;
 }
 
@@ -638,9 +634,12 @@ function parseToken2(str, tokenObj) {
 		result			= rx.exec(str); // index, input, [0] -> last match chars, [1]...[n] -> parenthesised substring matches 
 		//console.debug("REGEX for token sruou", rx.source);
 	var strMatch, replacementStr;
-	//console.debug("tokenObj", tokenObj);
 	
+	if (tokenObj.name == "Sin") {
+		console.debug("REGEX for token sruou <<", tokenObj.name, ">>", rx.source);
+	}
 	while (result) {
+		console.debug("tokenObj %%%%%%%%%%%%%%%%%%%%%%\n%%%%%%%%%%%%%%%%%%%%%5 ", tokenObj.name);
 		strMatch = result[0];
 		replacementStr = replaceToken2[tokenType](result[1], tokenName, result[3]);
 		str = str.slice(0,result.index) + replacementStr + str.slice(result.index + strMatch.length);
@@ -652,21 +651,22 @@ function parseToken2(str, tokenObj) {
 	return str;
 }
 function fullParse3(str) {
-	var result = str;
+	var result = parseString(str);
 	
 	for (var i = 0, len = tokenObjArr.length; i < len; i++) {
 		result = parseToken2(result, tokenObjArr[i]);
 	}
 	
-	console.debug("result NO strip commas", result);
+	console.debug("result NO strip commas >>>>   ", result);
 	result = result.replace(/,\[/g, "[").replace(/\],/g, "]").replace(/\],\[/g, "][");
-	console.debug("result strip commas", result);
+	console.debug("result strip commas >>> ", result);
 	result = standardFormToNest2(result)[0];
 	
 	if (typeof result === "string") {
 		result = ["Identity", result];
 	}
 	
+	console.debug("fullParse3", result);
 	return result;
 }
 var unitFuncMap = {
@@ -730,8 +730,9 @@ function doFullCalc(arr) {
 	}
 	return doCalc(arr);
 }
-function doReallyFullCall(str) {
-	return unitObjToStr(doFullCalc(fullParse3(parseString(str))));
+function doReallyFullCalc(str) {
+	return unitObjToStr(doFullCalc(fullParse3(str)));
+	//return doFullCalc(fullParse3(parseString(str)));
 }
 //}());
 
