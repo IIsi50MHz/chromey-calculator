@@ -111,8 +111,7 @@ var global = this;
 	}());	
 	//------------------------------------------
 	// Returns the unit object for a given key (e.g. "yards"); converts numbers to dimensionless unit objects.
-	function toUnitObj(x) {
-		console.debug("toU >>>>>>>>>>",x);
+	function toUnit(x) {
 		var result, xNum = +x;
 		if (x.factor != null) {
 			result = x;
@@ -121,7 +120,6 @@ var global = this;
 		} else {
 			result = {dim:{}, factor:xNum};
 		}
-		console.debug("toU result>>>>>>>>>>",result);
 		return result;
 	}
 	//------------------------------------------
@@ -137,12 +135,12 @@ var global = this;
 	function unitPlus(u1, u2) {
 		var result = {dim:{}};
 		if (u1 == null) {
-			result = toUnitObj(0);
+			result = toUnit(0);
 		} else if (u2 == null) {
-			result = toUnitObj(u1);
+			result = toUnit(u1);
 		} else {
-			u1 = toUnitObj(u1);
-			u2 = toUnitObj(u2);
+			u1 = toUnit(u1);
+			u2 = toUnit(u2);
 			// check if units have compatiple dimensions
 			if (dimsMatch(u1, u2)) {
 				// copy dim to result
@@ -164,9 +162,9 @@ var global = this;
 	function unitMinus(u1, u2) { 
 		var result;
 		if (u1 == null) {
-			result = toUnitObj(0);
+			result = toUnit(0);
 		} else if (u2 == null) {
-			result = toUnitObj(u1);
+			result = toUnit(u1);
 		} else {
 			result = unitPlus(u1, unitTimes(u2, -1));
 		}
@@ -177,12 +175,12 @@ var global = this;
 	function unitTimes(u1, u2) {		
 		var result = {dim:{}};
 		if (u1 == null) {
-			result = toUnitObj(1);
+			result = toUnit(1);
 		} else if (u2 == null) {
-			result = toUnitObj(u1);
+			result = toUnit(u1);
 		} else {
-			u1 = toUnitObj(u1);
-			u2 = toUnitObj(u2);
+			u1 = toUnit(u1);
+			u2 = toUnit(u2);
 			each.call(DIM, function (key) {
 				// add matching dimension powers				
 				result.dim[key] = (u1.dim[key] || 0) + (u2.dim[key] || 0);				
@@ -202,9 +200,9 @@ var global = this;
 	function unitDiv(u1, u2) {		
 		var result;
 		if (u1 == null) {
-			result = toUnitObj(1);
+			result = toUnit(1);
 		} else if (u2 == null) {
-			result = toUnitObj(u1);			
+			result = toUnit(u1);			
 		} else {
 			result = unitTimes(u1, unitPow(u2, -1));
 		}
@@ -216,15 +214,15 @@ var global = this;
 		var result;		
 		
 		if (u == null) {
-			result = toUnitObj(1);
+			result = toUnit(1);
 		} else if (p == null) {
-			result = toUnitObj(u);
+			result = toUnit(u);
 		} else {				
 			// p should be dimensionless	
 			p = toNum(p);
 			if (p != null) {
 				result = {dim:{}};
-				u = toUnitObj(u);			
+				u = toUnit(u);			
 				for (var key in u.dim) {
 					result.dim[key] = u.dim[key]*p
 				}
@@ -247,56 +245,36 @@ var global = this;
 		return result;
 	}	
 	//------------------------------------------
-	// Reformat str so it can be split into a special nested array, then do the split //**Wait. No. Don't do the split.
-	function parseString(str) {
-		//console.debug("// str\n", str);
+	// Reformat str so it can be split into a special nested array
+	function reformatStr(str) {
 		// normalize space
 		str = str.replace(/\s+/g, " ").replace(/^\s+|\s+$/g, "");
-		//console.debug("// normalize space\n", str);
 		// handle "e" notation
 		str = str.replace(/([0-9])[eE]([-]*[0-9])/g, "$1*10^$2");
 		// replace space between integers and fractions with "#", replace "/" fraction part with "&".
 		str = str.replace(/(\d+)\s+(\d+)\/(\d+)/g, "$1#$2&$3");	
-		//console.debug('// handle "e" notation\n', str);
 		// put a "|" betweeen numbers and units so we can make things like this work as expected: 10 ft / 5 ft = 2;
 		str = str.replace(/([0-9])([a-zA-Z'"])/g, "$1|$2");
 		str = str.replace(/([0-9a-zA-Z])\s+([a-zA-Z][^][-]?[0-9]|[a-zA-Z'"])/g, "$1|$2").replace(/([0-9a-zA-Z])\s+([a-zA-Z][^][-]?[0-9]|[a-zA-Z'"])/g, "$1|$2");
-		//console.debug("// put a | betweeen numbers and units so we can make things like this work as expected: 10 ft / 5 ft = 2\n", str);
 		// replace / before units with "`" so we can make things like this work as expected: 5 ft/sec / 5 in/sec = 12;
 		str = str.replace(/([0-9a-zA-Z])\s*\/\s*([a-zA-Z])/g, "$1`$2").replace(/([0-9a-zA-Z])\s*\/\s*([a-zA-Z])/g, "$1`$2");
-		//console.debug("replace / before units with ` so we can make things like this work as expected: 5 ft/sec / 5 in/sec = 12\n", str);
 		// replace spaces with * unless adjacent to an operator or followed by a letter
 		str = str.replace(/([^\+\-\*\/\^\'\"])\s([^\+\-\*\/\^])/g, "$1*$2");		
-		//console.debug("// replace spaces with * unless adjacent to and operator\n", str);
 		// remove all spaces around operators
 		str = str.replace(/\s*([^\+\-\*\/\^])\s*/g, "$1");
-		//console.debug("// remove all spaces around operators\n", str);
 		// add plus sign ' or " and numbers		
 		str = str.replace(/(["'])([0-9])/g, "$1+$2");
 		// add times sign between letters an anything not a letter or operator
 		str = str.replace(/([^a-zA-Z\+\-\*\/\^\|\`])([a-zA-Z])/g, "$1*$2");
-		//console.debug("// add times sign between letters an anything not a letter or operator\n", str);
 		str = str.replace(/([a-zA-Z])([^a-zA-Z\+\-\*\/\^\|\`])/g, "$1*$2");
-		//console.debug("// add times sign between letters an anything not a letter or operator\n", str);				
 		// replace minus operator with ~, but leave negative signs alone
 		str = str.replace(/([^+\-\*\/\^\|\`])-/g, "$1~");
-		//console.debug("// replace minus operator with ~, but leave negative signs alone\n", str);
-		// surround operators with space
-		//str = str.replace(/([\+\-\*\/\^\|\`])/g, " $1 ");
-		////console.debug("// surround operators with space\n", str);
-		
-		// trim
+		// trim space
 		str = str.replace(/^\s+|\s+$/g, "");
-		console.debug("// trim\n", str);
-		// create an array from the string
-		
-		// replace "Sine*", with "sin ", etc.
+		// replace stuff like "sine*", with "sin "
 		str = normalizeWordTokens(str);
-		console.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.. FInal tokenized >>>>", str);
 		
 		return str;
-		//console.debug(arrPlus);
-		//return splitToNestedArr([str], generateOrderedOpStrArray())[0];
 	}		
 	
 	// We create an array with a bunch of levels so we can easily keep track of the order of operations.
@@ -304,20 +282,22 @@ var global = this;
 	// ~ is used for minus so we can treat it differently than the negative sign
 	// We have couple extra operators so we can bind all units following a number together.
 	// ...This lets us interpret something like "10 m/s / 10 ft/s" as "(10 m/s) / (10 ft/s) " instead of "(10 / 10) m*ft/s^2"
-	// TODO: handle mixed numbers (e.g. 1 3/4 cups)
-	// TODO: handle this adjacent mixed units (e.g. 5 ft 11 in)
-	// TODO: handle unit conversion of result so everything doesn't have to be in m,s,kg.
-	// TODO: handle functions (tan, log, arcsin, etc.)
-	// TODO: handle constants (pi, e, etc.)
-	// TODO: handle parentheses
+	
+	//-----------------------------------------
+	// TODO[DONE]: handle mixed numbers (e.g. 1 3/4 cups) 										
+	// TODO[]: handle this adjacent mixed units (e.g. 5 ft 11 in)
+	// TODO[DONE]: handle unit conversion of result so everything doesn't have to be in m,s,kg.
+	// TODO[DONE]: handle functions (tan, log, arcsin, etc.) 										
+	// TODO[DONE]: handle constants (pi, e, etc.) 
+	// TODO[DONE]: handle parentheses 
 	//------------------------------------------
 		
 	//------------------------------------------
 	function unitConvert(str, unitStr) {
 		var strResult = calcFromNestedParenStr(str);
 		if (unitStr) {
-			var unitObj = calcUnitResult(strResult);
-			var toUnit = calcUnitResult(unitStr);
+			var unitObj = calcStrToUnit(strResult);
+			var toUnit = calcStrToUnit(unitStr);
 			if (dimsMatch(unitObj, toUnit)) {
 				return "" + unitObj.factor/toUnit.factor + " " + unitStr; 
 			} else {
@@ -328,8 +308,7 @@ var global = this;
 		}
 	};
 	//------------------------------------------
-	function unitObjToStr(unitObj) {
-		console.debug("---------------------\n---\n------------\n-----------------------------&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&	")
+	function unitToStr(unitObj) {
 		var factor = unitObj.factor, 
 			dim = unitObj.dim, dimExp,
 			units = "",
@@ -346,7 +325,7 @@ var global = this;
 		
 		displayUnits = DEFAULT_DISPLAY_UNITS[displayUnitsKey];
 		if (displayUnits) {
-			factor = factor/calcUnitResult(displayUnits).factor;
+			factor = factor/calcStrToUnit(displayUnits).factor;
 			// We found default display units. Convert to those units and use the display units string
 			result = factor.toString() + " " + displayUnits;
 		} else {
@@ -370,7 +349,7 @@ var global = this;
 		var i = nestedParenArr.length, item, resultStr;
 		if (i === 1) { 
 			// If the array contains a single string, we want replace it with the result (string)
-			return doReallyFullCalc(nestedParenArr[0]);
+			return calcStrToStr(nestedParenArr[0]);
 		} else {
 			// Otherwise we need to make sure everything in this array is a string, join those strings together, and calculate that (string) result. 
 			while(i--) {
@@ -379,7 +358,7 @@ var global = this;
 					nestedParenArr[i] = calcFromNestedParenArr(item);
 				}
 			}
-			return doReallyFullCalc(nestedParenArr.join(""));
+			return calcStrToStr(nestedParenArr.join(""));
 		}
 	}
 	//------------------------------------------
@@ -400,7 +379,7 @@ var global = this;
 		// Make stuff like 2.01 - 2 look good
 		numberPart = +splitArr[0];
 		numberPart = +(numberPart.toPrecision(precision));
-		console.debug("numberPart", numberPart);
+
 		if (Math.abs(numberPart) < smallest || Math.abs(numberPart) >= Math.pow(10, precision)) {
 			numberPart = numberPart.toExponential();
 		}
@@ -409,12 +388,12 @@ var global = this;
 		return "" + numberPart + unitPart;
 	}
 	//------------------------------------------
+	// Take a string and convert a nested array that duplicates the form of nested parentheses in the string.
+	// Should be able to then evaluate from inside out using calcStrToUnit???
 	/*
 		5*(10 m + 50 feet^2 / (4 in))^10 + 3
 		["5*, ["10 m + 50 feet^2 / ", ["4 in"]], "^10 + 3"]
 	*/
-	// Take a string and convert a nested array that duplicates the form of nested parentheses in the string.
-	// Should be able to then evaluate from inside out using calcUnitResult???
 	function parenToArr(str) {
 		var openParenPos, closeParenPos, parenCount, startToOpen, openToClose, closeToEnd, result;
 		
@@ -463,7 +442,7 @@ var global = this;
 		return result;
 	};
 	
-	function standardFormToNest2(str) {
+	function normalizedStrExprToArr(str) {
 		var openParenPos, closeParenPos, parenCount, startToOpen, openToClose, closeToEnd, result;
 		
 		// Find position of first open paren
@@ -494,63 +473,47 @@ var global = this;
 			result = [];
 			if (startToOpen) { 
 				// we don't need to process stuff before paren
-				console.debug("startToOpen", startToOpen);
 				result.push.apply(result, startToOpen.split(","));
 			}
 			if (openToClose) {
 				// apply function again to stuff between parens
-				result.push(standardFormToNest2(openToClose));
+				result.push(normalizedStrExprToArr(openToClose));
 			}
 			if (closeToEnd) {
 				// apply function again to stuff after closing paren
-				result = result.concat(standardFormToNest2(closeToEnd));
+				result = result.concat(normalizedStrExprToArr(closeToEnd));
 			} 
 		} else {
 			result = str.split(",");
 		}
-		console.debug("standardFormToNest2", result);
 		return result;	
 	};
+
 	global.unitsJsCalc = calcWithUnitConversion;
 	
 	// http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
 	function escapeRegExp(str) {
-	  return str.replace(/[-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+		return str.replace(/[-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	}
 	
 	
 var numberRx 			= /(\d.\d+)/,
-	wordRx 				= /\w+/,
 	notWordRx 			= /(^|[^\w]|$)/
 	parsedRx 			= /([\w\[\]\,\.\-]+)/,
-	//numberOrParsedRx	= RegExp(parsedRx.source);
 	numberOrParsedRx	= RegExp(numberRx.source + "|" + parsedRx.source);
-function surroundedInfixRx(rx) {
-	return RegExp(parsedRx.source + "\\s*(" + rx.source + ")\\s*" + parsedRx.source, "g");
-}
-function surroundedSuffixRx(rx) {
-	return RegExp("("+numberOrParsedRx.source+")+" + rx.source + "("+notWordRx.source+")+", "g");
-}
-function surroundedPrefixRx(rx) {
-	return RegExp(notWordRx.source + "\\s*(" +rx.source + ")\\s*" + parsedRx.source, "g");
-}
+
 var surroundedTokenRx = {
-	"infix": surroundedInfixRx,
-	"suffix": surroundedSuffixRx,
-	"prefix": surroundedPrefixRx
-}
-var replaceToken = {
-	"infix": function (lh, tokenName, rh) {
-		return tokenName+"["+lh+","+rh+"]";
+	"infix": function (rx) {
+		return RegExp(parsedRx.source + "\\s*(" + rx.source + ")\\s*" + parsedRx.source, "g");
 	},
-	"suffix": function (lh, tokenName, rh) {
-		return tokenName+"["+lh+"]"+rh;
+	"suffix": function (rx) {
+		return RegExp("("+numberOrParsedRx.source+")+" + rx.source + "("+notWordRx.source+")+", "g");
 	},
-	"prefix": function (lh, tokenName, rh) {
-		return lh+tokenName+"["+rh+"]";
+	"prefix": function (rx) {
+		return RegExp(notWordRx.source + "\\s*(" +rx.source + ")\\s*" + parsedRx.source, "g");
 	}
 }
-var replaceToken2 = {
+var replaceToken = {
 	"infix": function (lh, tokenName, rh) {
 		return "["+tokenName+","+lh+","+rh+"]";
 	},
@@ -598,73 +561,60 @@ var tokenObjArr = [
 	{token:"~", name:"Minus", rx:/~/, type:"infix"},
 	{token:"+", name:"Plus", rx:/\+/, type:"infix"}
 ];
-var tokenMap = (function () {
-	var map = {}, i = tokenObjArr.length;
-	while (i--) map[tokenObjArr[i].name] = tokenObjArr[i];
-	return map;
-}());
+// var tokenMap = (function () {
+	// var map = {}, i = tokenObjArr.length;
+	// while (i--) map[tokenObjArr[i].name] = tokenObjArr[i];
+	// return map;
+// }());
 
 function normalizeWordTokens(str) {
 	var tokenObj, rx;
 	var	arr = [], 
 		i 	= tokenObjArr.length;
-	//console.debug("normalizeWordTokens");
+	
 	while (i--) {
 		tokenObj = tokenObjArr[i];
-		//console.debug("normalizeWordTokens >", i);
 		if (tokenObj.aliasRx) {
-			//console.debug("tokenObj.aliasRx.source >>>", tokenObj.aliasRx.source);
 			rx = RegExp("\\b("+tokenObj.aliasRx.source+")\\b.", "gi")
 			str = str.replace(rx, tokenObj.token + " ");
-			//console.debug("str ********************", rx.source, str)
 		}
 	}
-	//console.debug("str ********************", rx.source, str)
 	return str;
 }
 
-function parseToken2(str, tokenObj) {
+function normalizeToken(str, tokenObj) {
+	var strMatch, replacementStr;
 	var tokenType		= tokenObj.type,
 		tokenName 		= tokenObj.name;
 		tokenReplaceRx	= tokenObj.rx || RegExp(tokenObj.token),
 		rx 				= surroundedTokenRx[tokenType](tokenReplaceRx),
-		result			= rx.exec(str); // index, input, [0] -> last match chars, [1]...[n] -> parenthesised substring matches 
-		//console.debug("REGEX for token sruou", rx.source);
-	var strMatch, replacementStr;
+		execArr			= rx.exec(str); // index, input, [0] -> last match chars, [1]...[n] -> parenthesised substring matches
 	
-	if (tokenObj.name == "Sin") {
-		console.debug("REGEX for token sruou <<", tokenObj.name, ">>", rx.source);
-	}
-	while (result) {
-		console.debug("tokenObj %%%%%%%%%%%%%%%%%%%%%%\n%%%%%%%%%%%%%%%%%%%%%5 ", tokenObj.name);
-		strMatch = result[0];
-		replacementStr = replaceToken2[tokenType](result[1], tokenName, result[3]);
-		str = str.slice(0,result.index) + replacementStr + str.slice(result.index + strMatch.length);
+	while (execArr) {
+		strMatch = execArr[0];
+		replacementStr = replaceToken[tokenType](execArr[1], tokenName, execArr[3]);
+		str = str.slice(0,execArr.index) + replacementStr + str.slice(execArr.index + strMatch.length);
 		rx.lastIndex = 0;
-		console.debug("replacementStr", replacementStr, result[1], result[2], result[3], "  @  ", tokenName, "  &  ", result, "\n>>>   *    "+rx.source);
 		// next match...
-		result = rx.exec(str);
+		execArr = rx.exec(str);
 	}
 	return str;
 }
-function fullParse3(str) {
-	var result = parseString(str);
+function stringExprToNormalizedArrExpr(str) {
+	var resultArr = reformatStr(str);
 	
 	for (var i = 0, len = tokenObjArr.length; i < len; i++) {
-		result = parseToken2(result, tokenObjArr[i]);
+		resultArr = normalizeToken(resultArr, tokenObjArr[i]);
 	}
 	
-	console.debug("result NO strip commas >>>>   ", result);
-	result = result.replace(/,\[/g, "[").replace(/\],/g, "]").replace(/\],\[/g, "][");
-	console.debug("result strip commas >>> ", result);
-	result = standardFormToNest2(result)[0];
+	resultArr = resultArr.replace(/,\[/g, "[").replace(/\],/g, "]").replace(/\],\[/g, "][");
+	resultArr = normalizedStrExprToArr(resultArr)[0];
 	
-	if (typeof result === "string") {
-		result = ["Identity", result];
+	if (typeof resultArr === "string") {
+		resultArr = ["Identity", resultArr];
 	}
 	
-	console.debug("fullParse3", result);
-	return result;
+	return resultArr;
 }
 var unitFuncMap = {
 	Plus:unitPlus,
@@ -673,66 +623,66 @@ var unitFuncMap = {
 	Divide:unitDiv,
 	Power:unitPow,
 	Sin:function (u) {
-		return {dim:{}, factor:Math.sin(toUnitObj(u).factor)};
+		return {dim:{}, factor:Math.sin(toUnit(u).factor)};
 	},
 	Cos:function (u) {
-		return {dim:{}, factor:Math.cos(toUnitObj(u).factor)};
+		return {dim:{}, factor:Math.cos(toUnit(u).factor)};
 	},
 	Tan:function (u) {
-		return {dim:{}, factor:Math.tan(toUnitObj(u).factor)};
+		return {dim:{}, factor:Math.tan(toUnit(u).factor)};
 	},
 	Asin:function (u) {
-		return {dim:{}, factor:Math.asin(toUnitObj(u).factor)};
+		return {dim:{}, factor:Math.asin(toUnit(u).factor)};
 	},
 	Acos:function (u) {
-		return {dim:{}, factor:Math.acos(toUnitObj(u).factor)};
+		return {dim:{}, factor:Math.acos(toUnit(u).factor)};
 	},
 	Atan:function (u) {
-		return {dim:{}, factor:Math.atan(toUnitObj(u).factor)};
+		return {dim:{}, factor:Math.atan(toUnit(u).factor)};
 	},
 	Csc:function (u) {
-		return {dim:{}, factor:1/Math.sin(toUnitObj(u).factor)};
+		return {dim:{}, factor:1/Math.sin(toUnit(u).factor)};
 	},
 	Sec:function (u) {
-		return {dim:{}, factor:1/Math.cos(toUnitObj(u).factor)};
+		return {dim:{}, factor:1/Math.cos(toUnit(u).factor)};
 	},
 	Cot:function (u) {
-		return {dim:{}, factor:1/Math.tan(toUnitObj(u).factor)};
+		return {dim:{}, factor:1/Math.tan(toUnit(u).factor)};
 	},
 	Acsc:function (u) {
-		return {dim:{}, factor:Math.asin(1/toUnitObj(u).factor)};
+		return {dim:{}, factor:Math.asin(1/toUnit(u).factor)};
 	},
 	Asec:function (u) {
-		return {dim:{}, factor:Math.acos(1/toUnitObj(u).factor)};
+		return {dim:{}, factor:Math.acos(1/toUnit(u).factor)};
 	},
 	Acot:function (u) {
-		return {dim:{}, factor:Math.atan(1/toUnitObj(u).factor)};
+		return {dim:{}, factor:Math.atan(1/toUnit(u).factor)};
 	},
 	Identity:function (u) {
-		return toUnitObj(u);
+		return toUnit(u);
 	}
 }
-function doCalc(arr) {
+function calcSingleOpToUnit(arr) {
 	return unitFuncMap[arr[0]].apply(null, arr.slice(1));
 }
-function doFullCalc(arr) {
+function calcArrFormToUnit(arr) {
 	var item, i, len = arr.length;
 	if (len > 1 && arr.join("").match(/,/)) {				
 		for (i = 1; i < len; i++) {
 			item = arr[i];
 			if (item.constructor === Array) {
-				arr[i] = doFullCalc(item);
+				arr[i] = calcArrFormToUnit(item);
 			}
 		}
 	}
-	return doCalc(arr);
+	return calcSingleOpToUnit(arr);
 }
-function calcUnitResult(str) {
-	return doFullCalc(fullParse3(str))
+function calcStrToUnit(str) {
+	return calcArrFormToUnit(stringExprToNormalizedArrExpr(str))
 }
-function doReallyFullCalc(str) {
-	return unitObjToStr(calcUnitResult(str));
-	//return doFullCalc(fullParse3(parseString(str)));
+// Do multi op calculation (no parens) 
+function calcStrToStr(str) {
+	return unitToStr(calcStrToUnit(str));
 }
 //}());
 
