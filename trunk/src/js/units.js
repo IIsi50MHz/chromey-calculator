@@ -249,31 +249,37 @@ var global = this;
 	function reformatStr(str) {
 		// normalize space
 		str = str.replace(/\s+/g, " ").replace(/^\s+|\s+$/g, "");
+		// replace " and ' with in and ft
+		str = str.replace(/(''|")/g, " in ").replace(/'/g, " ft ");
 		// handle "e" notation
 		str = str.replace(/([0-9])[eE]([-]*[0-9])/g, "$1*10^$2");
-		// replace space between integers and fractions with "#", replace "/" fraction part with "&".
+		// replace space between integers and fractions with "#" (high priority add), replace "/" fraction part with "&" (high priority divide).
 		str = str.replace(/(\d+)\s+(\d+)\/(\d+)/g, "$1#$2&$3");	
+		// replace space after unit and before number "?" (medium priority add)
+		str = str.replace(/(\w|\d)\s+(\d)/g, "$1?$2");
 		// put a "|" betweeen numbers and units so we can make things like this work as expected: 10 ft / 5 ft = 2;
 		str = str.replace(/([0-9])([a-zA-Z'"])/g, "$1|$2");
 		str = str.replace(/([0-9a-zA-Z])\s+([a-zA-Z][^][-]?[0-9]|[a-zA-Z'"])/g, "$1|$2").replace(/([0-9a-zA-Z])\s+([a-zA-Z][^][-]?[0-9]|[a-zA-Z'"])/g, "$1|$2");
 		// replace / before units with "`" so we can make things like this work as expected: 5 ft/sec / 5 in/sec = 12;
 		str = str.replace(/([0-9a-zA-Z])\s*\/\s*([a-zA-Z])/g, "$1`$2").replace(/([0-9a-zA-Z])\s*\/\s*([a-zA-Z])/g, "$1`$2");
 		// replace spaces with * unless adjacent to an operator or followed by a letter
-		str = str.replace(/([^\+\-\*\/\^\'\"])\s([^\+\-\*\/\^])/g, "$1*$2");		
+		//console.debug("str1 *    >>> ", str);
+		str = str.replace(/([^\+\-\*\/\^])\s([^\+\-\*\/\^])/g, "$1*$2");		
+		//console.debug("str2 *    >>> ", str);
 		// remove all spaces around operators
-		str = str.replace(/\s*([^\+\-\*\/\^])\s*/g, "$1");
+		str = str.replace(/\s*([^\+\-\*\/\^])\s*/g, "$1");	
 		// add plus sign ' or " and numbers		
 		str = str.replace(/(["'])([0-9])/g, "$1+$2");
 		// add times sign between letters an anything not a letter or operator
-		str = str.replace(/([^a-zA-Z\+\-\*\/\^\|\`])([a-zA-Z])/g, "$1*$2");
-		str = str.replace(/([a-zA-Z])([^a-zA-Z\+\-\*\/\^\|\`])/g, "$1*$2");
+		str = str.replace(/([^a-zA-Z\+\-\*\/\^\|\`\?\&\#])([a-zA-Z])/g, "$1*$2");
+		str = str.replace(/([a-zA-Z])([^a-zA-Z\+\-\*\/\^\|\`\?\&\#])/g, "$1*$2");
 		// replace minus operator with ~, but leave negative signs alone
 		str = str.replace(/([^+\-\*\/\^\|\`])-/g, "$1~");
 		// trim space
 		str = str.replace(/^\s+|\s+$/g, "");
 		// replace stuff like "sine*", with "sin "
 		str = normalizeWordTokens(str);
-		// console.debug("str", str);
+		console.debug("reformatStr", str);//KEEP
 		return str;
 	}		
 	
@@ -295,19 +301,19 @@ var global = this;
 	//------------------------------------------
 	function unitConvert(str, unitStr) {
 		var strResult = calcFromNestedParenStr(str);
-		// console.debug("unitConvert main expr > ", strResult);
+		console.debug("unitConvert main expr > ", strResult, unitStr);
 		if (unitStr) {
 			var unitObj = calcStrToUnit(strResult);
 			var newUnit = calcStrToUnit(unitStr);
 			// console.debug(">>>>>>>>>>>>>>>>", unitObj, newUnit);
 			if (dimsMatch(unitObj, newUnit)) {
-				return "" + unitObj.factor/newUnit.factor + " " + unitStr; 
+				strResult =  "" + unitObj.factor/newUnit.factor + " " + unitStr; 
 			} else {
 				throw incompatibleDimError;
 			}
-		} else {
-			return strResult;
-		}
+		} 
+		console.debug("[ UNIT CONFOVER RESULT &&&& ", strResult);
+		return strResult;
 	};
 	//------------------------------------------
 	function unitToStr(unitObj) {
@@ -376,11 +382,14 @@ var global = this;
 			precision 	= 13, 
 			smallest 	= 1e-4;
 		
-		splitStrArr = str.replace(/^(\s*[a-zA-Z].*)\s+in\s+a[n]?\s+([a-zA-Z].*)$/, "$2 in $1"); // Handle "in a" and "per". TODO: What if we have multiple "per"'s?
-		splitStrArr = splitStrArr.replace(/(\s+)(into|in|to)(\s+[a-zA-Z])/, "$1@@@$3").split(/\s+@@@\s+/);
-		// console.debug("splitStrArr", splitStrArr);
+		splitStrArr = str.replace(/^(\s*[a-zA-Z].*)\s+in\s+a[n]?\s+([a-zA-Z].*)$/, "$2 to $1"); // Handle "in a" and "per". TODO: What if we have multiple "per"'s?
+		console.debug("splitStrArr !!!!!A!!!!!!!!! >>> ", splitStrArr);
+		splitStrArr = splitStrArr.replace(/(\s+)(into|to)(\s+[a-zA-Z])/, "$1@@@$3");
+		console.debug("splitStrArr !!!!B!!!!!!!!!! >>> ", splitStrArr);
+		splitStrArr = splitStrArr.split(/\s+@@@\s+/);
+		console.debug("splitStrArr !!!!!C!!!!!!!!! >>> ", splitStrArr);
 		resultStr = unitConvert(splitStrArr[0], splitStrArr[1]);
-		// console.debug("resultStr  >  ", resultStr);
+		console.debug("resultStr  !!!!!D!!!!!!!!!>  ", resultStr);
 		// Make stuff like 2.01 - 2 look good. **TODO: This code should be handled by what ever is creating the view. Need to move it out of here.
 		// // Split number part and other part 
 		// splitArr = resultStr.split(/(\s+.*)$/);	
@@ -558,11 +567,12 @@ var global = this;
 		{token:"exp", name:"Exp", aliasRx:/exp/, type:"prefix"},
 		{token:"log", name:"Log", aliasRx:/log/, type:"prefix"},
 		{token:"ln", name:"Ln", aliasRx:/ln/, type:"prefix"},
-		// Power // Need separate token for unit powers...
+		// Power // Need separate token for unit powers?
 		{token:"^", name:"Power", rx:/\^/, type:"infix"},
 		// Units come next
 		{token:"`", name:"Divide", rx:/`/, type:"infix"},
 		{token:"|", name:"Times", rx:/\|/, type:"infix"},
+		{token:"?", name:"Plus", rx:/\?/, type:"infix"},
 		// Times, Divide
 		{token:"/", name:"Divide", rx:/\//, type:"infix"},
 		{token:"*", name:"Times", rx:/\*/, type:"infix"},
@@ -617,9 +627,9 @@ var global = this;
 		}
 		
 		resultArr = resultArr.replace(/,\[/g, "[").replace(/\],/g, "]").replace(/\],\[/g, "][");
-		// console.debug("resultArrStr", resultArr);
+		console.debug("resultArrStr", resultArr); //KEEP
 		resultArr = normalizedStrExprToArr(resultArr)[0];
-		// console.debug("resultArrArr>>", resultArr);
+		console.debug("resultArrArr>>", resultArr); //KEEP
 		
 		if (typeof resultArr === "string") {
 			resultArr = ["Identity", resultArr];
