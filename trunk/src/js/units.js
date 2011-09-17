@@ -333,7 +333,8 @@ var global = this;
 		var factor = unitObj.factor, 
 			dim = unitObj.dim, dimExp,
 			units = "",
-			displayUnitsKey = "", displayUnits; 
+			displayUnitsKey = "", 
+			displayUnits; 
 		
 		// Construct key so we can get the default display unit string (if it exists)
 		each.call(DIM, function (key) {
@@ -343,7 +344,7 @@ var global = this;
 			}
 		});
 		
-		//displayUnits = DEFAULT_DISPLAY_UNITS[displayUnitsKey];
+		displayUnits = DEFAULT_DISPLAY_UNITS[displayUnitsKey];
 		if (displayUnits) {
 			factor = factor/calcUnitResult(displayUnits).factor;
 			// We found default display units. Convert to those units and use the display units string
@@ -363,10 +364,6 @@ var global = this;
 		}
 		
 		return result;
-	}
-	//------------------------------------------
-	function calcStrResult(str) {
-		return unitObjToStr(calcUnitResult(str));
 	}
 	//------------------------------------------
 	function calcFromNestedParenArr(nestedParenArr) {
@@ -730,8 +727,11 @@ function doFullCalc(arr) {
 	}
 	return doCalc(arr);
 }
+function calcUnitResult(str) {
+	return doFullCalc(fullParse3(str))
+}
 function doReallyFullCalc(str) {
-	return unitObjToStr(doFullCalc(fullParse3(str)));
+	return unitObjToStr(calcUnitResult(str));
 	//return doFullCalc(fullParse3(parseString(str)));
 }
 //}());
