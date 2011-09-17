@@ -19,8 +19,9 @@ var global = this;
 	//
 	var incompatibleDimError = new Error("Uh oh, incompatible dimensions.");
 	// Conversion factors for all units 
-	var cupFactor = 0.000236588237;
-	var poundFactor = 0.45359237;
+	var cupFactor	 = 0.000236588237,
+		poundFactor	 = 0.45359237;
+		
 	var UNIT = {
 		// ANGLE
 		"radian":{dim:{}, factor:1, alias:["radian", "radians", "rad", "rads"]},
@@ -79,9 +80,19 @@ var global = this;
 		"kph":{dim:{L:1, T:-1}, factor:1000/3600, alias:["kph"]},
 		
 		// TEMPERATURE
-		"Farenheight":{dim:{TEMP:1}, factor:function () {}, alias:["Farenheight", "farenheight", "F"]},
-		"Celsius":{dim:{TEMP:1}, factor:function () {}, alias:["Celsius", "celsius", "Centigrade", "centigrade", "C"]},
-		"Kelvin":{dim:{TEMP:1}, factor:function () {}, alias:["Kelvin", "kelvin", "K"]},
+		"Celsius":{
+			dim:{TEMP:1}, 
+			factor:function (x) {return x + 273.15;}, 
+			invFactor:function (y) {return y - 273.15},
+			alias:["Farenheight", "farenheight", "F"]
+		},
+		"Farenheight":{
+			dim:{TEMP:1}, 
+			factor:function (x) {return (x - 32)*9/5 + 273.15;},
+			invFactor:function (y) {return (y - 273.15)*9/5 + 32;},			
+			alias:["Celsius", "celsius", "Centigrade", "centigrade", "C"]
+		},
+		"Kelvin":{dim:{TEMP:1}, factor:1, alias:["Kelvin", "kelvin", "K"]},
 		
 		// FUNCTIONS
 		"sine": {dim:{}, alias:["sine", "sin"], f:function (x) {
@@ -102,9 +113,7 @@ var global = this;
 				UNIT[alias[i]] = UNIT[key];
 			}
 		}
-	}());
-	//------------------------------------------
-	var ONE = {dim:{}, factor:1}, NEGATIVE_ONE = {dim:{}, factor:-1}, ZERO = {dim:{}, factor:0};
+	}());	
 	//------------------------------------------
 	// Returns the unit object for a given key (e.g. "yards"); converts numbers to dimensionless unit objects.
 	function toUnitObj(x) {
@@ -254,7 +263,7 @@ var global = this;
 		return result;
 	}
 	//------------------------------------------
-	// Reformat str so it can be split into a special nested array, then do the split.
+	// Reformat str so it can be split into a special nested array, then do the split //**Wait. No. Don't do the split.
 	function parseString(str) {
 		//console.debug("// str\n", str);
 		// normalize space
@@ -262,6 +271,8 @@ var global = this;
 		//console.debug("// normalize space\n", str);
 		// handle "e" notation
 		str = str.replace(/([0-9])[eE]([-]*[0-9])/g, "$1*10^$2");
+		// replace space between integers and fractions with "#", replace "/" fraction part with "&".
+		str = str.replace(/(\d+)\s+(\d+)\/(\d+)/g, "$1#$2&$3");	
 		//console.debug('// handle "e" notation\n', str);
 		// put a "|" betweeen numbers and units so we can make things like this work as expected: 10 ft / 5 ft = 2;
 		str = str.replace(/([0-9])([a-zA-Z'"])/g, "$1|$2");
@@ -294,8 +305,9 @@ var global = this;
 		console.debug("// trim\n", str);
 		// create an array from the string
 		
+		return str;
 		//console.debug(arrPlus);
-		return splitToNestedArr([str], generateOrderedOpStrArray())[0];
+		//return splitToNestedArr([str], generateOrderedOpStrArray())[0];
 	}		
 	
 	// We create an array with a bunch of levels so we can easily keep track of the order of operations.
@@ -310,9 +322,11 @@ var global = this;
 	// TODO: handle constants (pi, e, etc.)
 	// TODO: handle parentheses
 	//------------------------------------------
-	function generateOrderedOpStrArray() {return ["+", "~", "*", "/", "|", "`", "^"];}
+	function generateOrderedOpStrArray() {return ["+", "~", "*", "/", /*all other functions should go here... somehow...*/ "|", "`", "^"];}
 	//------------------------------------------
 	function splitToNestedArr(arr, orderedOpStrArr) {
+		count++;
+		//console.debug("<<<<<<<<<",count);
 		orderedOpStrArr || (orderedOpStrArr = generateOrderedOpStrArray());		
 		var opStr = orderedOpStrArr.shift();		
 		if (opStr) {
@@ -380,7 +394,7 @@ var global = this;
 			}
 		});
 		
-		displayUnits = DEFAULT_DISPLAY_UNITS[displayUnitsKey];
+		//displayUnits = DEFAULT_DISPLAY_UNITS[displayUnitsKey];
 		if (displayUnits) {
 			factor = factor/calcUnitResult(displayUnits).factor;
 			// We found default display units. Convert to those units and use the display units string
@@ -502,6 +516,455 @@ var global = this;
 		
 		return result;
 	};
+	
+	function standardFormToNest(str) {
+		var openParenPos, closeParenPos, parenCount, startToOpen, openToClose, closeToEnd, result;
+		var tokenName;
+		
+		// Find position of first open paren
+		openParenPos = str.indexOf("[");	
+		if (openParenPos !== -1) {		
+			for (var i = openParenPos + 1, parenCount = 1, len = str.length; 0 < parenCount && i < len; i++) {		
+				// Increment count when we find an open paren; decrement when we find a closed one. 
+				if (str[i] === "[") {
+					parenCount++;
+				} else if (str[i] === "]") {
+					parenCount--;
+				}
+				
+				// When the count reaches zero, we've found the matching paren
+				if (parenCount === 0) {
+					closeParenPos = i;
+				}
+			}	
+			
+			// Slice from string start to openParenPos 
+			startToOpen = str.slice(0, openParenPos);
+			// Get tokenName
+			tokenName = startToOpen.match(/\w+$/)[0];
+			startToOpen = startToOpen.replace(RegExp(tokenName+"$"), "");
+			//console.debug("tokenName", tokenName);
+			// Slice from openParenPos to closeParenPos
+			openToClose = str.slice(openParenPos+1, closeParenPos);
+			// Slice from closeParenPos to end of string	
+			closeToEnd = str.slice(closeParenPos+1);
+			
+			// build result
+			result = [];
+			if (startToOpen) { 
+				// we don't need to process stuff before paren
+				//console.debug('Result', result);;
+				startToOpen = startToOpen.split(",");
+				if (!startToOpen[0]) startToOpen.shift();
+				if (!startToOpen[startToOpen.length-1]) startToOpen.pop();
+				result = result.concat(startToOpen);
+				//console.debug('startToOpen.split(",")', startToOpen, result);
+			}
+			if (openToClose) {
+				// apply function again to stuff between parens
+				result.push(standardFormToNest(tokenName + "," + openToClose));
+			}
+			if (closeToEnd) {
+				// apply function again to stuff after closing paren
+				result = result.concat(standardFormToNest(closeToEnd));
+			} 
+		} else {
+			result = str.split(",");
+			if (!result[0]) result.shift();
+			if (!result[result.length-1]) result.pop();
+		}
+		
+		return result;
+	};
+	function standardFormToNest2(str) {
+		var openParenPos, closeParenPos, parenCount, startToOpen, openToClose, closeToEnd, result;
+		
+		// Find position of first open paren
+		openParenPos = str.indexOf("[");	
+		if (openParenPos !== -1) {		
+			for (var i = openParenPos + 1, parenCount = 1, len = str.length; 0 < parenCount && i < len; i++) {		
+				// Increment count when we find an open paren; decrement when we find a closed one. 
+				if (str[i] === "[") {
+					parenCount++;
+				} else if (str[i] === "]") {
+					parenCount--;
+				}
+				
+				// When the count reaches zero, we've found the matching paren
+				if (parenCount === 0) {
+					closeParenPos = i;
+				}
+			}	
+			
+			// Slice from string start to openParenPos 
+			startToOpen = str.slice(0, openParenPos);
+			// Slice from openParenPos to closeParenPos
+			openToClose = str.slice(openParenPos+1, closeParenPos);
+			// Slice from closeParenPos to end of string	
+			closeToEnd = str.slice(closeParenPos+1);
+			
+			// build result
+			result = [];
+			if (startToOpen) { 
+				// we don't need to process stuff before paren
+				console.debug("startToOpen", startToOpen);
+				result.push.apply(result, startToOpen.split(","));
+			}
+			if (openToClose) {
+				// apply function again to stuff between parens
+				result.push(standardFormToNest2(openToClose));
+			}
+			if (closeToEnd) {
+				// apply function again to stuff after closing paren
+				result = result.concat(standardFormToNest2(closeToEnd));
+			} 
+		} else {
+			result = str.split(",");
+		}
+		
+		return result;	
+	};
 	global.unitsJsCalc = calcWithUnitConversion;
+	
+	// http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+	function escapeRegExp(str) {
+	  return str.replace(/[-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+	}
+	
+	count = 0;
+
+	
+	function splitOnOps(strArr, ops) {
+		count++;
+		if (count < 10) {
+			var opsCopy = ops.slice(0);
+			while (ops.length) {
+				console.debug("ops.length", ops.length);
+				var op = ops.shift();
+				var rx = RegExp(escapeRegExp(op), "g");
+				var nextStrArr = strArr.split(rx);
+				strArr.unshift(op);
+				console.debug("strArr",strArr);
+				for (var i = 1; i < strArr.length; i++) {
+					strArr[i] = splitOnOps(strArr[i], opsCopy);
+				}
+			}
+			console.debug("strArr2",strArr);
+			if (strArr && strArr[2] != null) {
+				return strArr;
+			} else {
+				return strArr[1];
+			}
+		}
+	}
+	
+	
+	function splitOnOps(strArr, opArr) {
+		console.debug(">>>>>>passed strArr: ", strArr, count);
+		count++;
+		if (count < 100) {
+			var nextStrArr, opArrCopy = opArr.slice(0), nextOp, strIndex;
+			for (strIndex = 0; strIndex < strArr.length; strIndex++) {
+				while (opArr.length) {
+					nextOp = opArr.shift();
+					console.debug("strArr", strArr, "|", strIndex, "|", strArr[strIndex]);
+					nextStrArr = strArr[strIndex].split(RegExp(escapeRegExp(nextOp)), "g");
+					console.debug("nextStrArr", nextStrArr, strArr, strArr[strIndex].split(RegExp(escapeRegExp(nextOp))), strIndex, nextOp);
+					if (nextStrArr[1] == null) {
+						strArr[strIndex] = nextStrArr[0];	
+						console.debug("strArr null!!!!!!!!!", strArr);
+					} else {
+						strArr[strIndex] = nextStrArr;
+						splitOnOps(nextStrArr, opArrCopy);
+						nextStrArr.unshift(nextOp);
+						console.debug("strArr NOT nullZZZZZZZZZ!", strArr);
+					}
+				}
+			}
+			return strArr[0];
+		}
+	}
+	
+	function splitOnOp(str, op) {
+		//console.debug(">>>>str", str, op);
+		var splitStr = str.split(op);
+		if (splitStr[1]) {
+			return [op].concat(splitStr);
+		} 
+		return str;
+	}	
+	function splitOnOps(preSplitArr, ops) {
+		count++;
+		var len = preSplitArr.length, opsCopy;
+		
+		while (--len) {
+			opsCopy = ops.slice(0);
+			while (ops.length) {
+				//console.debug(len, "preSplitArr 1>", preSplitArr, ">>--------", ops, ops[0]);
+				//console.debug("preSplitArr 1>", preSplitArr, preSplitArr[len], ">>???", ops.length, ops, ops[0]);
+				var nextPreSplitArr = preSplitArr[len];
+				if (typeof nextPreSplitArr == "string") {
+					preSplitArr[len] = splitOnOp(nextPreSplitArr, ops.shift());
+				} else {
+					splitOnOps(nextPreSplitArr, ops.slice(0));
+					ops.shift();					
+				}
+				//console.debug("preSplitArr 2>", preSplitArr, len, ">>>>>>", ops.length);
+			}
+			// restore op arr
+			ops = opsCopy;
+			
+		}
+		return preSplitArr;
+	}
+	count = 0;
+	function go(preSplitArr, ops) {
+		var str = preSplitArr[1];
+		count = 0;
+		console.time("go");
+		var result = splitOnOps(preSplitArr, ops);
+		console.timeEnd("go");
+		console.debug(">>");
+		console.time("parse");
+		parseString(str);
+		console.timeEnd("parse");
+		//console.debug(">>>>>>>>", count);
+		return result;
+		
+	}
+	 
+// var myRe = /([\w\[\]\,]+)[\^]([\w\[\]\,]+)/;
+// var str = "3*7^2+6^5^4+8+9^5";
+// var myArray;
+// var newArr = [];
+// var count = 0;
+// while (count < 10 && ((myArray = myRe.exec(str)) != null)) {
+	// count++;
+	// var msg = "Found " + myArray[0] + " at " + myArray.index + ". ";
+	// msg += "Next match starts at " + myRe.lastIndex;
+	// console.debug("msg", msg,myArray);
+	// var strMatch = myArray[0];
+	// var replaceStrMatch = "Pow[" + strMatch.replace(/s*[\^]\s*/, ",") + "]";
+	// str = str.slice(0,myArray.index) + replaceStrMatch + str.slice(myArray.index + strMatch.length);
+	// console.debug("str >>>", str);
+	// myRe.lastIndex = 0;
+// }
+
+var numberRx 			= /(\d.\d+)/,
+	wordRx 				= /\w+/,
+	notWordRx 			= /(^|[^\w]|$)/
+	parsedRx 			= /([\w\[\]\,\.\-]+)/,
+	//numberOrParsedRx	= RegExp(parsedRx.source);
+	numberOrParsedRx	= RegExp(numberRx.source + "|" + parsedRx.source);
+function surroundedInfixRx(rx) {
+	//console.debug("rx??", rx.source);
+	// /[\w\[\]\,]+/
+	//var rxStr = parsedRx.source;
+	var regEx = RegExp(parsedRx.source + rx.source + parsedRx.source, "g");
+	//console.debug("regEx", regEx.source);
+	return RegExp(parsedRx.source + "\\s*" + rx.source + "\\s*" + parsedRx.source, "g");
+	//var rxStr = "("+parsedRx.source+"+)";
+	//return RegExp(rxStr + "("+rx.source+")" + rxStr, "g");
+}
+function surroundedSuffixRx(rx) {
+	//console.debug("rx??", rx.source);
+	return RegExp("("+numberOrParsedRx.source+")+" + rx.source + "("+notWordRx.source+")+", "g");
+}
+function surroundedPrefixRx(rx) {
+	//console.debug("rx??", rx.source);
+	var regEx = RegExp(notWordRx.source + rx.source + parsedRx.source, "g");
+	//console.debug("regEx", regEx.source);
+	return RegExp(notWordRx.source + "\\s*" +rx.source + "\\s*" + parsedRx.source, "g");
+}
+var surroundedTokenRx = {
+	"infix": surroundedInfixRx,
+	"suffix": surroundedSuffixRx,
+	"prefix": surroundedPrefixRx
+}
+var replaceToken = {
+	"infix": function (lh, tokenName, rh) {
+		return tokenName+"["+lh+","+rh+"]";
+	},
+	"suffix": function (lh, tokenName, rh) {
+		return tokenName+"["+lh+"]"+rh;
+	},
+	"prefix": function (lh, tokenName, rh) {
+		return lh+tokenName+"["+rh+"]";
+	}
+}
+var replaceToken2 = {
+	"infix": function (lh, tokenName, rh) {
+		return "["+tokenName+","+lh+","+rh+"]";
+	},
+	"suffix": function (lh, tokenName, rh) {
+		return "["+tokenName+","+lh+"]"+rh;
+	},
+	"prefix": function (lh, tokenName, rh) {
+		return lh+"["+tokenName+","+rh+"]";
+	},
+	"nofix": function (lh, tokenName, rh) {
+		return lh+"["+tokenName+"]"+rh;
+	}
+}
+var tokenObjArr = [
+	// Mixed numbers get hightst priority
+	{token:"&", name:"Divide", rx:/&/, type:"infix"},
+	{token:"#", name:"Plus", rx:/#/, type:"infix"},
+	// Units come next
+	{token:"`", name:"Divide", rx:/`/, type:"infix"},
+	{token:"|", name:"Times", rx:/\|/, type:"infix"},
+	// Power
+	{token:"^", name:"Power", rx:/\^/, type:"infix"},
+	// Functions
+	{token:"sin", name:"Sin", rx:/sin/, type:"prefix"},
+	{token:"cos", name:"Cos", rx:/cos/, type:"prefix"},
+	{token:"tan", name:"Tan", rx:/tan/, type:"prefix"},
+	{token:"asin", name:"Asin", rx:/asin/, type:"prefix"},
+	{token:"acos", name:"Acos", rx:/acos/, type:"prefix"},
+	{token:"atan", name:"Atan", rx:/atan/, type:"prefix"},
+	{token:"csc", name:"Csc", rx:/csc/, type:"prefix"},
+	{token:"sec", name:"Sec", rx:/sec/, type:"prefix"},
+	{token:"cot", name:"Cot", rx:/cot/, type:"prefix"},
+	{token:"acsc", name:"Acsc", rx:/acsc/, type:"prefix"},
+	{token:"asec", name:"Asec", rx:/asec/, type:"prefix"},
+	{token:"acot", name:"Acot", rx:/acot/, type:"prefix"},
+	{token:"exp", name:"Exp", rx:/exp/, type:"prefix"},
+	{token:"log", name:"Log", rx:/log/, type:"prefix"},
+	{token:"ln", name:"Ln", rx:/ln/, type:"prefix"},
+	// Times, Divide
+	{token:"/", name:"Divide", rx:/\//, type:"infix"},
+	{token:"*", name:"Times", rx:/\*/, type:"infix"},
+	// Plus, Minus
+	{token:"~", name:"Minus", rx:/~/, type:"infix"},
+	{token:"+", name:"Plus", rx:/\+/, type:"infix"}
+];
+var tokenMap = (function () {
+	var map = {}, i = tokenObjArr.length;
+	while (i--) map[tokenObjArr[i].name] = tokenObjArr[i];
+	return map;
+}());
+function parseToken(str, tokenObj) {
+	var tokenType		= tokenObj.type,
+		tokenName 		= tokenObj.name;
+		tokenReplaceRx	= tokenObj.rx,
+		rx 				= surroundedTokenRx[tokenType](tokenReplaceRx),
+		//console.debug("RXXXX", rx.source),
+		result			= rx.exec(str); // hatokenObjs index, input, [0] -> last match chars, [1]...[n] -> parenthesised substring matches 
+	
+	//console.debug("result", result, rx);
+	while (result) {
+		var msg = "Found " + result[0] + " at " + result.index + ". ";
+		msg += "Next match starts at " + rx.lastIndex;
+		//console.debug("msg", msg,result);
+		//console.debug("---------->", rx.source);
+		var strMatch = result[0];
+		var replacementStr = replaceToken[tokenType](result[1], tokenName, result[2]);
+		str = str.slice(0,result.index) + replacementStr + str.slice(result.index + strMatch.length);
+		//console.debug("str >>>", str);
+		rx.lastIndex = 0;
+		
+		// next match...
+		result = rx.exec(str);
+	}
+	return str;
+}
+function fullParse(str) {
+	for (var i = 0, len = tokenObjArr.length; i < len; i++) {
+		str = parseToken(str, tokenObjArr[i]);
+	}
+	console.debug("str", str);
+	return str;
+}
+function parseToken2(str, tokenObj) {
+	var tokenType		= tokenObj.type,
+		tokenName 		= tokenObj.name;
+		tokenReplaceRx	= tokenObj.rx,
+		rx 				= surroundedTokenRx[tokenType](tokenReplaceRx),
+		//console.debug("RXXXX", rx.source),
+		result			= rx.exec(str); // hatokenObjs index, input, [0] -> last match chars, [1]...[n] -> parenthesised substring matches 
+	
+	//console.debug("result", result, rx);
+	while (result) {
+		var msg = "Found " + result[0] + " at " + result.index + ". ";
+		msg += "Next match starts at " + rx.lastIndex;
+		//console.debug("msg", msg,result);
+		//console.debug("---------->", rx.source);
+		var strMatch = result[0];
+		var replacementStr = replaceToken2[tokenType](result[1], tokenName, result[2]);
+		str = str.slice(0,result.index) + replacementStr + str.slice(result.index + strMatch.length);
+		//console.debug("str >>>", str);
+		rx.lastIndex = 0;
+		
+		// next match...
+		result = rx.exec(str);
+	}
+	return str;
+}
+function fullParse2(str) {
+	for (var i = 0, len = tokenObjArr.length; i < len; i++) {
+		str = parseToken2(str, tokenObjArr[i]);
+	}
+	//console.debug("str", str);
+	return str;
+}
+function fullParse3(str) {
+	var result;
+	for (var i = 0, len = tokenObjArr.length; i < len; i++) {
+		str = parseToken2(str, tokenObjArr[i]);
+	}
+	
+	str = str.replace(/,\[/g, "[").replace(/\],/g, "]").replace(/\],\[/g, "][");
+	console.debug("fullParse3 >> comma filtered >>", str);
+	result = standardFormToNest2(str)[0];
+	
+	if (typeof result === "string") {
+		console.debug("blah1 >>>>", str);
+		console.debug("blah 2>>>>", str.replace(/,\[/g, "[").replace(/\],/g, "]").replace(/\]\[/g, "],["));
+		result = ["Identity", result];
+	}
+	
+	console.debug("------------------------->", result)
+	return result;
+}
+var unitFuncMap = {
+	Plus:unitPlus,
+	Minus:unitMinus,
+	Times:unitTimes,
+	Divide:unitDiv,
+	Power:unitPow,
+	Sin:function (u) {
+		console.debug("sin u", u);
+		return {dim:{}, factor:Math.sin(toUnitObj(u).factor)};
+	}, 
+	Identity:function (u) {
+		return toUnitObj(u);
+	}
+}
+function doCalc(arr) {
+	console.debug("doCalc ! >>>>>>>>>>>>>>>> arr",  unitFuncMap[arr[0]].apply(null, arr.slice(1)));
+	return unitFuncMap[arr[0]].apply(null, arr.slice(1));
+}
+function doFullCalc(arr) {
+	var item, i, len = arr.length;
+	console.debug("doFullCalc >> arr", arr);
+	//console.debug("???join",  arr, arr.join(""), arr.join("").match(/,/));
+	if (len > 1 && arr.join("").match(/,/)) {		
+		//console.debug("???join", arr.join().match(/\[/));		
+		for (i = 1; i < len; i++) {
+			item = arr[i];
+			if (item.constructor === Array) {
+				arr[i] = doFullCalc(item);
+			}
+		}
+	}
+	console.debug("doFullCalc <<<>> arr", arr);
+	return doCalc(arr);
+}
+function doReallyFullCall(str) {
+	console.debug("str -->",str);
+	console.debug("parseString -->", parseString(str));
+	console.debug("doFullCalc fullParse3 parseString >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>-->",doFullCalc(fullParse3(parseString(str))), doFullCalc(fullParse3(parseString(str))).dim);
+	return unitObjToStr(doFullCalc(fullParse3(parseString(str))));
+}
 //}());
 
