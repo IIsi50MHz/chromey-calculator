@@ -252,11 +252,13 @@ var global = this;
 		// replace " and ' with in and ft
 		str = str.replace(/(''|")/g, " in ").replace(/'/g, " ft ");
 		// handle "e" notation
-		str = str.replace(/([0-9])[eE]([-]*[0-9])/g, "$1*10^$2");
+		str = str.replace(/([0-9])[eE]([-]*[0-9])/g, "$1|10\\$2");
 		// replace space between integers and fractions with "#" (high priority add), replace "/" fraction part with "&" (high priority divide).
 		str = str.replace(/(\d+)\s+(\d+)\/(\d+)/g, "$1#$2&$3");	
 		// replace space after unit and before number "?" (medium priority add)
-		str = str.replace(/(\w|\d)\s+(\d)/g, "$1?$2");
+		str = str.replace(/([a-zA-Z])\s+(\d)/g, "$1?$2");
+		// replace "^" with "\" for unit and constant powers (pi^2 => pi\2) (high priority power)
+		str = str.replace(/([a-zA-Z])\s*\^\s*/g, "$1\\");
 		// put a "|" betweeen numbers and units so we can make things like this work as expected: 10 ft / 5 ft = 2;
 		str = str.replace(/([0-9])([a-zA-Z'"])/g, "$1|$2");
 		str = str.replace(/([0-9a-zA-Z])\s+([a-zA-Z][^][-]?[0-9]|[a-zA-Z'"])/g, "$1|$2").replace(/([0-9a-zA-Z])\s+([a-zA-Z][^][-]?[0-9]|[a-zA-Z'"])/g, "$1|$2");
@@ -270,11 +272,11 @@ var global = this;
 		str = str.replace(/\s*([^\+\-\*\/\^])\s*/g, "$1");	
 		// add plus sign ' or " and numbers		
 		str = str.replace(/(["'])([0-9])/g, "$1+$2");
-		// add times sign between letters an anything not a letter or operator
-		str = str.replace(/([^a-zA-Z\+\-\*\/\^\|\`\?\&\#])([a-zA-Z])/g, "$1*$2");
-		str = str.replace(/([a-zA-Z])([^a-zA-Z\+\-\*\/\^\|\`\?\&\#])/g, "$1*$2");
+		// add times sign between letters and anything not a letter or operator
+		str = str.replace(/([^a-zA-Z\+\-\*\/\^\|\`\?\&\#\\])([a-zA-Z])/g, "$1*$2");
+		str = str.replace(/([a-zA-Z])([^a-zA-Z\+\-\*\/\^\|\`\?\&\#\\])/g, "$1*$2");
 		// replace minus operator with ~, but leave negative signs alone
-		str = str.replace(/([^+\-\*\/\^\|\`])-/g, "$1~");
+		str = str.replace(/([^\+\-\*\/\^\|\`\?\&\#\\])-/g, "$1~");
 		// trim space
 		str = str.replace(/^\s+|\s+$/g, "");
 		// replace stuff like "sine*", with "sin "
@@ -551,6 +553,8 @@ var global = this;
 		{token:"#", name:"Plus", rx:/#/, type:"infix"},
 		// Space after function name 
 		{token:" ", name:"Identity", rx:/\s/, type:"prefix"},
+		// Units/constant power
+		{token:"\\", name:"Power", rx:/\\/, type:"infix"},
 		// Functions
 		{token:"sin", name:"Sin", aliasRx:/sin(e|)/, type:"prefix"},
 		{token:"cos", name:"Cos", aliasRx:/cos(ine|)/, type:"prefix"},
@@ -567,12 +571,16 @@ var global = this;
 		{token:"exp", name:"Exp", aliasRx:/exp/, type:"prefix"},
 		{token:"log", name:"Log", aliasRx:/log/, type:"prefix"},
 		{token:"ln", name:"Ln", aliasRx:/ln/, type:"prefix"},
-		// Power // Need separate token for unit powers?
-		{token:"^", name:"Power", rx:/\^/, type:"infix"},
-		// Units come next
+		{token:"sqrt", name:"Sqrt", aliasRx:/sqrt|root/, type:"prefix"},
+		
+		
 		{token:"`", name:"Divide", rx:/`/, type:"infix"},
 		{token:"|", name:"Times", rx:/\|/, type:"infix"},
 		{token:"?", name:"Plus", rx:/\?/, type:"infix"},
+		
+		// Power // Need separate token for unit powers?
+		{token:"^", name:"Power", rx:/\^/, type:"infix"},
+		
 		// Times, Divide
 		{token:"/", name:"Divide", rx:/\//, type:"infix"},
 		{token:"*", name:"Times", rx:/\*/, type:"infix"},
@@ -643,6 +651,9 @@ var global = this;
 		Times:unitTimes,
 		Divide:unitDiv,
 		Power:unitPow,
+		Sqrt:function (u) {
+			return {dim:{}, factor:Math.sqrt(toUnit(u).factor)};
+		},
 		Sin:function (u) {
 			return {dim:{}, factor:Math.sin(toUnit(u).factor)};
 		},
