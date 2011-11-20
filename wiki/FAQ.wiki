@@ -1,4 +1,3 @@
-
 #summary Frequently Asked Questions
 <dl>
 <dt>*How does Cloudy Calculator work?*
@@ -13,5 +12,5 @@
 <dt>*What kinds of names are allowed for user variables?*
 <dd>User variables must start with an "@" sign followed by one or more letters, numbers, or underscores. The "@" variable is reserved for storing the most recent result.
 
-<dt>*Why they name change from "Chromey" to "Cloudy"?*
+<dt>*Why the name change from "Chromey" to "Cloudy"?*
 <dd>Google made us change it.
