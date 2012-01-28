@@ -1,4 +1,11 @@
-﻿GLOBAL = this
+﻿/*
+	
+	NOTE: Looks I like stopped in the middle of rewriting of units.js (units2.js). There's probably some good stuff in here that can be used in a rewrite, but be carful. I think the "Quick dim objects" I'm using in here are a bad idea -- should not be sharing dim objects unless we make sure they can't be modifed. Probably simpler/better to not use them at all.
+
+*/
+
+var GLOBAL = this;
+
 (function (GLOBAL) {
 
 var BASE_UNITS = {
@@ -142,20 +149,20 @@ var UNIT = (function () {
 		"mph":			{dim:SPEED, n:1609.344/3600, alias:["mph"]},
 		"kph":			{dim:SPEED, n:1000/3600, alias:["kph"]},
 		
-		// TEMPERATURE (TODO: figure out how to deal with these...)
+		// TEMPERATURE (TODO: Figure out how to deal with these...)
 		"Celsius":{
-			dim:{TEMP:1}, 
-			n:function (x) {return x + 273.15;}, 
-			invFactor:function (y) {return y - 273.15},
+			dim:{TEMP:1},
+			func:function (x) {return x + 273.15;}, 
+			inverseFunc:function (y) {return y - 273.15},
 			alias:["Farenheight", "farenheight", "F"]
 		},	
 		"Farenheight":{
 			dim:{TEMP:1}, 
-			factor:function (x) {return (x - 32)*9/5 + 273.15;},
-			invFactor:function (y) {return (y - 273.15)*9/5 + 32;},			
+			func:function (x) {return (x - 32)*9/5 + 273.15;},
+			inverseFunc:function (y) {return (y - 273.15)*9/5 + 32;},			
 			alias:["Celsius", "celsius", "Centigrade", "centigrade", "C"]
 		},
-		"Kelvin":{dim:{TEMP:1}, factor:1, alias:["Kelvin", "kelvin", "K"]},
+		"Kelvin":{dim:{TEMP:1}, n:1, alias:["Kelvin", "kelvin", "K"]},
 	}
 	
 	

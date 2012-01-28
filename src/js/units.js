@@ -245,7 +245,7 @@ var global = this;
 		return result;
 	}	
 	
-	var reformatStr = (function () {
+	var prepareInputStr = (function () {
 		//------------------------------------------
 		function normalizeWordTokens(str) {
 			var tokenObj, rx;
@@ -264,7 +264,7 @@ var global = this;
 		
 		//------------------------------------------
 		// Reformat str so it can be split into a special nested array
-		function reformatStr(str) {
+		function prepareInputStr(str) {
 			// normalize space
 			str = str.replace(/\s+/g, " ").replace(/^\s+|\s+$/g, "");
 			// replace " and ' with in and ft
@@ -299,11 +299,11 @@ var global = this;
 			str = str.replace(/^\s+|\s+$/g, "");
 			// replace stuff like "sine*", with "sin "
 			str = normalizeWordTokens(str);
-			console.debug("reformatStr", str);//KEEP
+			console.debug("prepareInputStr", str);//KEEP
 			return str;
 		}
 		//------------------------------------------
-		return reformatStr;
+		return prepareInputStr;
 	}());
 	
 	
@@ -390,7 +390,7 @@ var global = this;
 		}
 		//---------------------------------
 		function stringExprToNormalizedArrExpr(str) {
-			var resultArr = reformatStr(str);
+			var resultArr = prepareInputStr(str);
 			
 			for (var i = 0, len = tokenObjArr.length; i < len; i++) {
 				resultArr = normalizeToken(resultArr, tokenObjArr[i]);
