@@ -884,6 +884,10 @@ var cCalc = (function (window, document) {
 				filter(function () {return $(this).text().match(' = ')}).
 				slice(-1).html();					
 			}
+			// If no calculator result try oneBox
+			if (!docHtml) {
+				docHtml = $doc.find(".answers").find("b").html();
+			}
 
 			if (docHtml) {
 				// clean up result for copy/paste...
