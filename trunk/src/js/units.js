@@ -491,7 +491,12 @@ var global = this;
 			} else {
 				result = [str];
 			}
-			
+
+			// Remove any outer parens
+			if (result.length === 1 && Object.prototype.toString.call(result[0]) === "[object Array]") {
+				result = result[0];
+			}
+
 			return result;
 		};
 		//------------------------------------------
@@ -590,6 +595,13 @@ var global = this;
 				smallest 	= 1e-4;
 			
 			splitStrArr = str.replace(/^(\s*[a-zA-Z].*)\s+in\s+a[n]?\s+([a-zA-Z].*)$/, "$2 to $1"); // Handle "in a" and "per". TODO: What if we have multiple "per"'s?
+			// "in" means same as "to" or "into" under conditions like these:
+			// (xxx) in in ft
+			// "10 m in ft"
+			// "10 m^3 in ft^3"
+			// "(xxx) in ft"
+			
+			splitStrArr = splitStrArr.replace(/(\)\s+in\s+|[a-zA-Z]\s+|[a-zA-Z]\^[-+]?[0-9]+\s+|\)\s+)(in)(\s+[a-zA-Z])/, "$1@@@$3");
 			console.debug("splitStrArr !!!!!A!!!!!!!!! >>> ", splitStrArr);
 			splitStrArr = splitStrArr.replace(/(\s+)(into|to)(\s+[a-zA-Z])/, "$1@@@$3");
 			console.debug("splitStrArr !!!!B!!!!!!!!!! >>> ", splitStrArr);
