@@ -798,7 +798,7 @@ var cCalc = (function (window, document) {
 				// Try to fix it so we don't get goofy results when calculating things like 2.01 - 2.0				
 				unroundedResult = eval(input);				
 				if (unroundedResult <= max) {					
-					output = +(unroundedResult.toFixed(maxDigits));				
+					output = +(unroundedResult.toPrecision(maxDigits));				
 					console.debug("unroundedResult", unroundedResult);
 					console.debug("roundedResult", output);
 				}
@@ -806,6 +806,28 @@ var cCalc = (function (window, document) {
 			return output;
 		}
 
+		function extractUnitJsCalcOutput(input) {
+			try {
+				var output = global.unitsJsCalc(input);
+				// Make js scientific notation look like google				
+				if (/e[+-]\d+/.test(output)) {
+					displayOutput = output.replace(/(.*)e\+*(-*\d+)(\s*\w.*$|$)/, '$1 &times; 10<div style="display:inline-block; opacity:0; width:0px;">^</div><sup>$2</sup><span>$3</span>');
+				} else {
+					displayOutput = output;
+				}
+				console.debug("output", output);
+				return {
+					display: displayOutput,
+					plain: $('<div>'+displayOutput+'</div>').text() // output cleaned of all markup
+				};
+			} catch (err) {
+				return {
+					display: null,
+					plain: null
+				};
+			}
+		}
+		
 		// Extract output from javascript "query"
 		function extractJsCalcOutput(input) {
 			var output, displayOutput;
@@ -932,7 +954,7 @@ var cCalc = (function (window, document) {
 		}
 
 		return {
-			js: extractJsCalcOutput,
+			js: extractUnitJsCalcOutput,
 			google: extractGoogleCalcOutput,
 			alpha: extractAlphaCalcOutput
 		}
