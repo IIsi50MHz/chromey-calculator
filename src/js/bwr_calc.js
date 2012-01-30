@@ -227,14 +227,6 @@ var cCalc = (function (window, document) {
 								$results.eq($results.length-1).find(".resultLink").show().css({opacity: maxResultLinkOpacity}).animate({opacity: minResultLinkOpacity}, 2000);
 							}
 							updateResultsArea($calcResults, $calcResultsWrapper);
-							// If there's a popup, update if we're entering stuff in the dropdown
-							if (background.calcPopOut && background.calcPopOut !== window) {
-								calcStore.save();
-								bg$ = background.calcPopOut.jQuery;
-								$calcPopOut = bg$(background.calcPopOut);
-								// Don't let popout overwrite most current results
-								updateResultsArea(bg$("#calcResults"), bg$("#calcResultsWrapper"));												
-							}
 						});
 					}
 					// Update history
