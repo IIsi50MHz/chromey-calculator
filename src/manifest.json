@@ -1,6 +1,6 @@
 {
 	"name": "Cloudy Calculator",
-	"version": "5.0.1",
+	"version": "6.0",
 	"description": "A shockingly versatile calculator for Chrome. (Formerly Chromey Calculator)",
 	"icons": {
 		"16": "icons/16.png",
@@ -14,8 +14,7 @@
 	},
 	"permissions": [
 		"http://*.google.com/",
-		"https://*.google.com/",
-		"http://*.wolframalpha.com/"
+		"https://*.google.com/"
 	],
 	"background_page": "background.html",
 	"options_page": "options.html"
