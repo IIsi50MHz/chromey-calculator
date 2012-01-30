@@ -7,12 +7,13 @@ var global = this;
 		}
 	}
 	// All units are converted to these when doing calculations
-	var DIM = ["L", "T", "M"];
+	var DIM = ["L", "M", "T"];
 	var DEFAULT_DISPLAY_UNITS = {
 		"L1": "m",
 		"T1": "s",
 		"M1": "kg",
 		"L1T-1": "m/s",
+		"L1T-2": "m/s^2",
 		"L2": "m^2",
 		"L3": "m^3"
 	};
@@ -41,7 +42,6 @@ var global = this;
 		"parsec":{dim:{L:1}, factor:3.08568025e16, alias:["parsec", "parsecs"]},
 		
 		// AREA
-		//"xxx":{dim:{L:1}, factor:1, alias:["xxx", "xxx"]},
 		"acre":{dim:{L:2}, factor:Math.pow(1609.344,2)/640 , alias:["acre", "acres"]},
 		
 		// VOLUME
@@ -61,6 +61,7 @@ var global = this;
 		"minute":{dim:{T:1}, factor:60, alias:["minute", "minutes", "min", "mins"]},
 		"hour":{dim:{T:1}, factor:3600, alias:["hour", "hours", "hr", "hrs", "h"]},
 		"day":{dim:{T:1}, factor:3600*24, alias:["day", "days"]},
+		"month":{dim:{T:1}, factor:3600*24*365.242199/12, alias:["month", "months"]},
 		"year":{dim:{T:1}, factor:3600*24*365.242199, alias:["year", "years", "yr", "yrs"]},
 		"decade":{dim:{T:1}, factor:10*3600*24*365.242199, alias:["decade", "decades"]},
 		"score":{dim:{T:1}, factor:20*3600*24*365.242199, alias:["score"]},
@@ -94,7 +95,10 @@ var global = this;
 		},
 		"Kelvin":{dim:{TEMP:1}, factor:1, alias:["Kelvin", "kelvin", "K"]},
 		
-		// CONSTANTS
+		// CONSTANTS (careful!)
+		//"G": {dim{L:3,T:-2,M:-1}, factor:6.67384e-11, alias:["G"]}, // From http://physics.nist.gov, 1/29/2012
+		//"h": {dim{L:2,T:-1,M:1}, factor:6.62606957e-34, alias:["h"]}, // From http://physics.nist.gov, 1/29/2012
+		//"c": {dim:{L:1,T:-1}, factor:299792458, alias:["c"]}, // From http://physics.nist.gov, 1/29/2012
 		"pi": {dim:{}, factor:Math.PI, alias:["pi", "Pi", "PI"]},
 		"e": {dim:{}, factor:Math.E, alias:["e", "E"]} //
 		/////////////////////////////////////////////////
@@ -267,6 +271,12 @@ var global = this;
 		function prepareInputStr(str) {
 			// normalize space
 			str = str.replace(/\s+/g, " ").replace(/^\s+|\s+$/g, "");
+			// replace "×" with * if preceded and followed by space or digit (NOTE: not converting "x" for now.
+			str = str.replace(/(\s)×(\s)/g, "$1*$2");
+			// replace "x" with * for "1 x 2", "1x 2", "1 x2", but not "1x2" (simple way to make sure we can pass hex numbers on to google)
+			str = str.replace(/(\s)x(\s)/g, "$1*$2");
+			str = str.replace(/(\d)x(\s)/g, "$1*$2");
+			str = str.replace(/(\s)x(\d)/g, "$1*$2");
 			// replace " and ' with in and ft
 			str = str.replace(/(''|")/g, " in ").replace(/'/g, " ft ");
 			// handle "e" notation
@@ -299,7 +309,7 @@ var global = this;
 			str = str.replace(/^\s+|\s+$/g, "");
 			// replace stuff like "sine*", with "sin "
 			str = normalizeWordTokens(str);
-			console.debug("prepareInputStr", str);//KEEP
+			console.debug("*****prepareInputStr", str);//KEEP
 			return str;
 		}
 		//------------------------------------------
@@ -587,6 +597,9 @@ var global = this;
 		};	
 		//------------------------------------------
 		function calcWithUnitConversion(str) {
+			if (/[,]/.test(str)) {
+				throw new Error("Can't handle commas yet...");
+			}
 			console.time("calcWithUnitConversion");
 			// TODO: handle "in a", "per" **NOTE: per is took tricky...
 			// Split on "in" or "to" or "into"
@@ -596,12 +609,14 @@ var global = this;
 			
 			splitStrArr = str.replace(/^(\s*[a-zA-Z].*)\s+in\s+a[n]?\s+([a-zA-Z].*)$/, "$2 to $1"); // Handle "in a" and "per". TODO: What if we have multiple "per"'s?
 			// "in" means same as "to" or "into" under conditions like these:
+			// 3'2" in in
+			// 3' in in
 			// (xxx) in in ft
 			// "10 m in ft"
 			// "10 m^3 in ft^3"
 			// "(xxx) in ft"
 			
-			splitStrArr = splitStrArr.replace(/(\)\s+in\s+|[a-zA-Z]\s+|[a-zA-Z]\^[-+]?[0-9]+\s+|\)\s+)(in)(\s+[a-zA-Z])/, "$1@@@$3");
+			splitStrArr = splitStrArr.replace(/(\)\s+in\s+|[a-zA-Z'"]\s+|[a-zA-Z]\^[-+]?[0-9]+\s+|\)\s+)(in)(\s+[a-zA-Z])/, "$1@@@$3");
 			console.debug("splitStrArr !!!!!A!!!!!!!!! >>> ", splitStrArr);
 			splitStrArr = splitStrArr.replace(/(\s+)(into|to)(\s+[a-zA-Z])/, "$1@@@$3");
 			console.debug("splitStrArr !!!!B!!!!!!!!!! >>> ", splitStrArr);
@@ -681,24 +696,24 @@ var global = this;
 		{token:"asin", name:"Asin", aliasRx:/a(rc|)sin(e|)/, type:"prefix"},
 		{token:"acos", name:"Acos", aliasRx:/a(rc|)cos(ine|)/, type:"prefix"},
 		{token:"atan", name:"Atan", aliasRx:/a(rc|)tan(gent|)/, type:"prefix"},
-		{token:"csc", name:"Csc", aliasRx:/csc|cosec(ant|)/, type:"prefix"},
-		{token:"sec", name:"Sec", aliasRx:/sec(ant|)/, type:"prefix"},
-		{token:"cot", name:"Cot", aliasRx:/cot(an(gent|)|)/, type:"prefix"},
-		{token:"acsc", name:"Acsc", aliasRx:/a(rc|)(csc|cosec(ant|))/, type:"prefix"},
-		{token:"asec", name:"Asec", aliasRx:/a(rc|)sec(ant|)/, type:"prefix"},
-		{token:"acot", name:"Acot", aliasRx:/a(rc|)cot(an(gent|))/, type:"prefix"},
+		//{token:"csc", name:"Csc", aliasRx:/csc|cosec(ant|)/, type:"prefix"},
+		//{token:"sec", name:"Sec", aliasRx:/sec(ant|)/, type:"prefix"},
+		//{token:"cot", name:"Cot", aliasRx:/cot(an(gent|)|)/, type:"prefix"},
+		//{token:"acsc", name:"Acsc", aliasRx:/a(rc|)(csc|cosec(ant|))/, type:"prefix"},
+		//{token:"asec", name:"Asec", aliasRx:/a(rc|)sec(ant|)/, type:"prefix"},
+		//{token:"acot", name:"Acot", aliasRx:/a(rc|)cot(an(gent|))/, type:"prefix"},
 		{token:"exp", name:"Exp", aliasRx:/exp/, type:"prefix"},
 		{token:"log", name:"Log", aliasRx:/log/, type:"prefix"},
 		{token:"ln", name:"Ln", aliasRx:/ln/, type:"prefix"},
 		{token:"sqrt", name:"Sqrt", aliasRx:/sqrt|root/, type:"prefix"},
 		
+		// Power // Need separate token for unit powers?
+		{token:"^", name:"Power", rx:/\^/, type:"infix"},
 		
+		// Times, Divide, Plus for units 
 		{token:"`", name:"Divide", rx:/`/, type:"infix"},
 		{token:"|", name:"Times", rx:/\|/, type:"infix"},
 		{token:"?", name:"Plus", rx:/\?/, type:"infix"},
-		
-		// Power // Need separate token for unit powers?
-		{token:"^", name:"Power", rx:/\^/, type:"infix"},
 		
 		// Times, Divide
 		{token:"/", name:"Divide", rx:/\//, type:"infix"},
@@ -716,9 +731,18 @@ var global = this;
 		Divide:		unitDiv,
 		Power:		unitPow,
 		Sqrt:		function (u) {return {dim:{}, factor:Math.sqrt(toUnit(u).factor)};},
-		Sin:		function (u) {return {dim:{}, factor:Math.sin(toUnit(u).factor)};},
-		Cos:		function (u) {return {dim:{}, factor:Math.cos(toUnit(u).factor)};},
-		Tan:		function (u) {return {dim:{}, factor:Math.tan(toUnit(u).factor)};},
+		Sin:		function (u) {
+						var x = Math.sin(toUnit(u).factor);
+						return {dim:{}, factor: Math.abs(x) < 1e-15 ? 0 : x};
+					},
+		Cos:		function (u) {
+						var x = Math.cos(toUnit(u).factor);
+						return {dim:{}, factor: Math.abs(x) < 1e-15 ? 0 : x};
+					},
+		Tan:		function (u) {
+						var x = Math.tan(toUnit(u).factor);
+						return {dim:{}, factor: Math.abs(x) < 1e-15 ? 0 : x};
+					},
 		Asin:		function (u) {return {dim:{}, factor:Math.asin(toUnit(u).factor)};},
 		Acos:		function (u) {return {dim:{}, factor:Math.acos(toUnit(u).factor)};},
 		Atan:		function (u) {return {dim:{}, factor:Math.atan(toUnit(u).factor)};},
