@@ -1,7 +1,7 @@
 {
 	"name": "Cloudy Calculator",
 	"version": "5.0.1",
-	"description": "A shockingly versatile calculator for Chrome. Results are generated using Google and Wolfram|Alpha. (Formerly Chromey Calculator)",
+	"description": "A shockingly versatile calculator for Chrome. (Formerly Chromey Calculator)",
 	"icons": {
 		"16": "icons/16.png",
 		"48": "icons/48.png",

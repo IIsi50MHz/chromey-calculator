@@ -205,17 +205,12 @@ var cCalc = (function (window, document) {
 						cmdArgs = inputVal.slice(3, inputVal.length - 1).split(/\s*,\s*/);
 						calcCmd[cmdArgs[0]] && calcCmd[cmdArgs[0]].apply({}, cmdArgs.slice(1));
 					} else {
-						// ============================================================  CHECK ME  ==============================================================
-						// Continue from previous result? (When we can)						
-						if (getOption('continueFromResult')[0]) {																					
-							// Looking for: + - * / ^ % (sticking with the basics for now...)
-							if (inputVal.match(/^[+\-*\/^%]/)) { // operator doesn't need space before it
-								inputVal = '@' + inputVal;							
-							} else if (inputVal.match(/^plus\s+|^minus\s+|^times\s+|^x\s+|^divided\s+by\s+|^mod\s+|^modulo\s+|^modulus\s+/i)) { // operator needs space before it
-								inputVal = '@ ' + inputVal;
-							}
+						// Continue from previous result (when we can). Looking for: + - * / ^ % (sticking with the basics for now...)
+						if (inputVal.match(/^[+\-*\/^%]/)) { // operator doesn't need space before it
+							inputVal = '@' + inputVal;							
+						} else if (inputVal.match(/^plus\s+|^minus\s+|^times\s+|^x\s+|^divided\s+by\s+|^mod\s+|^modulo\s+|^modulus\s+/i)) { // operator needs space before it
+							inputVal = '@ ' + inputVal;
 						}
-						// ===========================================================  /CHECK ME  ==============================================================
 						
 						// Do calculation
 						calc.findResult(inputVal, function () {
@@ -1133,13 +1128,6 @@ var cCalc = (function (window, document) {
 			}
 		}
 		// -----------------------------------------------------------------------
-		// =====================================================================  CHECK ME  =================================================================================
-		function continueFromResult(isOn) {
-			console.debug("continueFromResult", isOn);
-			localStorage.opt_continueFromResult = JSON.stringify([!!isOn]);
-		}
-		// =====================================================================  /CHECK ME  =================================================================================
-		// -----------------------------------------------------------------------
 		function width(w) {
 			w = parseInt(w);
 			w || (w = "");
@@ -1286,7 +1274,6 @@ var cCalc = (function (window, document) {
 		// Set default options
 		var defaultOptions = {
 			zoom: 1,
-			continueFromResult: true,
 			width: "450px",
 			height: "400px", 
 			resultFont: "times",
@@ -1312,7 +1299,7 @@ var cCalc = (function (window, document) {
 		// List of stored options
 		// =====================================================================  CHECK ME  =================================================================================
 		options = [
-			"zoom", "continueFromResult", "width", "height", "resultFont", "titleFont", "inputFont", "headerLinksFont", 
+			"zoom", "width", "height", "resultFont", "titleFont", "inputFont", "headerLinksFont", 
 			"quickKeyOn", "localGoogleOn", "localGoogleUrl"
 		];
 		// -----------------------------------------------------------------------
@@ -1321,7 +1308,6 @@ var cCalc = (function (window, document) {
 			defaultOptions: defaultOptions,
 			setDefaultOptions: setDefaultOptions,
 			resetOption: resetOption,
-			continueFromResult: continueFromResult,
 			zoom: zoom,
 			width: width,
 			height: height,
