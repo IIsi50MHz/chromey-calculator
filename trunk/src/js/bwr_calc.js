@@ -11,6 +11,11 @@ var cCalc = (function (window, document) {
 	// -----------------------------------------------------------------------
 	// 	Variables
 	// -----------------------------------------------------------------------
+	var precision = 13;
+	
+	var maxResultLinkOpacity = 0.99, // There's a weird Chrome bug that messes up bottom margin of the last result if this is set to 1
+		minResultLinkOpacity = 0.35;
+	
 	var	calcSelStart, calcSelEnd, // variables to keep track of caret postion or selection in calc input area
 		maxResults = 500, history = History(maxResults), // variables for history		
 		queryCount = 0,		
@@ -20,55 +25,7 @@ var cCalc = (function (window, document) {
 	var queryMode = {
 		all: {
 			firstStatus: "trying js",
-			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up
-				"trying js": "js",
-				"trying google": "google",
-				"trying google, did you mean": "google",
-				"trying alpha": "alpha",
-				"failed": ""
-			},
-			nextStatus: { // Used to decide what query to try next if last query failed
-				"trying js": "trying google",
-				"trying google": "trying google, did you mean",
-				"trying google, did you mean": "trying alpha",
-				"trying alpha": "failed"
-			}
-		},		
-		js: { // Only "query" js
-			firstStatus: "trying js",
-			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up
-				"trying js": "js",				
-				"failed": ""
-			},
-			nextStatus: { // Used to decide what query to try next if last query failed
-				"trying js": "failed"				
-			}			
-		},
-		google: { // Only query Google
-			firstStatus: "trying google",
-			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up
-				"trying google": "google",
-				"trying google, did you mean": "google",				
-				"failed": ""
-			},
-			nextStatus: { // Used to decide what query to try next if last query failed
-				"trying google": "trying google, did you mean",
-				"trying google, did you mean": "failed",				
-			}			
-		},
-		alpha: { // Only query Wolfram|Alpha
-			firstStatus: "trying alpha",
-			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up
-				"trying alpha": "alpha",				
-				"failed": ""
-			},
-			nextStatus: { // Used to decide what query to try next if last query failed
-				"trying alpha": "failed"								
-			}			
-		},
-		jsGoogle: { // query js, then Google
-			firstStatus: "trying js",
-			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up
+			queryTypeByStatus: { // Used to decide to query js or Google or give up
 				"trying js": "js",
 				"trying google": "google",
 				"trying google, did you mean": "google",				
@@ -78,37 +35,33 @@ var cCalc = (function (window, document) {
 				"trying js": "trying google",
 				"trying google": "trying google, did you mean",
 				"trying google, did you mean": "failed"								
-			}			
-		},
-		googleAlpha: {
+			}		
+		},		
+		js: { // Only "query" js
 			firstStatus: "trying js",
-			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up				
-				"trying google": "google",
-				"trying google, did you mean": "google",
-				"trying alpha": "alpha",
-				"failed": ""
-			},
-			nextStatus: { // Used to decide what query to try next if last query failed				
-				"trying google": "trying google, did you mean",
-				"trying google, did you mean": "trying alpha",
-				"trying alpha": "failed"
-			}
-		},
-		jsAlpha: {
-			firstStatus: "trying js",
-			queryTypeByStatus: { // Used to decide to query js or Google or Wolfram|Alpha or give up
+			queryTypeByStatus: { // Used to decide to query js or Google give up
 				"trying js": "js",				
-				"trying alpha": "alpha",
 				"failed": ""
 			},
 			nextStatus: { // Used to decide what query to try next if last query failed
-				"trying js": "trying alpha",				
-				"trying alpha": "failed"
-			}
+				"trying js": "failed"				
+			}			
+		},
+		google: { // Only query Google
+			firstStatus: "trying google",
+			queryTypeByStatus: { // Used to decide to query js or Google or give up
+				"trying google": "google",
+				"trying google, did you mean": "google",				
+				"failed": ""
+			},
+			nextStatus: { // Used to decide what query to try next if last query failed
+				"trying google": "trying google, did you mean",
+				"trying google, did you mean": "failed",				
+			}			
 		},
 	};
 	var currentQueryMode = queryMode.all;
-	var rxCleanInput = /:\s*(g|w|c|cg|cw|gw)$/i;
+	var rxCleanInput = /:\s*(g|c|cg)$/i;
 	// -----------------------------------------------------------------------
 	// 	Some functions that need a better home...
 	// -----------------------------------------------------------------------
@@ -167,10 +120,10 @@ var cCalc = (function (window, document) {
 		//////
 		// Stuff to do before DOM is ready
 		function showSourceLink(e) {
-			$(this).stop().css("opacity", "").show();
+			$(this).stop().css("opacity", maxResultLinkOpacity);
 		}
 		function hideSourceLink(e) {
-			$(this).animate({opacity: "0"}, 500);
+			$(this).animate({opacity: minResultLinkOpacity}, 500);
 		}
 		// Show/hide link to result source on hover
 		$(document).undelegate();
@@ -228,16 +181,8 @@ var cCalc = (function (window, document) {
 					// Update query mode					
 					if (inputVal.match(/:\s*g$/i)) {						
 						currentQueryMode = queryMode.google;
-					} else if (inputVal.match(/:\s*w$/i)) {
-						currentQueryMode = queryMode.alpha;
 					} else if (inputVal.match(/:\s*c$/i)) {
 						currentQueryMode = queryMode.js;
-					} else if (inputVal.match(/:\s*cg$/i)) {
-						currentQueryMode = queryMode.jsGoogle;
-					} else if (inputVal.match(/:\s*cw$/i)) {
-						currentQueryMode = queryMode.jsAlpha;
-					} else if (inputVal.match(/:\s*gw$/i)) {
-						currentQueryMode = queryMode.googleAlpha;
 					} else {
 						currentQueryMode = queryMode.all;
 					}					
@@ -284,7 +229,7 @@ var cCalc = (function (window, document) {
 								if ($results.length > maxResults) {
 									$results.slice(0, $results.length - maxResults).remove();
 								}
-								$results.eq($results.length-1).find(".resultLink").show().css({opacity: ".8"}).animate({opacity: "0"}, 2000);
+								$results.eq($results.length-1).find(".resultLink").show().css({opacity: maxResultLinkOpacity}).animate({opacity: minResultLinkOpacity}, 2000);
 							}
 							updateResultsArea($calcResults, $calcResultsWrapper);
 							// If there's a popup, update if we're entering stuff in the dropdown
@@ -365,8 +310,7 @@ var cCalc = (function (window, document) {
 	// query uri heads
 	var queryUriHead = {
 		defaultGoogle: "http://www.google.com/search?q=",
-		google: "http://www.google.com/search?q=",
-		alpha: "http://m.wolframalpha.com/input/?i="
+		google: "http://www.google.com/search?q="
 	};
 	
 	// Set google url
@@ -445,7 +389,7 @@ var cCalc = (function (window, document) {
 
 		function storeCalcInfo() {
 			// store results and inputs
-			$calcResults.find(".resultLink").css({display: "block", opacity: "0"});
+			$calcResults.find(".resultLink").css({display: "block", opacity: minResultLinkOpacity});
 			localStorage.calcResults = $calcResults[0].innerHTML;
 			localStorage.prevInputs = JSON.stringify(history);
 
@@ -748,14 +692,9 @@ var cCalc = (function (window, document) {
 
 			return queryUriHead.google + encodeURIComponent(input);
 		}
-		// Wolfram|Alpha uri
-		function generateInputAlphaQueryUri(input) {
-			return queryUriHead.alpha + encodeURIComponent(input);
-		}
 		return {
 			js: generateJsUri,
-			google: generateInputGoogleQueryUri,
-			alpha: generateInputAlphaQueryUri
+			google: generateInputGoogleQueryUri
 		};
 	}());
 
@@ -914,53 +853,9 @@ var cCalc = (function (window, document) {
 			}
 		}
 
-		// Extract result from Wolfram|Alpha query doc
-		function extractAlphaCalcOutput(doc) {
-			var
-			input = calc.result.origInput,
-			inputIsSolve = !!input.match(/^\s*solve\s*[\(\[]/i),
-			inputIsPlot= !!input.match(/^\s*plot\s*[\(\[]/i),
-			$resultPods = $(doc).filter("#results").find(".pod"),
-			$outputPod,
-			firstPodHtml = $resultPods.html(),
-			output = "";			
-
-			// Use first pod if result is not just an input interpretation
-			if (firstPodHtml && !(firstPodHtml.match('>Input interpretation:<') || firstPodHtml.match('>Input:<'))) {
-				$outputPod = $resultPods.eq(0);
-			} else {
-				$outputPod = $resultPods.eq(1);
-			}
-			if (inputIsSolve) {
-				// Show all results for solve queries
-				$outputPod.find("img").each(function () {
-					output += $(this).attr("alt") + "<br/>"
-				});
-				output = output.replace(/<br\/>$/, "");
-			} else if (inputIsPlot) {
-				// Show link to result				
-				output = "<a target='_blank' class='outputLink plotLink' href='"+createQueryUri['alpha'](input.replace(rxCleanInput, ''))+"'>Wolfram|Alpha Plot</a>";
-			} else {
-				// Show first result only for any other queries
-				output = $outputPod.find("img").attr("alt");
-			}
-			output = output && output
-				// Clean up "solve" results (remove exacty result if there is an approximate results)
-				.replace(/=[^=~]*~~/g, "~~")
-				.replace(/~~/g, "&asymp;")
-				// Clean up results with \n newlines
-				.replace(/\\n/g, "<br/>");
-
-			return {
-				display: output && output,
-				plain: output && output.replace(/\\n/g, "<br/>")
-			};
-		}
-
 		return {
 			js: extractUnitJsCalcOutput,
-			google: extractGoogleCalcOutput,
-			alpha: extractAlphaCalcOutput
+			google: extractGoogleCalcOutput
 		}
 	}());
 
@@ -986,7 +881,7 @@ var cCalc = (function (window, document) {
 		}
 
 		function createLinkHtml(queryType, uri) {
-			var	linkText = {google: "G", alpha: "W"};
+			var	linkText = {google: "G"};
 			var $resultLink = $("<div><a target='_blank' class='resultLink'>" + (linkText[queryType] || "") + "</a></div>");
 			$resultLink = $resultLink.find("a").attr("href", calc.result.uri);
 			return $($resultLink).parent().html() || "";
@@ -1238,12 +1133,12 @@ var cCalc = (function (window, document) {
 			}
 		}
 		// -----------------------------------------------------------------------
-		// =====================================================================  C HECK ME  =================================================================================
+		// =====================================================================  CHECK ME  =================================================================================
 		function continueFromResult(isOn) {
 			console.debug("continueFromResult", isOn);
 			localStorage.opt_continueFromResult = JSON.stringify([!!isOn]);
 		}
-		// =====================================================================  /C HECK ME  =================================================================================
+		// =====================================================================  /CHECK ME  =================================================================================
 		// -----------------------------------------------------------------------
 		function width(w) {
 			w = parseInt(w);
@@ -1415,7 +1310,7 @@ var cCalc = (function (window, document) {
 		}
 		// -----------------------------------------------------------------------
 		// List of stored options
-		// =====================================================================  C HECK ME  =================================================================================
+		// =====================================================================  CHECK ME  =================================================================================
 		options = [
 			"zoom", "continueFromResult", "width", "height", "resultFont", "titleFont", "inputFont", "headerLinksFont", 
 			"quickKeyOn", "localGoogleOn", "localGoogleUrl"
@@ -1443,7 +1338,7 @@ var cCalc = (function (window, document) {
 			reset: reset
 		};
 	}());
-	// =====================================================================  /C HECK ME  =================================================================================
+	// =====================================================================  /CHECK ME  =================================================================================
 
 	// -----------------------------------------------------------------------
 	// 	Initialize Chromey Calculator
