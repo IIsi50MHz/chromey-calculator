@@ -841,7 +841,7 @@ var cCalc = (function (window, document) {
 		}
 
 		return {
-			js: extractUnitJsCalcOutput,
+			js: extractJsCalcOutput,
 			google: extractGoogleCalcOutput
 		}
 	}());
