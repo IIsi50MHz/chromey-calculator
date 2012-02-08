@@ -1,6 +1,17 @@
 #summary Cloudy Calculator help
 #sidebar HelpSideBar
 <wiki:toc max_depth="1" />
+
+= Quick Tips =  
+ * Use up/down arrow keys to access input history.
+ * Click on any result to insert it into the input area.
+ * Ctrl+Click on any result to copy to clipboard.
+ * Click the little arrow at the upper right to pop out to new window.
+ * Last result can be accessed using the "@" variable.
+ * Create your own user variables -- @abc_123 = 42
+ * Store an unevaluated expression -- @x := 10 meters
+ * You'll see a faint "G" next to results caclulated by Google. Click the "G" to see the original Google result.
+
 = Entering expressions =
 == Basic examples ==
 Some basic calculations are handled by Cloudy Calculator itself.
@@ -22,21 +33,14 @@ When Cloudy Calculator can't do the job, Google Calculator handles the calculati
 Google Guide maintains an excellent list with may more examples: [http://www.googleguide.com/help/calculator.html Google Calculator (Cheat Sheet)]
 
 == Wolfram|Alpha examples ==
-If neither Cloudy Calculator nor Google Calculator comes up with a result, the expression will get sent on to Wolfram|Alpha. Wolfram|Alpha can handle things like derivative, integrals, equation solving, and vector arithmetic. 
+NOTE: Wolfram asked us to stop sending queries to them. (See comments for issue 135 for details.)
 
- * d x^2 / dx
- * integral x^2 dx
- * solve(2 x^2 - 1 = 0)
- * {1,2,3}.{1,2,3}
- * {1,2,3}x{1,2,3}
+~~If neither Cloudy Calculator nor Google Calculator comes up with a result, the expression will get sent on to Wolfram|Alpha. Wolfram|Alpha can handle things like derivative, integrals, equation solving, and vector arithmetic.~~ 
 
-Wolfram|Alpha maintains a huge list of examples: [http://www.wolframalpha.com/examples/  Wolfram|Alpha Examples] (NOTE: Many, but not all Wolfram|Alpha queries are supported.)
+ * ~~d x^2 / dx~~
+ * ~~integral x^2 dx~~
+ * ~~solve(2 x^2 - 1 = 0)~~
+ * ~~{1,2,3}.{1,2,3}~~
+ * ~~{1,2,3}x{1,2,3}~~
 
-= Source links for results =
-You can hover over the the space just to the left of a result to reveal a "G" or "W" link. Click the link to see the original source of a result. (NOTE: For simple calculations handled directly by Cloudy Calculator, you won't find any link.)
-
-= Copy/Paste tricks =
-= Variables =
-== Valid variable names ==
-== Unevaluated expressions ==
-= History =
+~~Wolfram|Alpha maintains a huge list of examples: [http://www.wolframalpha.com/examples/  Wolfram|Alpha Examples] (NOTE: Many, but not all Wolfram|Alpha queries are supported.)~~
