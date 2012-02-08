@@ -30,7 +30,7 @@ When Cloudy Calculator can't do the job, Google Calculator handles the calculati
  * log(123)
  * ln(123)
  
-Google Guide maintains an excellent list with may more examples: [http://www.googleguide.com/help/calculator.html Google Calculator (Cheat Sheet)]
+Google Guide maintains an excellent list with many more examples: [http://www.googleguide.com/help/calculator.html Google Calculator (Cheat Sheet)]
 
 == Wolfram|Alpha examples ==
 NOTE: Wolfram asked us to stop sending queries to them. (See comments for issue 135 for details.)
