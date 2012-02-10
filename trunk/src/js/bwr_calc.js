@@ -810,10 +810,18 @@ var cCalc = (function (window, document) {
 				filter(function () {return $(this).text().match(' = ')}).
 				slice(-1).html();					
 			}
-			// If no calculator result try oneBox
+			// If no result try currency
+			if (!docHtml) {
+				docHtml = $doc.find(".currency").find("b").html();
+			}
+			// If no result try oneBox
 			if (!docHtml) {
 				docHtml = $doc.find(".answers").find("b").html();
 			}
+			// If no result try obcontainer? Really fragile? Sometimes needed for population (sometimes not)
+			if (!docHtml) {
+				docHtml = $doc.find(".obcontainer").find("em").html();
+			}			
 
 			if (docHtml) {
 				// clean up result for copy/paste...
