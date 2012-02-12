@@ -75,7 +75,7 @@ var cCalc = (function (window, document) {
 
 	function popOutCalc() {
 		var defaultPopOutWindowInfo = "width=300,height=400,scrollbars=no";
-		//calcStore.save();		
+		calcStore.save();		
 		if (background.calcPopOut) {
 			// don't let popout overwrite most current restults
 			background.calcPopOut.jQuery(background.calcPopOut).unbind("unload blur");
@@ -849,7 +849,7 @@ var cCalc = (function (window, document) {
 		}
 
 		return {
-			js: extractJsCalcOutput,
+			js: extractUnitJsCalcOutput,
 			google: extractGoogleCalcOutput
 		}
 	}());
