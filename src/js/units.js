@@ -269,8 +269,12 @@ var global = this;
 		//------------------------------------------
 		// Reformat str so it can be split into a special nested array
 		function prepareInputStr(str) {
+			var origStr = str;
 			// normalize space
 			str = str.replace(/\s+/g, " ").replace(/^\s+|\s+$/g, "");
+			// make it so we can disambiguate "e" later
+			str = str.replace(/([0-9])[eE][+]?([0-9])/g, "$1!e!$2"); // get rid of "+"
+			str = str.replace(/([0-9])[eE][-]([0-9])/g, "$1!e!!$2"); // get rid of "-" (temporarily)
 			// replace "×" with * if preceded and followed by space or digit (NOTE: not converting "x" for now.
 			str = str.replace(/(\s)×(\s)/g, "$1*$2");
 			// replace "x" with * for "1 x 2", "1x 2", "1 x2", but not "1x2" (simple way to make sure we can pass hex numbers on to google)
@@ -279,8 +283,6 @@ var global = this;
 			str = str.replace(/(\s)x(\d)/g, "$1*$2");
 			// replace " and ' with in and ft
 			str = str.replace(/(''|")/g, " in ").replace(/'/g, " ft ");
-			// handle "e" notation
-			str = str.replace(/([0-9])[eE]([-]*[0-9])/g, "$1|10\\$2");
 			// replace space between integers and fractions with "#" (high priority add), replace "/" fraction part with "&" (high priority divide).
 			str = str.replace(/(\d+)\s+(\d+)\/(\d+)/g, "$1#$2&$3");	
 			// replace space after unit and before number "?" (medium priority add) (EX: 5 ft 10 in => 5|ft?10|in)
@@ -300,16 +302,20 @@ var global = this;
 			str = str.replace(/\s*([^\+\-\*\/\^])\s*/g, "$1");	
 			// add plus sign ' or " and numbers		
 			str = str.replace(/(["'])([0-9])/g, "$1+$2");
-			// add times sign between letters and anything not a letter or operator
-			str = str.replace(/([^a-zA-Z\+\-\*\/\^\|\`\?\&\#\\])([a-zA-Z])/g, "$1*$2");
-			str = str.replace(/([a-zA-Z])([^a-zA-Z\+\-\*\/\^\|\`\?\&\#\\])/g, "$1*$2");
+			// add times sign between letters and anything not a letter or operator (unless the letter is "e")
+			str = str.replace(/([^a-zA-Z\+\-\*\/\^\|\`\?\&\#\\!])([a-zA-Z])/g, "$1*$2");
+			str = str.replace(/([a-zA-Z])([^a-zA-Z\+\-\*\/\^\|\`\?\&\#\\!])/g, "$1*$2");
 			// replace minus operator with ~, but leave negative signs alone
 			str = str.replace(/([^\+\-\*\/\^\|\`\?\&\#\\])-/g, "$1~");
 			// trim space
 			str = str.replace(/^\s+|\s+$/g, "");
 			// replace stuff like "sine*", with "sin "
 			str = normalizeWordTokens(str);
-			console.debug("*****prepareInputStr", str);//KEEP
+			// disambiguate "e" notation
+			str = str.replace(/([0-9])!e!!([0-9])/g, "$1e-$2");
+			str = str.replace(/([0-9])!e!([0-9])/g, "$1e$2");
+			console.debug("*****prepareInputStr1", origStr);//KEEP
+			console.debug("*****prepareInputStr2", str);//KEEP
 			return str;
 		}
 		//------------------------------------------
