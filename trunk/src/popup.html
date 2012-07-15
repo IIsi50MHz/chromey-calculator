@@ -16,44 +16,54 @@
 				height:401px;				
 			}			
 		</style>
+		<script>
+			// Work around for bug Chrome bug where popup won't get focus (see http://code.google.com/p/chromium/issues/detail?id=111660#c7)
+			if(location.search !== "?foo") {
+			  location.search = "?foo";
+			  throw new Error;  // load everything on the next page;
+								// stop execution on this page
+			}
+		</script>
 		<script src="js/jquery.js"></script>				
 		<script src="js/units.js"></script>
 		<script src="js/init_calc.js"></script>
 	</head>
 	<body id="calc">		
-		<div id="calcWrapper" class="vbox">						
-			<!--
-				Header
-			-->
-			<div id="headerWrapper" class="boxFlex0">												
-				<div id="headerLinks">					
-					<a href="#popOut" id="popOut" class="headerLink">
-						<img src="icons/popout.png"/>
+		<div style="height:0; width:0;"> <!--This div is a goofy fix for problem where popup is size wrong until user starts typing-->
+			<div id="calcWrapper" class="vbox">						
+				<!--
+					Header
+				-->
+				<div id="headerWrapper" class="boxFlex0">												
+					<div id="headerLinks">					
+						<a href="#popOut" id="popOut" class="headerLink">
+							<img src="icons/popout.png"/>
+						</a>
+						<span class="headerSeparator">|</span>
+						<a href="http://code.google.com/p/chromey-calculator/wiki/Help" target="_tab" id="googleCalcHelp" class="headerLink">Help</a>
+						<span class="headerSeparator">|</span>
+						<a href="options.html" target="_tab" id="options" class="headerLink">Options</a>
+						<span class="headerSeparator">|</span>
+						<a href="#calcResults" id="clearAll" class="headerLink">Clear</a>													
+					</div>
+					<a href="https://chrome.google.com/webstore/detail/acgimceffoceigocablmjdpebeodphgc" target="_tab" id="chromeyCalcPageLink">					
+						<pre id="chromeyCalcName">Cloudy Calculator</pre>
 					</a>
-					<span class="headerSeparator">|</span>
-					<a href="http://code.google.com/p/chromey-calculator/wiki/Help" target="_tab" id="googleCalcHelp" class="headerLink">Help</a>
-					<span class="headerSeparator">|</span>
-					<a href="options.html" target="_tab" id="options" class="headerLink">Options</a>
-					<span class="headerSeparator">|</span>
-					<a href="#calcResults" id="clearAll" class="headerLink">Clear</a>													
-				</div>
-				<a href="https://chrome.google.com/webstore/detail/acgimceffoceigocablmjdpebeodphgc" target="_tab" id="chromeyCalcPageLink">					
-					<pre id="chromeyCalcName">Cloudy Calculator</pre>
-				</a>
-			</div>			
-			<!--
-				Results
-			-->				
-			<div id="calcResultsWrapper" class="boxFlex1">						
-				<ul id="calcResults"></ul>
-			</div>	
-			<!--
-				Input
-			-->			
-			<div id="calcInputWrapper" class="boxFlex0">
-				<input type="text" id="calcInput"/>
-				<div id="inputMarker">></div>						
-			</div>			
-		</div>		
+				</div>			
+				<!--
+					Results
+				-->				
+				<div id="calcResultsWrapper" class="boxFlex1">						
+					<ul id="calcResults"></ul>
+				</div>	
+				<!--
+					Input
+				-->			
+				<div id="calcInputWrapper" class="boxFlex0">
+					<input type="text" id="calcInput"/>
+					<div id="inputMarker">></div>						
+				</div>			
+			</div>		
+		</div>
 	</body>	
 </html>

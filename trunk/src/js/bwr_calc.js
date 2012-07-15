@@ -13,6 +13,10 @@ var cCalc = (function (window, document) {
 	// -----------------------------------------------------------------------
 	var precision = 13;
 	
+	var digitGroupSeparator = ",",
+		digitGroupSize = "3",
+		decimalMark = ".";
+	
 	var maxResultLinkOpacity = 0.99, // There's a weird Chrome bug that messes up bottom margin of the last result if this is set to 1
 		minResultLinkOpacity = 0.35;
 	
@@ -276,7 +280,7 @@ var cCalc = (function (window, document) {
 					// focus calc input
 					$calcInput.focus();
 
-					// set caret to end of insterted result
+					// set caret to end of inserted result
 					$calcInput[0].selectionStart = $calcInput[0].selectionEnd = calcSelStart;
 				}
 				return {
@@ -437,7 +441,16 @@ var cCalc = (function (window, document) {
 				varAssign:  /^\s*@\w*\s*=\s*.+$/,
 				varAssignNoSubst:  /^\s*@\w*\s*:=\s*.+$/
 			};
-
+		
+		// Remove digit separators and make sure we're using "." for decimal markers
+		function cleanNumbers(input) {
+			return input.
+				// Remove digit seperators
+				replace(RegExp("(\\d)\\" + digitGroupSeparator + "(\\d)", "g"), "$1$2").
+				// Replace decimal marker with "."
+				replace(RegExp("(\\d)\\" + decimalMark + "(\\d)", "g"), "$1.$2");
+		}
+		
 		// Extract output from query result doc
 		function findResult(input, callback) {
 			// Reset result object
@@ -463,10 +476,6 @@ var cCalc = (function (window, document) {
 				doQuery = false;
 			} else if (isNothing(input)) {
 				result.outputDisplay = result.outputPlain = "";
-				doQuery = false;
-			// Input is just a number, no query
-			} else if (isNumber(input)) {
-				result.outputDisplay = result.outputPlain = result.number = input;
 				doQuery = false;
 			// Input is a variable inspection, no query
 			} else if (isVarInspect(input)) {
@@ -528,8 +537,10 @@ var cCalc = (function (window, document) {
 		function calcQuery(input, callback) {			
 			var uri;
 			var queryTypeByStatus = currentQueryMode.queryTypeByStatus;
-			var nextStatus = currentQueryMode.nextStatus;			
+			var nextStatus = currentQueryMode.nextStatus;	
 			
+			// Remove digit seperators, set decimal marker to "."
+			input = cleanNumbers(input);
 			// ======================================================  CHECK ME  ========================================================
 			// 	This might be a good place to put a query-rate limiter, to prevent spamming Google and WolframAlpha
 			// ======================================================  /CHECK ME  ========================================================
@@ -731,10 +742,29 @@ var cCalc = (function (window, document) {
 			}			
 			return output;
 		}
+		
+		// Group digits to make output easier to read
+		function insertDigitGroupSeparator(output) {
+			// var integerPart = output.replace(/^(-?[0-9]+)([^0-9].*)$/, "$1"); 
+				// afterIntegerPart = output.replace(RegExp("^" + integerPart + "(.*$)"), "$1");
+			// console.debug("output>>>>>>>>>>", output);
+			// console.debug("integerPart>>>>>", integerPart);
+			// console.debug("afterIntegerPart", integerPart);
+			// if (integerPart) {
+				// output = integerPart.split("").reverse().join("").
+					// replace(RegExp("(\\d{"+digitGroupSize+"})", "g"), "$1"+digitGroupSeparator).
+					// split("").reverse().join("").
+					// replace(RegExp("^[" + digitGroupSeparator + "]"), "") + 
+					// afterIntegerPart;
+			// }
+			// NOTE: Have this do nothing for now. Bring back later... maybe...
+			return output;
+		}
 
 		function extractUnitJsCalcOutput(input) {
 			try {
 				var output = global.unitsJsCalc(input);
+				
 				// Make js scientific notation look like google				
 				if (/e[+-]\d+/.test(output)) {
 					displayOutput = output.replace(/(.*)e\+*(-*\d+)(\s*\w.*$|$)/, '$1 &times; 10<div style="display:inline-block; opacity:0; width:0px;">^</div><sup>$2</sup><span>$3</span>');
@@ -743,7 +773,7 @@ var cCalc = (function (window, document) {
 				}
 				console.debug("output", output);
 				return {
-					display: displayOutput,
+					display: insertDigitGroupSeparator(displayOutput),
 					plain: $('<div>'+displayOutput+'</div>').text() // output cleaned of all markup
 				};
 			} catch (err) {
@@ -778,7 +808,7 @@ var cCalc = (function (window, document) {
 						displayOutput = output;
 					}					
 					return {
-						display: displayOutput,
+						display: insertDigitGroupSeparator(displayOutput),
 						plain: $('<div>'+displayOutput+'</div>').text() // output cleaned of all markup
 					};
 				} else {
@@ -814,6 +844,13 @@ var cCalc = (function (window, document) {
 			if (!docHtml) {
 				docHtml = $doc.find(".currency").find("b").html();
 			}
+			// If no result try unit convertion boxes
+			if (!docHtml) {
+				docHtml = $doc.find("#ucw_rhs_d").val();
+				if (docHtml) {
+					docHtml += " " + $doc.find("#ucw_rhs_u").val();
+				}
+			}
 			// If no result try oneBox
 			if (!docHtml) {
 				docHtml = $doc.find(".answers").find("b").html();
@@ -836,7 +873,7 @@ var cCalc = (function (window, document) {
 				var outputDisplay = docHtml.replace(/.*=\s(.*)/, '$1'); // get stuff after = sign
 				return {
 					// get output for display (only using RH part of result for now)
-					display: outputDisplay,
+					display: insertDigitGroupSeparator(outputDisplay),
 					// get raw output (used for calculator variables)
 					plain: $('<div>'+outputDisplay+'</div>').text() // output cleaned of all markup
 				};
