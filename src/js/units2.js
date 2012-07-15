@@ -6,7 +6,7 @@
 
 var GLOBAL = this;
 
-(function (GLOBAL) {
+//(function (GLOBAL) {
 
 var BASE_UNITS = {
 	L: "m",
@@ -91,6 +91,10 @@ var UNIT = (function () {
 		VOLUME =	{L:3},
 		SPEED = 	{L:1, T:-1}
 		
+	// Factors
+	var poundFactor 	= 0.45359237,
+		cupFactor 		= 0.000236588237
+		
 	// Define all units
 	var unitDefs = { 	 
 		// ANGLE
@@ -150,19 +154,19 @@ var UNIT = (function () {
 		"kph":			{dim:SPEED, n:1000/3600, alias:["kph"]},
 		
 		// TEMPERATURE (TODO: Figure out how to deal with these...)
-		"Celsius":{
-			dim:{TEMP:1},
-			func:function (x) {return x + 273.15;}, 
-			inverseFunc:function (y) {return y - 273.15},
-			alias:["Farenheight", "farenheight", "F"]
+		"Celsius": {
+			dim:			{TEMP:1},
+			func:			function (x) {return x + 273.15;}, 
+			inverseFunc:	function (y) {return y - 273.15},
+			alias:			["Farenheight", "farenheight", "F"]
 		},	
-		"Farenheight":{
-			dim:{TEMP:1}, 
-			func:function (x) {return (x - 32)*9/5 + 273.15;},
-			inverseFunc:function (y) {return (y - 273.15)*9/5 + 32;},			
-			alias:["Celsius", "celsius", "Centigrade", "centigrade", "C"]
+		"Farenheight": {
+			dim:			{TEMP:1}, 
+			func:			function (x) {return (x - 32)*9/5 + 273.15;},
+			inverseFunc:	function (y) {return (y - 273.15)*9/5 + 32;},			
+			alias:			["Celsius", "celsius", "Centigrade", "centigrade", "C"]
 		},
-		"Kelvin":{dim:{TEMP:1}, n:1, alias:["Kelvin", "kelvin", "K"]},
+		"Kelvin":		{dim:{TEMP:1}, n:1, alias:["Kelvin", "kelvin", "K"]},
 	}
 	
 	
@@ -480,4 +484,4 @@ function foldRight(f, arr) {
 	return arr[0];
 }
 
-}(this));
+//}(this));

@@ -80,20 +80,20 @@ var global = this;
 		"mph":{dim:{L:1, T:-1}, factor:1609.344/3600, alias:["mph"]},
 		"kph":{dim:{L:1, T:-1}, factor:1000/3600, alias:["kph"]},
 		
-		// TEMPERATURE
-		"Celsius":{
-			dim:{TEMP:1}, 
-			factor:function (x) {return x + 273.15;}, 
-			invFactor:function (y) {return y - 273.15},
-			alias:["Farenheight", "farenheight", "F"]
-		},
-		"Farenheight":{
-			dim:{TEMP:1}, 
-			factor:function (x) {return (x - 32)*9/5 + 273.15;},
-			invFactor:function (y) {return (y - 273.15)*9/5 + 32;},			
-			alias:["Celsius", "celsius", "Centigrade", "centigrade", "C"]
-		},
-		"Kelvin":{dim:{TEMP:1}, factor:1, alias:["Kelvin", "kelvin", "K"]},
+		// TEMPERATURE // NOTE: this doesn't seem to be working...
+		// "Celsius":{
+			// dim:{TEMP:1}, 
+			// factor:function (x) {return x + 273.15;}, 
+			// invFactor:function (y) {return y - 273.15},
+			// alias:["Farenheight", "farenheight", "F"]
+		// },
+		// "Farenheight":{
+			// dim:{TEMP:1}, 
+			// factor:function (x) {return (x - 32)*9/5 + 273.15;},
+			// invFactor:function (y) {return (y - 273.15)*9/5 + 32;},			
+			// alias:["Celsius", "celsius", "Centigrade", "centigrade", "C"]
+		// },
+		// "Kelvin":{dim:{TEMP:1}, factor:1, alias:["Kelvin", "kelvin", "K"]},
 		
 		// CONSTANTS (careful!)
 		//"G": {dim{L:3,T:-2,M:-1}, factor:6.67384e-11, alias:["G"]}, // From http://physics.nist.gov, 1/29/2012
@@ -296,17 +296,17 @@ var global = this;
 			str = str.replace(/([0-9a-zA-Z])\s*\/\s*([a-zA-Z])/g, "$1`$2").replace(/([0-9a-zA-Z])\s*\/\s*([a-zA-Z])/g, "$1`$2");
 			// replace spaces with * unless adjacent to an operator or followed by a letter
 			//console.debug("str1 *    >>> ", str);
-			str = str.replace(/([^\+\-\*\/\^])\s([^\+\-\*\/\^])/g, "$1*$2");		
+			str = str.replace(/([^\+\-\*\/\^\{])\s([^\+\-\*\/\^\{])/g, "$1*$2");		
 			//console.debug("str2 *    >>> ", str);
 			// remove all spaces around operators
-			str = str.replace(/\s*([^\+\-\*\/\^])\s*/g, "$1");	
+			str = str.replace(/\s*([^\+\-\*\/\^\{])\s*/g, "$1");	
 			// add plus sign ' or " and numbers		
 			str = str.replace(/(["'])([0-9])/g, "$1+$2");
 			// add times sign between letters and anything not a letter or operator (unless the letter is "e")
-			str = str.replace(/([^a-zA-Z\+\-\*\/\^\|\`\?\&\#\\!])([a-zA-Z])/g, "$1*$2");
-			str = str.replace(/([a-zA-Z])([^a-zA-Z\+\-\*\/\^\|\`\?\&\#\\!])/g, "$1*$2");
+			str = str.replace(/([^a-zA-Z\+\-\*\/\^\|\`\?\&\#\\!\{])([a-zA-Z])/g, "$1*$2");
+			str = str.replace(/([a-zA-Z])([^a-zA-Z\+\-\*\/\^\|\`\?\&\#\\!\{])/g, "$1*$2");
 			// replace minus operator with ~, but leave negative signs alone
-			str = str.replace(/([^\+\-\*\/\^\|\`\?\&\#\\])-/g, "$1~");
+			str = str.replace(/([^\+\-\*\/\^\|\`\?\&\#\\\{])-/g, "$1~");
 			// trim space
 			str = str.replace(/^\s+|\s+$/g, "");
 			// replace stuff like "sine*", with "sin "
@@ -571,6 +571,14 @@ var global = this;
 						nestedParenArr[i] = calcFromNestedParenArr(item);
 					}
 				}
+				i = nestedParenArr.length;
+				while(i--) {
+					// replace "^" with "{" for powers next to parentheses ((1000 cm)^2 => (1000 cm)}2) [otherwise (1000 cm)^2 becomes 10 m^2 because rule following this one.]
+					item = nestedParenArr[i];
+					if (item[0] === "^") {
+						nestedParenArr[i] = "{" + item.slice(1);
+					}
+				}
 				return calcStrToStr(nestedParenArr.join(""));
 			}
 		}
@@ -604,7 +612,7 @@ var global = this;
 		//------------------------------------------
 		function calcWithUnitConversion(str) {
 			if (/[,]/.test(str)) {
-				throw new Error("Can't handle commas yet...");
+				//throw new Error("Can't handle commas yet...");
 			}
 			console.time("calcWithUnitConversion");
 			// TODO: handle "in a", "per" **NOTE: per is took tricky...
@@ -620,9 +628,10 @@ var global = this;
 			// (xxx) in in ft
 			// "10 m in ft"
 			// "10 m^3 in ft^3"
+			// "(10 m)^3 in ft^3"
 			// "(xxx) in ft"
 			
-			splitStrArr = splitStrArr.replace(/(\)\s+in\s+|[a-zA-Z'"]\s+|[a-zA-Z]\^[-+]?[0-9]+\s+|\)\s+)(in)(\s+[a-zA-Z])/, "$1@@@$3");
+			splitStrArr = splitStrArr.replace(/(\)\s+in\s+|[a-zA-Z'"]\s+|[a-zA-Z\)]\^[-+]?[0-9]+\s+|\)\s+)(in)(\s+[a-zA-Z])/, "$1@@@$3");
 			console.debug("splitStrArr !!!!!A!!!!!!!!! >>> ", splitStrArr);
 			splitStrArr = splitStrArr.replace(/(\s+)(into|to)(\s+[a-zA-Z])/, "$1@@@$3");
 			console.debug("splitStrArr !!!!B!!!!!!!!!! >>> ", splitStrArr);
@@ -713,13 +722,16 @@ var global = this;
 		{token:"ln", name:"Ln", aliasRx:/ln/, type:"prefix"},
 		{token:"sqrt", name:"Sqrt", aliasRx:/sqrt|root/, type:"prefix"},
 		
-		// Power // Need separate token for unit powers?
+		// Power // Need separate token for unit powers? [Yep. See above.]
 		{token:"^", name:"Power", rx:/\^/, type:"infix"},
 		
 		// Times, Divide, Plus for units 
 		{token:"`", name:"Divide", rx:/`/, type:"infix"},
 		{token:"|", name:"Times", rx:/\|/, type:"infix"},
 		{token:"?", name:"Plus", rx:/\?/, type:"infix"},
+		
+		// Power for stuff with units in parentheses. e.g. (1000 cm)^2
+		{token:"{", name:"Power", rx:/\{/, type:"infix"},
 		
 		// Times, Divide
 		{token:"/", name:"Divide", rx:/\//, type:"infix"},
