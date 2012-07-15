@@ -1,7 +1,8 @@
 #summary Frequently Asked Questions
 <dl>
 <dt>*How does Cloudy Calculator work?*
-<dd>If Cloudy Calculator can't handle a calculation, it asks Google for the result (you'll see a litte "G" to the left of those calculations).
+<dd>It's mostly magic. If Cloudy Calculator can't handle a calculation, it asks Google for the result (you'll see a litte "G" to the left of those calculations).
+
 <dt>*Why don't I see any result when I press "="?*
 <dd>To get a result, you must press _Enter_. You can add an "=" to the end of an expression, but it is not necessary.
 
