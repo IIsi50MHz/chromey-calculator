@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2009, 2010 Brent Weston Robinett <bwrobinett@gmail.com>
+ * Copyright (c) 2009, 2010, 2011, 2012 Brent Weston Robinett <bwrobinett@gmail.com>
  * Licensed under the MIT License:http://www.opensource.org/licenses/mit-license.php
  */
-body, html {padding:0; margin:0; background-color:white;}
+body, html, #calcWrapperTable {padding:0; margin:0; background-color:white; height:100%; width:100%;}
 body {font-size:17px; font-family:monospace; color:#123272; overflow:hidden;}
 ul {list-style-type:none; margin-left:-15px;}
 #calcWrapper {position:absolute; table-layout:fixed; height:100%; width:100%; margin:0; padding:0px;}
@@ -35,6 +35,9 @@ ul {list-style-type:none; margin-left:-15px;}
 	background-color:rgba(221,234,249,.5); border:solid #3E5785 1px;
 	-webkit-box-shadow: 0px 0px 3px black; -webkit-border-radius: 0px;
 	overflow:auto;
+}
+#calcResultsWrapper, #calcResultsWrapperCell {
+	height: 100%;
 }
 .outputText, .inputText, .replacedInputText, .errorInputText, .errorOutputText,
 .inputTextWithVars, .replacedVarAssignmentInputText,
@@ -70,7 +73,7 @@ ul {list-style-type:none; margin-left:-15px;}
 }
 /*
 	hbox and vbox classes [modified from http://alex.dojotoolkit.org/2009/08/css-3-progress/]
-*/
+
 .hbox {display:-webkit-box;	-webkit-box-orient:horizontal; -webkit-box-align:stretch;}
 .hbox > * {-webkit-box-flex:0; display:block;}
 .vbox {display:-webkit-box; -webkit-box-orient:vertical; -webkit-box-align:stretch;}
@@ -84,4 +87,4 @@ ul {list-style-type:none; margin-left:-15px;}
 .boxGroup2 {-webkit-box-flex-group:2;}
 .start {-webkit-box-pack:start;}
 .end {-webkit-box-pack:end;}
-.center {-webkit-box-pack:center;}
+.center {-webkit-box-pack:center;}*/

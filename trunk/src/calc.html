@@ -1,11 +1,11 @@
 <!--
 /*
- * Copyright (c) 2009, 2010 Brent Weston Robinett <bwrobinett@gmail.com>
+ * Copyright (c) 2009, 2010, 2011, 2012 Brent Weston Robinett <bwrobinett@gmail.com>
  * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
  */
 -->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
 	<head>
 		<title>Cloudy Calculator</title>
 		<link rel="stylesheet" type="text/css" href="css/calc.css" />			
@@ -15,42 +15,54 @@
 		<style>			
 			#calcWrapper {
 				width:100% !important;
-				height:100% !important;				
-				min-height:100% !important;
-				max-height:100% !important;	
+				height:100% !important;
 			}
-		</style>		
+		</style>
 	</head>
-	<body id="calc">	
-		<div id="calcWrapper" class="vbox">						
-			<!--
-				Header
-			-->
-			<div id="headerWrapper" class="boxFlex0">												
-				<div id="headerLinks">
-					<a href="http://code.google.com/p/chromey-calculator/wiki/Help" target="_tab" id="googleCalcHelp" class="headerLink">Help</a>
-					<span class="headerSeparator">|</span>
-					<a href="options.html" target="_tab" id="options" class="headerLink">Options</a>
-					<span class="headerSeparator">|</span>
-					<a href="#calcResults" id="clearAll" class="headerLink">Clear</a>										
-				</div>
-				<a href="https://chrome.google.com/webstore/detail/acgimceffoceigocablmjdpebeodphgc" target="_tab" id="chromeyCalcPageLink">					
-					<pre id="chromeyCalcName">Cloudy Calculator</pre>
-				</a>
-			</div>			
-			<!--
-				Results
-			-->				
-			<div id="calcResultsWrapper" class="boxFlex1">						
-				<ul id="calcResults"></ul>
-			</div>	
-			<!--
-				Input
-			-->			
-			<div id="calcInputWrapper" class="boxFlex0">
-				<input type="text" id="calcInput"/>
-				<div id="inputMarker">></div>						
-			</div>			
+	<body id="calc">
+		<div id="calcWrapper" class="vbox">	
+			<table id="calcWrapperTable">
+				<!--
+					Header
+				-->
+				<tr>
+					<td>
+						<div id="headerWrapper" class="boxFlex0">												
+							<div id="headerLinks">
+								<a href="http://code.google.com/p/chromey-calculator/wiki/Help" target="_tab" id="googleCalcHelp" class="headerLink">Help</a>
+								<span class="headerSeparator">|</span>
+								<a href="options.html" target="_tab" id="options" class="headerLink">Options</a>
+								<span class="headerSeparator">|</span>
+								<a href="#calcResults" id="clearAll" class="headerLink">Clear</a>										
+							</div>
+							<a href="https://chrome.google.com/webstore/detail/acgimceffoceigocablmjdpebeodphgc" target="_tab" id="chromeyCalcPageLink">					
+								<pre id="chromeyCalcName">Cloudy Calculator</pre>
+							</a>
+						</div>	
+					</td>
+				</tr>			
+				<!--
+					Results
+				-->	
+				<tr>
+					<td id="calcResultsWrapperCell">
+						<div id="calcResultsWrapper" class="boxFlex1">						
+							<ul id="calcResults"></ul>
+						</div>	
+					</td>
+				</tr>
+				<!--
+					Input
+				-->			
+				<tr>
+					<td>
+						<div id="calcInputWrapper" class="boxFlex0">
+							<input type="text" id="calcInput"/>
+							<div id="inputMarker">></div>						
+						</div>	
+					</td>
+				</tr>		
+			</table>
 		</div>
 	</body>	
 </html>
