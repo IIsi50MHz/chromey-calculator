@@ -1,40 +1,12 @@
 <!--
 /*
- * Copyright (c) 2009, 2010, 2011 Brent Weston Robinett <bwrobinett@gmail.com>
+ * Copyright (c) 2009, 2010, 2011, 2012 Brent Weston Robinett <bwrobinett@gmail.com>
  * Licensed under the MIT License: http://www.opensource.org/licenses/mit-license.php
  */
 -->
 <!DOCTYPE html>
-<script>
-	// restore user's preference for the main icon. Chrome might briefly show the default icon while loading the extension, though.
-	// To prevent flicker, we should really load a completely transparent icon, then replace with either default or user preference.
-	var icons = {
-		"icon_pi.png": "icons/19.png",
-		"icon_classic.png": "icons/19-classic.png"
-	};
-	chrome.browserAction.setIcon({path: icons[localStorage.useIcon] || icons["icon_pi.png"]});
-	
-	var background = {};
-</script> 
 <script src="js/jquery.js"></script>
 <script src="js/history.js"></script>
 <script src="js/units.js"></script>	
 <script src="js/bwr_calc.js"></script>
-<script>
-	// open popout when asked
-	chrome.extension.onRequestExternal.addListener(function(request, sender, sendResponse) {			
-		var qkOn = JSON.parse(localStorage.opt_quickKeyOn)[0];
-		console.debug("qkon", qkOn);
-		if (request.helperIsInstalled === "yep") {
-			console.debug("YEP-----------------")
-			background.helperIsInstalled = true;
-		} else if (request.helperIsInstalled === "nope") {
-			console.debug("NOPE-----------------")
-			background.helperIsInstalled = false;
-		} else if (request.openPopOut && qkOn) {		
-			console.debug("hwlo", cCalc.popOutCalc)
-			cCalc.popOutCalc();
-		}
-		sendResponse({});
-	});
-</script>
+<script src="js/openPopoutWhenAsked.js"></script>

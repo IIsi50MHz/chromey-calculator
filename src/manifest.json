@@ -2,13 +2,15 @@
 	"name": "Cloudy Calculator",
 	"version": "6.0.4",
 	"description": "A shockingly versatile calculator for Chrome. (Formerly Chromey Calculator)",
+	"manifest_version": 2,
+	
 	"icons": {
 		"16": "icons/16.png",
 		"48": "icons/48.png",
 		"128": "icons/128.png"
 	},
 	"browser_action": {
-		"default_icon": "icons/19-loading.png",
+		"default_icon": "icons/19.png",
 		"default_title": "Cloudy Calculator",
 		"default_popup": "popup.html"
 	},
@@ -16,6 +18,6 @@
 		"http://*.google.com/",
 		"https://*.google.com/"
 	],
-	"background_page": "background.html",
+	"background": {"page": "background.html"},
 	"options_page": "options.html"
 }
