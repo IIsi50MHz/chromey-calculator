@@ -763,7 +763,7 @@ var cCalc = (function (window, document) {
 
 		function extractUnitJsCalcOutput(input) {
 			try {
-				var output = global.unitsJsCalc(input);
+				var output = unitsJsCalc(input);
 				
 				// Make js scientific notation look like google				
 				if (/e[+-]\d+/.test(output)) {
