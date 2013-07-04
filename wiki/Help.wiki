@@ -14,21 +14,23 @@
 
 = Entering expressions =
 == Basic examples ==
-Some basic calculations are handled by Cloudy Calculator itself.
+Many calculations are handled by Cloudy Calculator itself.
  * 2+2
  * 2`*`4
  * 100 - (1+2+5+7+11)`*`2.71828
-
-== Google Calculator examples ==
-When Cloudy Calculator can't do the job, Google Calculator handles the calculation. Google can handle things like mixed unit calculations, unit conversions, currency converions, hex and binary arithmetic, trig functions, basic mathematical and physical constants, and much more.
- * 2 mi + 4 km + 3 light-years in feet
+ * 2 mi + 4 km + 3 lightyears in feet
  * 1/4 cup in tablespoons
- * 56 dollars in euros
- * 4 + 0xAF + 0o71 + 0b10 in hex
  * cos(pi/2)
  * sin(60 degrees)
  * log(123)
  * ln(123)
+
+== Google Calculator examples ==
+When Cloudy Calculator can't do the job, Google Calculator handles the calculation.
+ * 56 dollars in euros
+ * 4 + 0xAF + 0o71 + 0b10 in hex
+ * How old is Barack Obama?
+ * Population of Seattle
  
 Google Guide maintains an excellent list with many more examples: [http://www.googleguide.com/help/calculator.html Google Calculator (Cheat Sheet)]
 
