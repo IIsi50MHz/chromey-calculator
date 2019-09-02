@@ -275,10 +275,12 @@ var cCalc = (function (window, document) {
 
 					// caclulate new location for insertion (so results are inserted from left to right)
 					calcSelStart = calcSelEnd = calcSelStart + resultText.length;
-					$calcInput.val(head + resultText + tail);
+					if (!window.getSelection().toString()) {
+						$calcInput.val(head + resultText + tail);
 
 					// focus calc input
-					$calcInput.focus();
+						$calcInput.focus();
+					}
 
 					// set caret to end of inserted result
 					$calcInput[0].selectionStart = $calcInput[0].selectionEnd = calcSelStart;
@@ -289,7 +291,11 @@ var cCalc = (function (window, document) {
 			});
 
 			// refocus calc input no matter where user clicks
-			$(document).click(function () {$calcInput.focus();});
+			$(document).click(function () {
+				if (!window.getSelection().toString()) {
+					$calcInput.focus();
+				}
+			});
 			$calcResultsWrapper.scroll(function () {$calcInput.focus();});			
 		});
 	}
